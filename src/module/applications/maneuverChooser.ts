@@ -4,6 +4,7 @@ import AttackChooser from './attackChooser.js';
 import AllOutAttack from './maneuvers/AllOutAttack.js';
 import AllOutDefense from './maneuvers/AllOutDefense.js';
 import Feint from './maneuvers/Feint.js';
+import Aim from './maneuvers/Aim.js';
 
 export default class ManeuverChooser extends BaseManeuverChooser {
   maneuversInfo: Record<string, ManeuverInfo>;
@@ -13,6 +14,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
       title: `Maneuver Chooser - ${token.name}`,
       template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
     });
+
     this.maneuversInfo = {
       do_nothing: {
         tooltip: 'Take no action but recover from stun',
@@ -30,6 +32,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
       aim: {
         tooltip: 'Aim a ranged weapon to get its Accuracy bonus',
         page: 'B:364',
+        callback: (token: Token) => new Aim(token).render(true),
       },
       evaluate: {
         tooltip: 'Study a foe prior to a melee attack',

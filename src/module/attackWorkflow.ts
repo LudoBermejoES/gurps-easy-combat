@@ -57,10 +57,11 @@ export async function makeAttackInner(
   const roll = await rollAttack(attacker, attack, type);
   if (roll.failure) return;
   if (!roll.isCritSuccess) {
-    const defenceSuccess = await DefenseChooser.requestDefense(target, modifiers.defense);
+    const defenceSuccess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
     if (defenceSuccess) {
       return;
     }
+    8;
   }
   const damageParts = attack.damage.split(' ');
   const damage = { formula: damageParts[0], type: damageParts[1], extra: damageParts[2] };
@@ -95,14 +96,17 @@ export function getMeleeModifiers(
   const lastFeint = <{ successMargin: number; targetId: string; round: number } | undefined>(
     token.document.getFlag(MODULE_NAME, 'lastFeint')
   );
+
   if (
     lastFeint &&
     lastFeint.targetId === target.id &&
     lastFeint.round - (game.combat?.round ?? 0) <= 1 &&
     lastFeint.successMargin > 0
   ) {
-    modifiers.defense.push({ mod: -lastFeint.successMargin, desc: 'feint' });
+    token.document.unsetFlag(MODULE_NAME, 'lastFeint');
+    modifiers.attack.push({ mod: lastFeint.successMargin, desc: 'finta' });
   }
+
   return modifiers;
 }
 
@@ -120,6 +124,12 @@ export function getRangedModifiers(
     defense: <Modifier[]>[],
     damage: <Modifier[]>[],
   };
+  const lastAim = <{ bonus: number } | undefined>token.document.getFlag(MODULE_NAME, 'lastAim');
+  if (lastAim) {
+    token.document.unsetFlag(MODULE_NAME, 'lastAim');
+    modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
+  }
+
   ensureDefined(token.actor, 'token without actor');
   switch (getManeuver(token.actor)) {
     case 'move_and_attack':

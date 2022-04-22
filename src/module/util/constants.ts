@@ -8,3 +8,4 @@ export const allOutAttackManeuvers = [
   'aoa_strong',
   'aoa_suppress',
 ];
+export const allOutDefenseManeuvers = ['allout_defense', 'aod_dodge', 'aod_parry', 'aod_block', 'aod_double'];

@@ -55,6 +55,7 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
       Maneuver: maneuver.name,
       Description: maneuver.tooltip,
     }));
+    console.log({ items: maneuversDescriptions, headers: ['Maneuver', 'Description'], id: 'manuever_choice' });
     return { items: maneuversDescriptions, headers: ['Maneuver', 'Description'], id: 'manuever_choice' };
   }
   activateListeners(html: JQuery): void {
@@ -71,6 +72,7 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
 
   getManeuversData(): Maneuver[] {
     const gurpsManeuvers: Record<string, GurpsManeuver> = Maneuvers.getAllData();
+    console.log(this.maneuversInfo);
     return Object.entries(this.maneuversInfo).map(([key, maneuverInfo]: [string, ManeuverInfo]) => {
       return {
         ...maneuverInfo,

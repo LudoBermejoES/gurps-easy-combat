@@ -14,7 +14,7 @@ const zip = require('gulp-zip');
 
 const name = path.basename(path.resolve('.'));
 const sourceDirectory = './src';
-const distDirectory = './dist';
+const distDirectory = '../../OneDrive/Rol/Foundryvtt/Data/modules/gurps-easy-combat';
 const stylesDirectory = `${sourceDirectory}/styles`;
 const stylesExtension = 'css';
 const sourceFileExtension = 'ts';

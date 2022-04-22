@@ -1,3 +1,4 @@
+import { getDefenseModifiers } from '../defenseWorkflow';
 import { allOutAttackManeuvers, TEMPLATES_FOLDER } from '../util/constants';
 import { getBlocks, getDodge, getParries } from '../dataExtractor';
 import BaseActorController from './abstract/BaseActorController';
@@ -27,9 +28,18 @@ export default class DefenseChooser extends BaseActorController {
       template: `${TEMPLATES_FOLDER}/defenseChooser.hbs`,
     });
     this.data = data;
+    this.data.modifiers = getDefenseModifiers(token).defense;
   }
-  getData(): { dodge: number; parry: Record<string, number>; block: Record<string, number> } {
-    return { dodge: getDodge(this.actor), parry: getParries(this.actor), block: getBlocks(this.actor) };
+  getData(): {
+    dodge: number;
+    parry: Record<string, number>;
+    block: Record<string, number>;
+  } {
+    return {
+      dodge: getDodge(this.actor),
+      parry: getParries(this.actor),
+      block: getBlocks(this.actor),
+    };
   }
   async close(): Promise<void> {
     await super.close();
@@ -67,6 +77,7 @@ export default class DefenseChooser extends BaseActorController {
       this.data.resolve(result);
       this.closeForEveryone();
     });
+
     html.on('click', '.blockRow', (event) => {
       applyModifiers(this.data.modifiers);
       const weapon = $(event.currentTarget).attr('weapon');
@@ -100,7 +111,7 @@ export default class DefenseChooser extends BaseActorController {
     });
     return promise;
   }
-  static async requestDefense(token: Token, modifiers: Modifier[]): Promise<boolean> {
+  static async requestDefense(token: Token, modifiers: Modifier[], attacker: Actor): Promise<boolean> {
     const actor = token.actor;
     ensureDefined(actor, 'token has no actor');
     const users = highestPriorityUsers(actor);

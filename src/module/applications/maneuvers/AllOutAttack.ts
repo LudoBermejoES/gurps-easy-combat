@@ -15,12 +15,12 @@ export default class ManeuverChooser extends BaseManeuverChooser {
 
   constructor(token: Token) {
     super('AllOutAttack', token, {
-      title: `All Out Attack - ${token.name}`,
+      title: `Ataque total - ${token.name}`,
       template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
     });
     this.maneuversInfo = {
       aoa_double: {
-        tooltip: 'Attack twice with a melee weapon',
+        tooltip: 'Atacar dos veces con un arma cuerpo a cuerpo',
         page: 'B:365',
         callback: async (token: Token) => {
           await AttackChooser.request(token, { meleeOnly: true });
@@ -28,17 +28,17 @@ export default class ManeuverChooser extends BaseManeuverChooser {
         },
       },
       aoa_determined: {
-        tooltip: 'Attack with a bonus to hit (+4 for melee, +1 for ranged)',
+        tooltip: 'Ataca con un bonus (+4 para Cuerpo a cuerpo, +1 a Distancia',
         page: 'B:365',
         callback: (token: Token) => new AttackChooser(token).render(true),
       },
       aoa_strong: {
-        tooltip: 'Attack with +2 to damge using a melee weapon',
+        tooltip: 'Ataca con +2 al daño usando un arma de melee',
         page: 'B:365',
         callback: (token: Token) => new AttackChooser(token, { meleeOnly: true }).render(true),
       },
       aoa_feint: {
-        tooltip: 'Make a feint then make an attack with a melee weapon',
+        tooltip: 'Hace una finta y después un ataque con un arma cuerpo a cuerpo',
         page: 'B:365',
         callback: async (token: Token) => {
           await Feint.request(token);
@@ -47,7 +47,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
         },
       },
       aoa_suppress: {
-        tooltip: 'Spray an area with automatic weapon (RoF 5+)',
+        tooltip: 'Fuego de supresión en un área con arma automática (solo con RoF 5+)',
         page: 'B:365',
         callback: (token: Token) => new AttackChooser(token, { rangedOnly: true }).render(true),
       },
