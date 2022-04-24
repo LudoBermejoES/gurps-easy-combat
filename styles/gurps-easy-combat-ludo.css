@@ -26,3 +26,8 @@
   background: #333;
   color: #fff;
 }
+
+table .selected {
+  background: #333;
+  color: #fff;
+}

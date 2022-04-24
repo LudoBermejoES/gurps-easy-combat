@@ -78,7 +78,11 @@ export function setTargets(user: User, targets: Token[]): void {
   user.updateTokenTargets(targets.map((t) => t.id));
 }
 
-export function activateChooser(html: JQuery, id: string, callback: (index: number) => void): void {
+export function activateChooser(
+  html: JQuery,
+  id: string,
+  callback: (index: number, element: JQuery<any>) => void,
+): void {
   html.on('click', `#${id} tr.clickable`, (event) => {
     const element = $(event.currentTarget);
     const indexString = element.attr('index');
@@ -86,7 +90,7 @@ export function activateChooser(html: JQuery, id: string, callback: (index: numb
       ui.notifications?.error('no index on clicked element');
       throw new Error('no index on clicked element');
     }
-    callback(parseInt(indexString));
+    callback(parseInt(indexString), element);
   });
 }
 

@@ -1,8 +1,11 @@
 <div>
-  <div>Choose attack (you must have a target selected)</div>
+  <div>Escoge ataque (tienes que tener seleccionado un objetivo)</div>
+
   <div><input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">keep window open after attack</label></div>
   <h2>Melee</h2>
   {{> choiceTable melee}}
   <h2>Ranged</h2>
   {{> choiceTable ranged}}
+
+  {{> choiceTable hitLocations}}
 </div>

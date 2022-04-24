@@ -18,6 +18,7 @@ export async function rollAttack(actor: Actor, attack: Attack, type: 'melee' | '
 }
 
 async function rollDamage(
+  actor: Actor,
   damage: { formula: string; type: string; extra: string },
   target: Token,
   modifiers: Modifier[] = [],
@@ -30,12 +31,29 @@ async function rollDamage(
     ensureDefined(game.user, 'game not initialized');
     setTargets(game.user, oldTargets);
   });
-  return GURPS.performAction({
-    type: 'damage',
-    formula: damage.formula,
-    damagetype: damage.type,
-    extdamagetype: damage.extra,
-  });
+  let isDerivedDamage = false;
+  let derivedformula = '';
+  if (damage.formula.toUpperCase().indexOf('SW') > -1) {
+    isDerivedDamage = true;
+    derivedformula = 'sw';
+    damage.formula = damage.formula.split('sw').join('');
+  }
+  if (damage.formula.toUpperCase().indexOf('TH') > -1) {
+    isDerivedDamage = true;
+    derivedformula = 'th';
+    damage.formula = damage.formula.split('thr').join('');
+  }
+  debugger;
+  return GURPS.performAction(
+    {
+      type: isDerivedDamage ? 'deriveddamage' : 'damage',
+      derivedformula,
+      formula: damage.formula,
+      damagetype: damage.type,
+      extdamagetype: damage.extra,
+    },
+    actor,
+  );
 }
 
 export async function makeAttackInner(
@@ -57,15 +75,16 @@ export async function makeAttackInner(
   const roll = await rollAttack(attacker, attack, type);
   if (roll.failure) return;
   if (!roll.isCritSuccess) {
-    const defenceSuccess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
-    if (defenceSuccess) {
+    const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
+    if (defenseSucess) {
       return;
     }
-    8;
   }
   const damageParts = attack.damage.split(' ');
   const damage = { formula: damageParts[0], type: damageParts[1], extra: damageParts[2] };
-  await rollDamage(damage, target, modifiers.damage);
+  setTimeout(() => {
+    rollDamage(attacker, damage, target, modifiers.damage);
+  }, 1000);
 }
 
 export function getMeleeModifiers(
@@ -107,6 +126,26 @@ export function getMeleeModifiers(
     modifiers.attack.push({ mod: lastFeint.successMargin, desc: 'finta' });
   }
 
+  const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
+  if (location && location.bonus) {
+    token.document.unsetFlag(MODULE_NAME, 'location');
+    modifiers.attack.push({ mod: location.bonus, desc: location.where });
+  }
+
+  const lastEvaluate = <{ bonus: number; targetId: string; round: number } | undefined>(
+    token.document.getFlag(MODULE_NAME, 'lastEvaluate')
+  );
+
+  if (
+    lastEvaluate &&
+    lastEvaluate.targetId === target.id &&
+    lastEvaluate.round - (game.combat?.round ?? 0) <= 1 &&
+    lastEvaluate.bonus > 0
+  ) {
+    token.document.unsetFlag(MODULE_NAME, 'lastEvaluate');
+    modifiers.attack.push({ mod: lastEvaluate.bonus, desc: 'Evaluar' });
+  }
+
   return modifiers;
 }
 
@@ -130,6 +169,12 @@ export function getRangedModifiers(
     modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
   }
 
+  const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
+  if (location && location.bonus) {
+    token.document.unsetFlag(MODULE_NAME, 'location');
+    modifiers.attack.push({ mod: location.bonus, desc: location.where });
+  }
+
   ensureDefined(token.actor, 'token without actor');
   switch (getManeuver(token.actor)) {
     case 'move_and_attack':
@@ -139,5 +184,6 @@ export function getRangedModifiers(
       modifiers.attack.push({ mod: 1, desc: 'determined' });
       break;
   }
+
   return modifiers;
 }

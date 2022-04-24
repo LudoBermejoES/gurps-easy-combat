@@ -74,8 +74,8 @@ export default class DefenseChooser extends BaseActorController {
         },
         this.actor,
       );
-      this.data.resolve(result);
       this.closeForEveryone();
+      this.data.resolve(result);
     });
 
     html.on('click', '.blockRow', (event) => {
@@ -93,8 +93,8 @@ export default class DefenseChooser extends BaseActorController {
         },
         this.actor,
       );
-      this.data.resolve(result);
       this.closeForEveryone();
+      this.data.resolve(result);
     });
   }
   static async attemptDefense(sceneId: string, tokenId: string, modifiers: Modifier[]): Promise<boolean> {

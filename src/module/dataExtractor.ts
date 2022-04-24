@@ -1,4 +1,4 @@
-import { MeleeAttack, RangedAttack } from './types';
+import { HitLocation, MeleeAttack, RangedAttack } from './types';
 import { getFullName } from './util/miscellaneous';
 
 export function getAttacks(actor: Actor): { melee: MeleeAttack[]; ranged: RangedAttack[] } {
@@ -27,4 +27,8 @@ export function getBlocks(actor: Actor): Record<string, number> {
 
 export function getDodge(actor: Actor): number {
   return actor.data.data.currentdodge;
+}
+
+export function getHitLocations(actor: Actor): HitLocation[] {
+  return Object.values(actor.data.data.hitlocations);
 }

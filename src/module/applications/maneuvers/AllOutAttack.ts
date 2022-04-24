@@ -23,8 +23,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
         tooltip: 'Atacar dos veces con un arma cuerpo a cuerpo',
         page: 'B:365',
         callback: async (token: Token) => {
-          await AttackChooser.request(token, { meleeOnly: true });
-          await AttackChooser.request(token, { meleeOnly: true });
+          await AttackChooser.request(token, { meleeOnly: true, twoAttacks: true });
         },
       },
       aoa_determined: {

@@ -5,74 +5,76 @@ import AllOutAttack from './maneuvers/AllOutAttack.js';
 import AllOutDefense from './maneuvers/AllOutDefense.js';
 import Feint from './maneuvers/Feint.js';
 import Aim from './maneuvers/Aim.js';
+import Evaluate from './maneuvers/Evaluate';
 
 export default class ManeuverChooser extends BaseManeuverChooser {
   maneuversInfo: Record<string, ManeuverInfo>;
 
   constructor(token: Token) {
     super('ManeuverChooser', token, {
-      title: `Maneuver Chooser - ${token.name}`,
+      title: `Elección de maniobra - ${token.name}`,
       template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
     });
 
     this.maneuversInfo = {
       do_nothing: {
-        tooltip: 'Take no action but recover from stun',
+        tooltip: 'No hacer acción pero recuperarse de Aturdido',
         page: 'B:364',
         callback: () => game.combat?.nextTurn(),
       },
       move: {
-        tooltip: 'Do nothing but move',
+        tooltip: 'Solo moverse',
         page: 'B:364',
       },
       change_posture: {
-        tooltip: `Stand up, sit down, etc.`,
+        tooltip: `Levantarse, sentarse, etc`,
         page: 'B:364',
       },
       aim: {
-        tooltip: 'Aim a ranged weapon to get its Accuracy bonus',
+        tooltip: 'Apuntar un arma a distancia para conseguir su bono de Precisión',
         page: 'B:364',
         callback: (token: Token) => new Aim(token).render(true),
       },
       evaluate: {
-        tooltip: 'Study a foe prior to a melee attack',
+        tooltip: 'Estudiar a un enemigo antes de un ataque de melee',
         page: 'B:364',
+        callback: (token: Token) => new Evaluate(token),
       },
       attack: {
-        tooltip: 'unarmed or with a weapon',
+        tooltip: 'Ataque cuerpo a cuerpo o a distancia',
         page: 'B:365',
         callback: (token: Token) => new AttackChooser(token).render(true),
       },
       move_and_attack: {
-        tooltip: 'Move and attack at a penalty',
+        tooltip: 'Moverse y atacar con penalizador',
         page: 'B:365',
         callback: (token: Token) => new AttackChooser(token).render(true),
       },
       feint: {
-        tooltip: 'Fake a melee attack',
+        tooltip: 'Fingir un ataque cuerpo a cuerpo para ganar un bonus',
         page: 'B:365',
         callback: (token: Token) => new Feint(token).render(true),
       },
       allout_attack: {
-        tooltip: 'Attack at a bonus or multiple times',
+        tooltip: 'Atacar con bonus o varias veces',
         page: 'B:365',
         callback: (token: Token) => new AllOutAttack(token).render(true),
       },
       allout_defense: {
-        tooltip: 'Increased or double defense',
+        tooltip: 'Defensa incrementada o defenderse dos veces de un mismo ataque',
         page: 'B:366',
         callback: (token: Token) => new AllOutDefense(token).render(true),
       },
       ready: {
-        tooltip: 'Prepare a weapon or other item',
+        tooltip: 'Preparar un arma u otro equipo',
         page: 'B:366',
       },
       concentrate: {
-        tooltip: 'Focus on a mental task',
+        tooltip: 'Enfocarse en una tarea mental, como un hechizo',
         page: 'B:366',
       },
       wait: {
-        tooltip: 'Hold yourself in readiness to act',
+        tooltip: 'Esperar antes de actuar',
         page: 'B:366',
       },
     };

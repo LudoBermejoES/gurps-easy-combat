@@ -8,7 +8,6 @@ export function getDefenseModifiers(token: Token): {
     defense: <Modifier[]>[],
   };
   ensureDefined(token.actor, 'token without actor');
-  debugger;
   switch (getManeuver(token.actor)) {
     case 'aod_dodge':
       modifiers.defense.push({ mod: 2, desc: 'dodge' });

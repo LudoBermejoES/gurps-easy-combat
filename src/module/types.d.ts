@@ -315,12 +315,16 @@ declare global {
     SetLastActor(actor: Actor): void;
     gurpslink(otf: string): string;
     executeOTF(otf: string): boolean;
-    performAction(data: {
-      type: 'damage';
-      formula: string;
-      damagetype: string;
-      extdamagetype: string;
-    }): Promise<boolean>;
+    performAction(
+      data: {
+        type: 'damage' | 'deriveddamage';
+        derivedformula: string;
+        formula: string;
+        damagetype: string;
+        extdamagetype: string;
+      },
+      actor: Actor,
+    ): Promise<boolean>;
     performAction(
       data: {
         type: 'attack';
