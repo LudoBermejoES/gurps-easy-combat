@@ -1,4 +1,4 @@
-import { HitLocation, MeleeAttack, RangedAttack } from './types';
+import { HitLocation, MeleeAttack, RangedAttack, Skill } from './types';
 import { getFullName } from './util/miscellaneous';
 
 export function getAttacks(actor: Actor): { melee: MeleeAttack[]; ranged: RangedAttack[] } {

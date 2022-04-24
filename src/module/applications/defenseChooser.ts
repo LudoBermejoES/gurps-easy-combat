@@ -1,17 +1,19 @@
 import { getDefenseModifiers } from '../defenseWorkflow';
-import { allOutAttackManeuvers, TEMPLATES_FOLDER } from '../util/constants';
+import { ACROBATICS, allOutAttackManeuvers, TEMPLATES_FOLDER } from '../util/constants';
 import { getBlocks, getDodge, getParries } from '../dataExtractor';
 import BaseActorController from './abstract/BaseActorController';
 import {
   ensureDefined,
+  findSkillSpell,
   getManeuver,
   getToken,
   highestPriorityUsers,
   isDefined,
   smartRace,
 } from '../util/miscellaneous';
-import { Modifier } from '../types';
+import { Modifier, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
+import Action = SocketInterface.Requests.Action;
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -32,10 +34,12 @@ export default class DefenseChooser extends BaseActorController {
   }
   getData(): {
     dodge: number;
+    acrobaticDodge: Skill;
     parry: Record<string, number>;
     block: Record<string, number>;
   } {
     return {
+      acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
       dodge: getDodge(this.actor),
       parry: getParries(this.actor),
       block: getBlocks(this.actor),
@@ -58,6 +62,26 @@ export default class DefenseChooser extends BaseActorController {
       );
       this.data.resolve(result);
       this.closeForEveryone();
+    });
+    html.on('click', '#acrobatic-dodge', async () => {
+      const action = {
+        orig: 'Sk:"Acrobatics"',
+        type: 'skill-spell',
+        isSpellOnly: false,
+        isSkillOnly: true,
+        name: 'Acrobatics',
+        spantext: '<b>Sk:</b>Acrobatics',
+      };
+
+      applyModifiers(this.data.modifiers);
+      const resultAcrobatic = await GURPS.performAction(action, this.actor);
+      if (!resultAcrobatic) {
+        this.data.modifiers.push({ mod: -2, desc: 'Fallo en esquiva acrobática' });
+      } else {
+        this.data.modifiers.push({ mod: +2, desc: 'Éxito en esquiva acrobática' });
+      }
+
+      $('#dodge')[0].click();
     });
     html.on('click', '.parryRow', (event) => {
       applyModifiers(this.data.modifiers);

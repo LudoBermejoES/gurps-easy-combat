@@ -317,6 +317,17 @@ declare global {
     executeOTF(otf: string): boolean;
     performAction(
       data: {
+        type: string;
+        orig: string;
+        isSpellOnly: boolean;
+        isSkillOnly: boolean;
+        name: string;
+        spantext: string;
+      },
+      actor: Actor,
+    ): Promise<boolean>;
+    performAction(
+      data: {
         type: 'damage' | 'deriveddamage';
         derivedformula: string;
         formula: string;

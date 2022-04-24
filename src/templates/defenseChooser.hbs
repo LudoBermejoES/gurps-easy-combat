@@ -5,11 +5,24 @@
       <td>dodge</td>
       <td>{{dodge}}</td>
     </tr>
+    {{#if acrobaticDodge}}
+      <tr class="clickable" id="acrobatic-dodge">
+        <td>
+          Esquiva acrobática
+        </td>
+        <td>
+          {{ acrobaticDodge.level }}
+        </td>
+        <td>
+          Se tirará primero Acrobacias, si la sacas ganas un +2 a Esquiva, si fallas pierdes un -2 a Esquiva
+        </td>
+      </tr>
+    {{/if}}
   </table>
   <table>
     <tr class="header">
-      <td>parry with</td>
-      <td>level</td>
+      <td>Parar con</td>
+      <td>Nivel</td>
     </tr>
     {{#each parry as |parryValue|}}
       <tr class="clickable parryRow" weapon="{{@key}}">
@@ -20,8 +33,8 @@
   </table>
   <table>
     <tr class="header">
-      <td>block with</td>
-      <td>level</td>
+      <td>Bloquear con</td>
+      <td>Nivel</td>
     </tr>
     {{#each block as |blockValue|}}
       <tr class="clickable blockRow" weapon="{{@key}}">

@@ -2,14 +2,20 @@
   <div>You are attacked! Choose defense to use.</div>
   <table>
     <tr class="clickable" id="dodge">
-      <td>dodge</td>
+      <td>Esquiva</td>
+      <td>{{dodge}}</td>
+    </tr>
+  </table>
+  <table>
+    <tr class="clickable" id="acrobatic-dodge">
+      <td>Esquiva acrobática</td>
       <td>{{dodge}}</td>
     </tr>
   </table>
   <table>
     <tr class="header">
-      <td>parry with</td>
-      <td>level</td>
+      <td>Parar con</td>
+      <td>Nivel</td>
     </tr>
     {{#each parry as |parryValue|}}
       <tr class="clickable parryRow" weapon="{{@key}}">
@@ -20,8 +26,8 @@
   </table>
   <table>
     <tr class="header">
-      <td>block with</td>
-      <td>level</td>
+      <td>Bloquear con</td>
+      <td>Nivel</td>
     </tr>
     {{#each block as |blockValue|}}
       <tr class="clickable blockRow" weapon="{{@key}}">

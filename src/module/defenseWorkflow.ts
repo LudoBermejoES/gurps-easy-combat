@@ -1,6 +1,5 @@
-import { Modifier } from './types';
+import { Modifier, Skill } from './types';
 import { ensureDefined, getManeuver } from './util/miscellaneous';
-
 export function getDefenseModifiers(token: Token): {
   defense: Modifier[];
 } {

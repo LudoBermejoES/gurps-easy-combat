@@ -1,7 +1,10 @@
-import { Attack, RangedAttack } from '../types';
+import { Attack, RangedAttack, Skill } from '../types';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import * as Gurps from '/systems/gurps/module/gurps.js';
 
 export async function smartRace<S extends T, T>(
   promises: Promise<T>[],
@@ -140,4 +143,10 @@ export function getToken(sceneId: string, tokenId: string): Token {
   const token = tokenDocument.object as Token;
   ensureDefined(token, `token document with id ${tokenId} on scene with id ${sceneId} doesn't have object attached`);
   return token;
+}
+
+export function findSkillSpell(actor: Actor, skill: string, isSkill: boolean, isSpell: boolean): Skill {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return GURPS.findSkillSpell(actor?.data?.data, skill, isSkill, isSpell);
 }

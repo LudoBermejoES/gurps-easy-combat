@@ -43,7 +43,6 @@ async function rollDamage(
     derivedformula = 'th';
     damage.formula = damage.formula.split('thr').join('');
   }
-  debugger;
   return GURPS.performAction(
     {
       type: isDerivedDamage ? 'deriveddamage' : 'damage',
