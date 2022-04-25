@@ -65,6 +65,7 @@ export async function makeAttackInner(
     defense: Modifier[];
     damage: Modifier[];
   },
+  isCounterAttack: boolean,
 ): Promise<void> {
   if (!target.actor) {
     ui.notifications?.error('target has no actor');
@@ -74,16 +75,46 @@ export async function makeAttackInner(
   const roll = await rollAttack(attacker, attack, type);
   if (roll.failure) return;
   if (!roll.isCritSuccess) {
+    if (isCounterAttack) {
+      modifiers.defense.push({ mod: -2, desc: 'Por contraataque' });
+
+      const successDefenses = <{ attackers: string[]; round: number } | undefined>(
+        attacker?.token?.getFlag(MODULE_NAME, 'successDefenses')
+      );
+
+      const attackerId = target?.id;
+      if (attackerId) {
+        const roundSuccess = (successDefenses?.round || 0) === game.combat?.round ?? 0;
+        const attackers = (roundSuccess && successDefenses?.attackers) || [];
+        const attackerFiltered = attackers.filter((attackerS) => attackerId !== attackerS);
+        attacker?.token?.setFlag(MODULE_NAME, 'successDefenses', {
+          attackers: attackerFiltered,
+          round: game.combat?.round ?? 0,
+        });
+      }
+    }
+
     const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
     if (defenseSucess) {
+      const successDefenses = <{ attackers: string[]; round: number } | undefined>(
+        target.document.getFlag(MODULE_NAME, 'successDefenses')
+      );
+
+      const attackerId = attacker?.token?.id;
+      if (attackerId) {
+        const roundSuccess = (successDefenses?.round || 0) === game.combat?.round ?? 0;
+        const attackers = (roundSuccess && successDefenses?.attackers) || [];
+        target.document.setFlag(MODULE_NAME, 'successDefenses', {
+          attackers: [...attackers, attackerId],
+          round: game.combat?.round ?? 0,
+        });
+      }
       return;
     }
   }
   const damageParts = attack.damage.split(' ');
   const damage = { formula: damageParts[0], type: damageParts[1], extra: damageParts[2] };
-  setTimeout(() => {
-    rollDamage(attacker, damage, target, modifiers.damage);
-  }, 1000);
+  rollDamage(attacker, damage, target, modifiers.damage);
 }
 
 export function getMeleeModifiers(
@@ -143,6 +174,17 @@ export function getMeleeModifiers(
   ) {
     token.document.unsetFlag(MODULE_NAME, 'lastEvaluate');
     modifiers.attack.push({ mod: lastEvaluate.bonus, desc: 'Evaluar' });
+  }
+
+  const retreating = <{ bonus: number; round: number } | undefined>(
+    token.document.getFlag(MODULE_NAME, 'roundRetreatMalus')
+  );
+
+  const dif = (game.combat?.round ?? 0) - (retreating?.round ?? 0);
+  if (retreating && dif > 0 && dif <= 1) {
+    modifiers.attack.push({ mod: retreating.bonus, desc: `por retroceder` });
+  } else {
+    token.document.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
   }
 
   return modifiers;

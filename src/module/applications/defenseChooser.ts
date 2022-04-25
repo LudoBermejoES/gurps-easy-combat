@@ -1,5 +1,5 @@
 import { getDefenseModifiers } from '../defenseWorkflow';
-import { ACROBATICS, allOutAttackManeuvers, TEMPLATES_FOLDER } from '../util/constants';
+import { ACROBATICS, allOutAttackManeuvers, FENCING_WEAPONS, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants';
 import { getBlocks, getDodge, getParries } from '../dataExtractor';
 import BaseActorController from './abstract/BaseActorController';
 import {
@@ -30,7 +30,7 @@ export default class DefenseChooser extends BaseActorController {
       template: `${TEMPLATES_FOLDER}/defenseChooser.hbs`,
     });
     this.data = data;
-    this.data.modifiers = getDefenseModifiers(token).defense;
+    this.data.modifiers = [...this.data.modifiers, ...getDefenseModifiers(token).defense];
   }
   getData(): {
     dodge: number;
@@ -49,9 +49,24 @@ export default class DefenseChooser extends BaseActorController {
     await super.close();
     this.data.reject('closed');
   }
+
+  addRetreatMalus(): void {
+    const round = game.combat?.round ?? 0;
+    this.token.document.setFlag(MODULE_NAME, 'roundRetreatMalus', {
+      round: round + 1,
+      bonus: -2,
+    });
+  }
+
   activateListeners(html: JQuery): void {
     html.on('click', '#dodge', () => {
       applyModifiers(this.data.modifiers);
+      const isRetreating = $('#retreat').val();
+      if (isRetreating === 'on') {
+        this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
+        this.addRetreatMalus();
+      }
+
       const result = GURPS.performAction(
         {
           orig: 'Dodge',
@@ -72,8 +87,12 @@ export default class DefenseChooser extends BaseActorController {
         name: 'Acrobatics',
         spantext: '<b>Sk:</b>Acrobatics',
       };
-
       applyModifiers(this.data.modifiers);
+      const isRetreating = $('#retreat').val();
+      if (isRetreating === 'on') {
+        this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
+        this.addRetreatMalus();
+      }
       const resultAcrobatic = await GURPS.performAction(action, this.actor);
       if (!resultAcrobatic) {
         this.data.modifiers.push({ mod: -2, desc: 'Fallo en esquiva acrobática' });
@@ -85,11 +104,30 @@ export default class DefenseChooser extends BaseActorController {
     });
     html.on('click', '.parryRow', (event) => {
       applyModifiers(this.data.modifiers);
+      const isRetreating = $('#retreat').val();
+      if (isRetreating === 'on') {
+        this.data.modifiers.push({ mod: +1, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
+        this.addRetreatMalus();
+      }
+      let lastParry = <{ times: number; round: number } | undefined>(
+        this?.actor?.token?.getFlag(MODULE_NAME, 'lastParry')
+      );
       const weapon = $(event.currentTarget).attr('weapon');
       if (!weapon) {
         ui.notifications?.error('no weapon attribute on clicked element');
         return;
       }
+      if (lastParry?.round === game.combat?.round ?? 0) {
+        const isFencingWeapon = FENCING_WEAPONS.some((v) => weapon.toUpperCase().includes(v));
+        const times = lastParry?.times || 0;
+        this.data.modifiers.push({
+          mod: (isFencingWeapon ? -2 : -4) * times,
+          desc: `Malus por haber parado previamente ${times} vez(ces)`,
+        });
+      } else {
+        lastParry = undefined;
+      }
+
       const result = GURPS.performAction(
         {
           isMelee: true,
@@ -98,12 +136,23 @@ export default class DefenseChooser extends BaseActorController {
         },
         this.actor,
       );
+
+      this.token.document.setFlag(MODULE_NAME, 'lastParry', {
+        times: lastParry?.times ? lastParry.times + 1 : 1,
+        round: game.combat?.round ?? 0,
+      });
+
       this.closeForEveryone();
       this.data.resolve(result);
     });
 
     html.on('click', '.blockRow', (event) => {
       applyModifiers(this.data.modifiers);
+      const isRetreating = $('#retreat').val();
+      if (isRetreating === 'on') {
+        this.data.modifiers.push({ mod: +1, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
+        this.addRetreatMalus();
+      }
       const weapon = $(event.currentTarget).attr('weapon');
       if (!weapon) {
         ui.notifications?.error('no weapon attribute on clicked element');

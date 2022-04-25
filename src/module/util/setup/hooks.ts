@@ -21,8 +21,27 @@ export function registerHooks(): void {
     await registerPartials();
   });
 
+  const deleteFlags = (combat: Combat) => {
+    combat.combatants.forEach((combatant) => {
+      debugger;
+      combatant?.token?.unsetFlag(MODULE_NAME, 'location');
+      combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
+      combatant?.token?.unsetFlag(MODULE_NAME, 'lastParry');
+      combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
+      combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
+      combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
+    });
+  };
+
+  Hooks.on('deleteCombat', async (combat: Combat) => {
+    deleteFlags(combat);
+  });
+
   Hooks.on('updateCombat', async (combat: Combat) => {
-    if (!combat.started) return;
+    if (!combat.started) {
+      deleteFlags(combat);
+      return;
+    }
     const tokenDocument = combat.combatant.token;
     ensureDefined(tokenDocument, 'current combatant has no actor');
     ensureDefined(tokenDocument.object, 'token document without token');

@@ -11,3 +11,5 @@ export const allOutAttackManeuvers = [
 export const allOutDefenseManeuvers = ['allout_defense', 'aod_dodge', 'aod_parry', 'aod_block', 'aod_double'];
 
 export const ACROBATICS = 'Acrobatics';
+
+export const FENCING_WEAPONS = ['MAIN-GAUCHE', 'RAPIER', 'SABER', 'Smallsword'];

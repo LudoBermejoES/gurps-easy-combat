@@ -6,6 +6,7 @@ import AllOutDefense from './maneuvers/AllOutDefense.js';
 import Feint from './maneuvers/Feint.js';
 import Aim from './maneuvers/Aim.js';
 import Evaluate from './maneuvers/Evaluate';
+import { checkSingleTarget, ensureDefined, getTargets } from '../util/miscellaneous';
 
 export default class ManeuverChooser extends BaseManeuverChooser {
   maneuversInfo: Record<string, ManeuverInfo>;
@@ -43,7 +44,9 @@ export default class ManeuverChooser extends BaseManeuverChooser {
       attack: {
         tooltip: 'Ataque cuerpo a cuerpo o a distancia',
         page: 'B:365',
-        callback: (token: Token) => new AttackChooser(token).render(true),
+        callback: (token: Token) => {
+          new AttackChooser(token).render(true);
+        },
       },
       move_and_attack: {
         tooltip: 'Moverse y atacar con penalizador',

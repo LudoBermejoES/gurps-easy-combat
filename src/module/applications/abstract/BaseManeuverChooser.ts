@@ -1,6 +1,6 @@
 import { ChooserData } from '../../types.js';
 import { MODULE_NAME } from '../../util/constants.js';
-import { activateChooser } from '../../util/miscellaneous.js';
+import { activateChooser, checkSingleTarget, ensureDefined, getTargets } from '../../util/miscellaneous.js';
 import BaseActorController from '../abstract/BaseActorController.js';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -61,6 +61,16 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
   activateListeners(html: JQuery): void {
     activateChooser(html, 'manuever_choice', (index) => {
       const maneuver = this.getManeuversData()[index];
+      let target;
+      if (['aim', 'evaluate', 'attack', 'feint', 'allout_attack', 'move_and_attack'].includes(maneuver.key)) {
+        ensureDefined(game.user, 'game not initialized');
+        if (checkSingleTarget(game.user)) {
+          target = getTargets(game.user)[0];
+          ensureDefined(target.actor, 'target has no actor');
+        }
+        if (!target) return;
+      }
+
       this.token.setManeuver(maneuver.key);
       ChatMessage.create({
         content: `${this.token.name} uses the "${maneuver.name}" maneuver [PDF:${maneuver.page}]`,
