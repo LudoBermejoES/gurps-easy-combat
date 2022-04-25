@@ -2,8 +2,6 @@ import { MODULE_NAME } from '../../util/constants.js';
 import BaseManeuverChooser from '../abstract/BaseManeuverChooser.js';
 import AttackChooser from '../attackChooser.js';
 import Feint from './Feint.js';
-import { activateChooser, ensureDefined } from '../../util/miscellaneous';
-import * as OriginalManeuverChooser from '../maneuverChooser';
 
 //#region types
 interface ManeuverInfo {
@@ -53,13 +51,5 @@ export default class ManeuverChooser extends BaseManeuverChooser {
         callback: (token: Token) => new AttackChooser(token, { rangedOnly: true }).render(true),
       },
     };
-  }
-  activateListeners(html: JQuery): void {
-    $('#closeAndReturn', html).click(() => {
-      const token = this.token;
-      ensureDefined(game.user, 'game not initialized');
-      new OriginalManeuverChooser.default(token).render(true);
-      this.closeForEveryone();
-    });
   }
 }

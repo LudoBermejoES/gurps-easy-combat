@@ -5,6 +5,7 @@ import BaseActorController from '../abstract/BaseActorController.js';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
+import ManeuverChooser from '../maneuverChooser';
 
 //#region types
 export interface ManeuverInfo {
@@ -77,6 +78,12 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
       });
       this.closeForEveryone();
       maneuver.callback?.(this.token);
+    });
+    $('#closeAndReturn', html).click(() => {
+      const token = this.token;
+      ensureDefined(game.user, 'game not initialized');
+      new ManeuverChooser(token).render(true);
+      this.closeForEveryone();
     });
   }
 
