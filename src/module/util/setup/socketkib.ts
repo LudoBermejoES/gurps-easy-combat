@@ -2,8 +2,18 @@ import BaseActorController from '../../applications/abstract/BaseActorController
 import DefenseChooser from '../../applications/defenseChooser.js';
 import FeintDefense from '../../applications/feintDefense.js';
 import { MODULE_NAME } from '../constants.js';
-
+import ManeuverChooser from '../../applications/maneuverChooser';
+import { ensureDefined } from '../miscellaneous';
 const functionsToRegister = {
+  chooseManeuver: (token: string) => {
+    ensureDefined(game.user, 'game not initialized');
+
+    const tokenDocument = token && game?.actors?.tokens[token]?.parent;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const tokenSelected = tokenDocument?.object;
+    new ManeuverChooser(tokenSelected).render(true);
+  },
   attemptDefense: DefenseChooser.attemptDefense,
   attemptFeintDefense: FeintDefense.attemptDefense,
   closeController: BaseActorController.closeById,
