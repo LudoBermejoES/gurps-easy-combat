@@ -7,6 +7,7 @@ import Feint from './maneuvers/Feint.js';
 import Aim from './maneuvers/Aim.js';
 import Evaluate from './maneuvers/Evaluate';
 import { checkSingleTarget, ensureDefined, getTargets } from '../util/miscellaneous';
+import PostureChooser from './postureChooser';
 
 export default class ManeuverChooser extends BaseManeuverChooser {
   maneuversInfo: Record<string, ManeuverInfo>;
@@ -30,6 +31,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
       change_posture: {
         tooltip: `Levantarse, sentarse, etc`,
         page: 'B:364',
+        callback: (token: Token) => new PostureChooser(token).render(true),
       },
       aim: {
         tooltip: 'Apuntar un arma a distancia para conseguir su bono de Precisión',

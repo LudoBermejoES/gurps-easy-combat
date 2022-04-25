@@ -10,6 +10,7 @@ import {
   findSkillSpell,
   getTargets,
 } from '../util/miscellaneous.js';
+import ManeuverChooser from './maneuverChooser';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 
@@ -179,6 +180,12 @@ export default class AttackChooser extends BaseActorController {
     activateChooser(html, 'hit_locations', (index, element) => this.chooseLocation(index, element));
     html.on('change', '#keepOpen', (event) => {
       this.data.keepOpen = $(event.currentTarget).is(':checked');
+    });
+    $('#closeAndReturn', html).click(() => {
+      const token = this.token;
+      ensureDefined(game.user, 'game not initialized');
+      new ManeuverChooser(token).render(true);
+      this.closeForEveryone();
     });
   }
 

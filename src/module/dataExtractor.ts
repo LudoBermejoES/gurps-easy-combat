@@ -1,4 +1,4 @@
-import { HitLocation, MeleeAttack, RangedAttack, Skill } from './types';
+import { HitLocation, MeleeAttack, Posture, RangedAttack, Skill } from './types';
 import { getFullName } from './util/miscellaneous';
 
 export function getAttacks(actor: Actor): { melee: MeleeAttack[]; ranged: RangedAttack[] } {
@@ -31,4 +31,39 @@ export function getDodge(actor: Actor): number {
 
 export function getHitLocations(actor: Actor): HitLocation[] {
   return Object.values(actor.data.data.hitlocations);
+}
+
+export function getPostures(): Posture[] {
+  function translate(key: string): string {
+    switch (key) {
+      case 'prone':
+        return 'Tumbado';
+        break;
+      case 'kneel':
+        return 'Arrodillado';
+        break;
+      case 'crouch':
+        return 'Acuclillado';
+        break;
+      case 'sit':
+        return 'Sentado';
+        break;
+      case 'crawl':
+        return 'Gateando';
+        break;
+    }
+    return '';
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const postures = Object.keys(GURPS?.StatusEffect?.getAllPostures() || {}).map((key) => ({
+    name: key,
+    tname: translate(key),
+  }));
+
+  postures.unshift({
+    name: 'standing',
+    tname: 'En pie',
+  });
+  return postures;
 }

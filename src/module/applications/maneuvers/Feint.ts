@@ -5,6 +5,7 @@ import { MODULE_NAME, TEMPLATES_FOLDER } from '../../util/constants';
 import { activateChooser, ensureDefined, checkSingleTarget, getTargets } from '../../util/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import FeintDefense from '../feintDefense';
+import ManeuverChooser from '../maneuverChooser';
 
 export default class Feint extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;
@@ -62,6 +63,12 @@ export default class Feint extends BaseActorController {
         this.promiseFuncs.resolve(successMargin);
       }
       this.close();
+    });
+    $('#closeAndReturn', html).click(() => {
+      const token = this.token;
+      ensureDefined(game.user, 'game not initialized');
+      new ManeuverChooser(token).render(true);
+      this.closeForEveryone();
     });
   }
 

@@ -1,7 +1,7 @@
 import { MODULE_NAME } from '../../util/constants.js';
 import BaseManeuverChooser from '../abstract/BaseManeuverChooser.js';
-import AttackChooser from '../attackChooser.js';
-import Feint from './Feint.js';
+import { ensureDefined } from '../../util/miscellaneous';
+import * as OriginalManeuverChooser from '../maneuverChooser';
 
 //#region types
 interface ManeuverInfo {
@@ -16,7 +16,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
   constructor(token: Token) {
     super('AllOutDefense', token, {
       title: `Defensa total - ${token.name}`,
-      template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
+      template: `modules/${MODULE_NAME}/templates/allOutDefense.hbs`,
     });
     this.maneuversInfo = {
       aod_dodge: {
@@ -36,5 +36,13 @@ export default class ManeuverChooser extends BaseManeuverChooser {
         page: 'B:366',
       },
     };
+  }
+  activateListeners(html: JQuery): void {
+    $('#closeAndReturn', html).click(() => {
+      const token = this.token;
+      ensureDefined(game.user, 'game not initialized');
+      new OriginalManeuverChooser.default(token).render(true);
+      this.closeForEveryone();
+    });
   }
 }

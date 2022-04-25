@@ -387,3 +387,8 @@ interface PromiseFunctions<T> {
   resolve(value: T | PromiseLike<T>): void;
   reject(reason: string): void;
 }
+
+interface Posture {
+  name: string;
+  tname: string;
+}

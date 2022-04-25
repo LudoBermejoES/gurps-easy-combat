@@ -3,6 +3,7 @@ import { ChooserData, PromiseFunctions } from '../../types';
 import { MODULE_NAME, TEMPLATES_FOLDER } from '../../util/constants';
 import { activateChooser, ensureDefined, checkSingleTarget, getTargets, getManeuver } from '../../util/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
+import ManeuverChooser from '../maneuverChooser';
 
 export default class Aim extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;
@@ -39,6 +40,12 @@ export default class Aim extends BaseActorController {
         bonus: lastAim?.bonus ? Number(lastAim?.bonus) + 1 : Number(attack.acc),
       });
       this.close();
+    });
+    $('#closeAndReturn', html).click(() => {
+      const token = this.token;
+      ensureDefined(game.user, 'game not initialized');
+      new ManeuverChooser(token).render(true);
+      this.closeForEveryone();
     });
   }
 

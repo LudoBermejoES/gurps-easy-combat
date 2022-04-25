@@ -14,6 +14,7 @@ import {
 import { Modifier, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
 import Action = SocketInterface.Requests.Action;
+import ManeuverChooser from './maneuverChooser';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;

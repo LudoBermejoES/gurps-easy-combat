@@ -1,6 +1,7 @@
 import { MODULE_NAME, TEMPLATES_FOLDER } from '../../util/constants';
 import { checkSingleTarget, ensureDefined, getManeuver, getTargets } from '../../util/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
+import ManeuverChooser from '../maneuverChooser';
 
 export default class Evaluate extends BaseActorController {
   constructor(token: Token) {
@@ -31,5 +32,13 @@ export default class Evaluate extends BaseActorController {
         round: game.combat?.round ?? 0,
       });
     }
+  }
+  activateListeners(html: JQuery): void {
+    $('#closeAndReturn', html).click(() => {
+      const token = this.token;
+      ensureDefined(game.user, 'game not initialized');
+      new ManeuverChooser(token).render(true);
+      this.closeForEveryone();
+    });
   }
 }

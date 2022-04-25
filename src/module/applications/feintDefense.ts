@@ -12,6 +12,7 @@ import {
   getToken,
 } from '../util/miscellaneous';
 import BaseActorController from './abstract/BaseActorController';
+import ManeuverChooser from './maneuverChooser';
 
 export default class FeintDefense extends BaseActorController {
   resolve: (value: GurpsRoll | PromiseLike<GurpsRoll>) => void;
@@ -49,6 +50,13 @@ export default class FeintDefense extends BaseActorController {
       const attack = getAttacks(this.actor).melee[index];
       const attackResult = rollAttack(this.actor, attack, 'melee');
       this.resolve(attackResult);
+      this.closeForEveryone();
+    });
+    $('#closeAndReturn', html).click(() => {
+      debugger;
+      const token = this.token;
+      ensureDefined(game.user, 'game not initialized');
+      new ManeuverChooser(token).render(true);
       this.closeForEveryone();
     });
   }

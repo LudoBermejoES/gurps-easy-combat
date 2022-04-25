@@ -23,7 +23,6 @@ export function registerHooks(): void {
 
   const deleteFlags = (combat: Combat) => {
     combat.combatants.forEach((combatant) => {
-      debugger;
       combatant?.token?.unsetFlag(MODULE_NAME, 'location');
       combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
       combatant?.token?.unsetFlag(MODULE_NAME, 'lastParry');
