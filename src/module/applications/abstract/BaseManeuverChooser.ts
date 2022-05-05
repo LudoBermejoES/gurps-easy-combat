@@ -42,7 +42,10 @@ interface GurpsManeuver {
 //#endregion
 
 export default abstract class BaseManeuverChooser extends BaseActorController {
-  abstract maneuversInfo: Record<string, ManeuverInfo>;
+  abstract maneuversInfo: {
+    basic: Record<string, ManeuverInfo>;
+    advanced: Record<string, ManeuverInfo>;
+  };
 
   constructor(appName: string, token: Token, options: Partial<Application.Options>) {
     super(appName, token, {
@@ -51,17 +54,32 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
       ...options,
     });
   }
-  getData(): ChooserData<['Maneuver', 'Description']> {
-    const maneuversDescriptions = this.getManeuversData().map((maneuver) => ({
+  getData(): {
+    basicManeuver: ChooserData<['Maneuver', 'Description']>;
+    advancedManeuver: ChooserData<['Maneuver', 'Description']>;
+  } {
+    const maneuversDescriptionsBasic = this.getManeuversData().basic.map((maneuver) => ({
       Maneuver: maneuver.name,
       Description: maneuver.tooltip,
     }));
-    console.log({ items: maneuversDescriptions, headers: ['Maneuver', 'Description'], id: 'manuever_choice' });
-    return { items: maneuversDescriptions, headers: ['Maneuver', 'Description'], id: 'manuever_choice' };
+    const maneuversDescriptionsAdvanced = this.getManeuversData().advanced.map((maneuver) => ({
+      Maneuver: maneuver.name,
+      Description: maneuver.tooltip,
+    }));
+    return {
+      basicManeuver: { items: maneuversDescriptionsBasic, headers: ['Maneuver', 'Description'], id: 'manuever_choice' },
+      advancedManeuver: {
+        items: maneuversDescriptionsAdvanced,
+        headers: ['Maneuver', 'Description'],
+        id: 'manuever_choice2',
+      },
+    };
   }
   activateListeners(html: JQuery): void {
-    activateChooser(html, 'manuever_choice', (index) => {
-      const maneuver = this.getManeuversData()[index];
+    activateChooser(html, 'manuever_choice,manuever_choice2', (index, element, type) => {
+      const selected = type || 'basic';
+      const maneuver =
+        selected === 'basic' ? this.getManeuversData().basic[index] : this.getManeuversData().advanced[index];
       let target;
       if (['aim', 'evaluate', 'attack', 'feint', 'allout_attack', 'move_and_attack'].includes(maneuver.key)) {
         ensureDefined(game.user, 'game not initialized');
@@ -87,10 +105,8 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
     });
   }
 
-  getManeuversData(): Maneuver[] {
-    const gurpsManeuvers: Record<string, GurpsManeuver> = Maneuvers.getAllData();
-    console.log(this.maneuversInfo);
-    return Object.entries(this.maneuversInfo).map(([key, maneuverInfo]: [string, ManeuverInfo]) => {
+  getInfo(gurpsManeuvers: Record<string, GurpsManeuver>, maneuversList: Record<string, ManeuverInfo>): Maneuver[] {
+    return Object.entries(maneuversList).map(([key, maneuverInfo]: [string, ManeuverInfo]) => {
       return {
         ...maneuverInfo,
         name: game.i18n.localize(gurpsManeuvers[key].label),
@@ -98,5 +114,13 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
         key,
       };
     });
+  }
+
+  getManeuversData(): { basic: Maneuver[]; advanced: Maneuver[] } {
+    const gurpsManeuvers: Record<string, GurpsManeuver> = Maneuvers.getAllData();
+    return {
+      basic: this.getInfo(gurpsManeuvers, this.maneuversInfo.basic),
+      advanced: this.getInfo(gurpsManeuvers, this.maneuversInfo.advanced),
+    };
   }
 }

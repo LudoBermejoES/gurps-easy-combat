@@ -13,3 +13,7 @@ export const allOutDefenseManeuvers = ['allout_defense', 'aod_dodge', 'aod_parry
 export const ACROBATICS = 'Acrobatics';
 
 export const FENCING_WEAPONS = ['MAIN-GAUCHE', 'RAPIER', 'SABER', 'Smallsword'];
+
+export const FAST_DRAW_ARROW_WEAPONS = ['CROSSBOW', ' BOW'];
+
+export const FAST_DRAW_ARROW_SEARCH = 'Fast-Draw/TL* (Arrows)';

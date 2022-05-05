@@ -1,5 +1,8 @@
 <div>
-  <div>Escoge tu maniobra para este turno.</div>
-  {{> choiceTable}}
+  <div>Escoge tu ataque.</div>
+  <h1>Ataques simples</h1>
+  {{> choiceTable basicManeuver}}
+  <h>Ataques avanzados</h>
+  {{> choiceTable advancedManeuver}}
   <div class="clickable" id="closeAndReturn">Volver a escoger maniobra</div>
 </div>

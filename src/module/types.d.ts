@@ -57,11 +57,19 @@ interface Spell extends BaseSkill {
   difficulty: string;
   parentuuid: string;
 }
+
+export interface ReadyManeouverNeeded {
+  itemId: string;
+  remainingRounds: number;
+}
+
 export interface Attack {
   name: string;
   contains: Record<string, never>;
   notes: string;
+  otf: string;
   pageref: string;
+  itemid: string;
   import: string;
   damage: string;
   st: string;
@@ -75,6 +83,7 @@ export interface MeleeAttack extends Attack {
   reach: string;
   parry: string;
   block: string;
+  notes: string;
 }
 export interface RangedAttack extends Attack {
   acc: string;
@@ -109,6 +118,7 @@ interface Note {
   parentuuid: string;
 }
 interface Item {
+  itemid: string;
   name: string;
   notes: string;
   pageref: string;
@@ -312,9 +322,10 @@ declare global {
   }
   const GURPS: {
     LastActor: Actor;
+    rangeObject: any;
     SetLastActor(actor: Actor): void;
     gurpslink(otf: string): string;
-    executeOTF(otf: string): boolean;
+    executeOTF(otf: string, priv: boolean | false, event: Event | null, actor: Actor | undefined): boolean;
     performAction(
       data: {
         type: string;

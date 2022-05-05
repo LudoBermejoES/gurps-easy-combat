@@ -11,7 +11,7 @@ interface ManeuverInfo {
 }
 
 export default class ManeuverChooser extends BaseManeuverChooser {
-  maneuversInfo: Record<string, ManeuverInfo>;
+  maneuversInfo: { basic: Record<string, ManeuverInfo>; advanced: Record<string, ManeuverInfo> };
 
   constructor(token: Token) {
     super('AllOutAttack', token, {
@@ -19,36 +19,40 @@ export default class ManeuverChooser extends BaseManeuverChooser {
       template: `modules/${MODULE_NAME}/templates/allOutAttackChooser.hbs`,
     });
     this.maneuversInfo = {
-      aoa_double: {
-        tooltip: 'Atacar dos veces con un arma cuerpo a cuerpo',
-        page: 'B:365',
-        callback: async (token: Token) => {
-          await AttackChooser.request(token, { meleeOnly: true, twoAttacks: true });
+      basic: {
+        aoa_double: {
+          tooltip: 'Atacar dos veces con un arma cuerpo a cuerpo',
+          page: 'B:365',
+          callback: async (token: Token) => {
+            await AttackChooser.request(token, { meleeOnly: true, twoAttacks: true });
+          },
+        },
+        aoa_determined: {
+          tooltip: 'Ataca con un bonus (+4 para Cuerpo a cuerpo, +1 a Distancia',
+          page: 'B:365',
+          callback: (token: Token) => new AttackChooser(token).render(true),
+        },
+        aoa_strong: {
+          tooltip: 'Ataca con +2 al daño usando un arma de melee',
+          page: 'B:365',
+          callback: (token: Token) => new AttackChooser(token, { meleeOnly: true }).render(true),
         },
       },
-      aoa_determined: {
-        tooltip: 'Ataca con un bonus (+4 para Cuerpo a cuerpo, +1 a Distancia',
-        page: 'B:365',
-        callback: (token: Token) => new AttackChooser(token).render(true),
-      },
-      aoa_strong: {
-        tooltip: 'Ataca con +2 al daño usando un arma de melee',
-        page: 'B:365',
-        callback: (token: Token) => new AttackChooser(token, { meleeOnly: true }).render(true),
-      },
-      aoa_feint: {
-        tooltip: 'Hace una finta y después un ataque con un arma cuerpo a cuerpo',
-        page: 'B:365',
-        callback: async (token: Token) => {
-          await Feint.request(token);
-          await AttackChooser.request(token, { meleeOnly: true });
-          token.document.unsetFlag(MODULE_NAME, 'lastFeint');
+      advanced: {
+        aoa_feint: {
+          tooltip: 'Hace una finta y después un ataque con un arma cuerpo a cuerpo',
+          page: 'B:365',
+          callback: async (token: Token) => {
+            await Feint.request(token);
+            await AttackChooser.request(token, { meleeOnly: true });
+            token.document.unsetFlag(MODULE_NAME, 'lastFeint');
+          },
         },
-      },
-      aoa_suppress: {
-        tooltip: 'Fuego de supresión en un área con arma automática (solo con RoF 5+)',
-        page: 'B:365',
-        callback: (token: Token) => new AttackChooser(token, { rangedOnly: true }).render(true),
+        aoa_suppress: {
+          tooltip: 'Fuego de supresión en un área con arma automática (solo con RoF 5+)',
+          page: 'B:365',
+          callback: (token: Token) => new AttackChooser(token, { rangedOnly: true }).render(true),
+        },
       },
     };
   }

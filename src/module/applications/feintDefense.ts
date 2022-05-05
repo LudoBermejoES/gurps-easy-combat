@@ -53,7 +53,6 @@ export default class FeintDefense extends BaseActorController {
       this.closeForEveryone();
     });
     $('#closeAndReturn', html).click(() => {
-      debugger;
       const token = this.token;
       ensureDefined(game.user, 'game not initialized');
       new ManeuverChooser(token).render(true);

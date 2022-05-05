@@ -5,6 +5,7 @@ import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import * as Gurps from '/systems/gurps/module/gurps.js';
+import { FENCING_WEAPONS } from './constants';
 
 export async function smartRace<S extends T, T>(
   promises: Promise<T>[],
@@ -84,16 +85,27 @@ export function setTargets(user: User, targets: Token[]): void {
 export function activateChooser(
   html: JQuery,
   id: string,
-  callback: (index: number, element: JQuery<any>) => void,
+  callback: (index: number, element: JQuery<any>, type: string) => void,
 ): void {
-  html.on('click', `#${id} tr.clickable`, (event) => {
+  const selector = id
+    .split(',')
+    .map((i) => `#${i} tr.clickable`)
+    .join(',');
+
+  html.on('click', selector, (event) => {
     const element = $(event.currentTarget);
     const indexString = element.attr('index');
     if (!indexString) {
       ui.notifications?.error('no index on clicked element');
       throw new Error('no index on clicked element');
     }
-    callback(parseInt(indexString), element);
+
+    const id = $(element).parent().parent().attr('id');
+    if (id && id.includes('2')) {
+      callback(parseInt(indexString), element, 'advanced');
+    } else {
+      callback(parseInt(indexString), element, 'basic');
+    }
   });
 }
 
@@ -149,4 +161,26 @@ export function findSkillSpell(actor: Actor, skill: string, isSkill: boolean, is
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return GURPS.findSkillSpell(actor?.data?.data, skill, isSkill, isSpell);
+}
+
+export function getCounterAttackLevel(actor: Actor, name: string, level: number): number {
+  const counterAttack = findSkillSpell(actor, 'Counterattack ', true, false);
+  let levelCounter = level - 5;
+  if (counterAttack) {
+    const weapon = counterAttack.name.split('Counterattack ').join('');
+    levelCounter = name.indexOf(weapon) > -1 ? counterAttack.level : level - 5;
+  }
+  return levelCounter;
+}
+
+export function getDisarmAttackLevel(actor: Actor, name: string, level: number): number {
+  const counterAttack = findSkillSpell(actor, 'Disarming ', true, false);
+  let levelCounter = level - 5;
+  if (counterAttack) {
+    const weapon = counterAttack.name.split('Disarming ').join('');
+    const levelOfSkill = name.indexOf(weapon) > -1 ? counterAttack.level - 4 : level - 4;
+    const isFencingWeapon = FENCING_WEAPONS.some((v) => weapon.toUpperCase().includes(v));
+    levelCounter = isFencingWeapon ? levelOfSkill : levelOfSkill - 2;
+  }
+  return levelCounter;
 }

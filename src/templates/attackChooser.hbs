@@ -1,17 +1,24 @@
 <div>
   <div>Escoge ataque (tienes que tener seleccionado un objetivo)</div>
-
-  <div><input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">keep window open after attack</label></div>
+<div><input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">keep window open after attack</label></div>
   {{#if counterAttack.items.length}}
     <h2>Contraataque</h2>
     <p>Un contraataque exitoso penalizará la parada del contrincante en -2</p>
     {{> choiceTable counterAttack}}
   {{/if}}
+  {{#if weaponsToBeReady.items.length}}
+    <h2>Armas a preparar</h2>
+    {{> choiceTable weaponsToBeReady}}
+  {{/if}}
   <h2>Melee</h2>
   {{> choiceTable melee}}
-  <h2>A distancia</h2>
-  {{> choiceTable ranged}}
-
+  {{#if ranged.items.length}}
+    <h2>A distancia</h2>
+    {{> choiceTable ranged}}
+  {{/if}}
+  <h2>Desarmar</h2>
+  {{> choiceTable disarmAttack}}
   {{> choiceTable hitLocations}}
   <div class="clickable" id="closeAndReturn">Volver a escoger maniobra</div>
 </div>
+2

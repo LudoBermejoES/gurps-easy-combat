@@ -1,10 +1,10 @@
-import { HitLocation, MeleeAttack, Posture, RangedAttack, Skill } from './types';
+import { HitLocation, MeleeAttack, Posture, RangedAttack, Item } from './types';
 import { getFullName } from './util/miscellaneous';
 
 export function getAttacks(actor: Actor): { melee: MeleeAttack[]; ranged: RangedAttack[] } {
   const melee = Object.values(actor.data.data.melee);
   const ranged = Object.values(actor.data.data.ranged);
-  return { melee, ranged };
+  return { melee: melee.filter((w) => w.damage), ranged };
 }
 
 export function getParries(actor: Actor): Record<string, number> {
@@ -31,6 +31,10 @@ export function getDodge(actor: Actor): number {
 
 export function getHitLocations(actor: Actor): HitLocation[] {
   return Object.values(actor.data.data.hitlocations);
+}
+
+export function getEquipment(actor: Actor): Item[] {
+  return Object.values(actor.data.data.equipment.carried);
 }
 
 export function getPostures(): Posture[] {

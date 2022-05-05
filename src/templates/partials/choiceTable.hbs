@@ -1,4 +1,4 @@
-<table id={{id}}>
+<table class="choiceTable" id={{id}}>
   <tr class="header">
     {{#each headers as |header|}}
       <td>{{header}}</td>
@@ -7,7 +7,11 @@
 {{#each items as |item|}}
   <tr class="clickable" index="{{@index}}">
     {{#each ../headers as |header|}}
-      <td>{{get item header}}</td>
+      <td>{{get item header}}
+      {{#ifEquals header "weapon"}}
+        <small><br>{{get item "notes"}}</small>
+      {{/ifEquals}}
+      </td>
     {{/each}}
   </tr>
 {{/each}}

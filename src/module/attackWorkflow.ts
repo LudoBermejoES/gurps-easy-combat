@@ -1,10 +1,34 @@
+import WeaponChooser from './applications/weaponChooser';
 import DefenseChooser from './applications/defenseChooser';
 import { Attack, GurpsRoll, MeleeAttack, Modifier, RangedAttack } from './types';
 import { applyModifiers } from './util/actions';
 import { MODULE_NAME } from './util/constants';
-import { ensureDefined, getBulk, getFullName, getManeuver, getTargets, setTargets } from './util/miscellaneous';
+import {
+  ensureDefined,
+  getBulk,
+  getCounterAttackLevel,
+  getDisarmAttackLevel,
+  getFullName,
+  getManeuver,
+  getTargets,
+  setTargets,
+} from './util/miscellaneous';
 
 export async function rollAttack(actor: Actor, attack: Attack, type: 'melee' | 'ranged'): Promise<GurpsRoll> {
+  await GURPS.performAction(
+    {
+      isMelee: type === 'melee',
+      isRanged: type === 'ranged',
+      name: getFullName(attack),
+      type: 'attack',
+    },
+    actor,
+  );
+
+  return GURPS.lastTargetedRoll;
+}
+
+export async function rollSkill(actor: Actor, attack: Attack, type: 'melee' | 'ranged'): Promise<GurpsRoll> {
   await GURPS.performAction(
     {
       isMelee: type === 'melee',
@@ -66,12 +90,19 @@ export async function makeAttackInner(
     damage: Modifier[];
   },
   isCounterAttack: boolean,
+  isDisarmingAttack: boolean,
 ): Promise<void> {
   if (!target.actor) {
     ui.notifications?.error('target has no actor');
     return;
   }
+  if (isCounterAttack) {
+    const newValue = getCounterAttackLevel(attacker, attack.name, attack.level);
+    modifiers.attack.push({ mod: newValue - attack.level, desc: 'Por contraataque' });
+  }
+
   applyModifiers(modifiers.attack);
+
   const roll = await rollAttack(attacker, attack, type);
   if (roll.failure) return;
   if (!roll.isCritSuccess) {
@@ -93,7 +124,6 @@ export async function makeAttackInner(
         });
       }
     }
-
     const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
     if (defenseSucess) {
       const successDefenses = <{ attackers: string[]; round: number } | undefined>(
@@ -112,6 +142,43 @@ export async function makeAttackInner(
       return;
     }
   }
+
+  if (isDisarmingAttack) {
+    const { ST: attackerST, DX: attackerDX } = attacker.data.data.attributes;
+    const attackerAttribute = attackerDX >= attackerST ? 'DX' : 'ST';
+    const { ST: defenderST, DX: defenderDX } = target.actor.data.data.attributes;
+    const defenderAttribute = defenderDX >= defenderST ? 'DX' : 'ST';
+
+    const rollAttacker = `SK:${attack.otf} (Based:${attackerAttribute}`;
+    const otfDefender = await WeaponChooser.request(target);
+    const rollDefender = `SK:${otfDefender} (Based:${defenderAttribute}`;
+    const resultAttacker = await GURPS.executeOTF(rollAttacker, false, null, attacker);
+    const resultAttackerRoll = GURPS.lastTargetedRoll;
+    const resultDefender = await GURPS.executeOTF(rollDefender, false, null, target.actor);
+    const resultDefenderRoll = GURPS.lastTargetedRoll;
+    console.log(resultAttacker, resultAttackerRoll);
+    console.log(resultDefender, resultDefenderRoll);
+    if (resultAttackerRoll.margin > resultDefenderRoll.margin) {
+      ChatMessage.create({
+        content: `
+  <div id="GURPS-LEGAL" style='font-size:85%'>${target.actor.name} pierde el arma
+  </div>`,
+        hasPlayerOwner: false,
+
+        type: CONST.CHAT_MESSAGE_TYPES.OOC,
+      });
+    } else {
+      ChatMessage.create({
+        content: `
+  <div id="GURPS-LEGAL" style='font-size:85%'>${target.actor.name} consigue NO perder el arma
+  </div>`,
+        hasPlayerOwner: false,
+        type: CONST.CHAT_MESSAGE_TYPES.OOC,
+      });
+    }
+    return;
+  }
+
   const damageParts = attack.damage.split(' ');
   const damage = { formula: damageParts[0], type: damageParts[1], extra: damageParts[2] };
   rollDamage(attacker, damage, target, modifiers.damage);
@@ -225,6 +292,13 @@ export function getRangedModifiers(
       modifiers.attack.push({ mod: 1, desc: 'determined' });
       break;
   }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const distance = game.canvas.grid.measureDistance(token.center, target.center, { gridSpaces: true }) || 0;
+  const modifierByDistance = GURPS.rangeObject.ranges;
+  const modifier = modifierByDistance.find((d: any) => d.max >= distance);
+  modifiers.attack.push({ mod: modifier.penalty, desc: 'By distance' });
 
   return modifiers;
 }
