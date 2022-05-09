@@ -14,6 +14,192 @@ import {
   setTargets,
 } from './util/miscellaneous';
 
+function randomIntFromInterval(min: number, max: number): number {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function doAnimation(actor: Actor, name: string) {
+  let anim = '';
+
+  if (name.toLowerCase().includes('throwing knife')) {
+    anim = '/anim Dagger01_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('knife')) {
+    anim = '/anim Dagger02_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('spear')) {
+    anim = '/anim Spear00_01* *0.3';
+  } else if (name.toLowerCase().includes('great axe')) {
+    anim = '/anim GreatAxe01_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('axe')) {
+    anim = '/anim HandAxe02_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('greatsword')) {
+    anim = '/anim GreatSword01_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('shortsword')) {
+    anim = '/anim Sword01_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('maul')) {
+    anim = '/anim Maul01_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('rapier')) {
+    anim = '/anim Rapier01_01_Regular_White* *0.3';
+  } else if (name.toLowerCase().includes('mace')) {
+    anim = '/anim Mace01_01* *0.3';
+  } else if (name.toLowerCase().includes('bow')) {
+    anim = '/anim Arrow01_01* *0.3';
+  } else if (name.toLowerCase().includes('crossbow')) {
+    anim = '/anim Bolt01_01_Regular* *0.3';
+  }
+  if (anim) GURPS.executeOTF(anim, false, null, actor);
+}
+
+function doSound(actor: Actor, name: string, tryAttack: boolean, success: boolean) {
+  let sound = '';
+
+  const totalMeleeHitSound = 13;
+  const totalArrowTrySound = 3;
+  const totalMeleeMissSound = 1;
+  const totalArrowHitSound = 5;
+
+  if (tryAttack) {
+    if (name.toLowerCase().includes('bow')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Arrow Fly-By/arrow-fly-by-${randomIntFromInterval(
+        1,
+        totalArrowTrySound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('crossbow')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Arrow Fly-By/arrow-fly-by-${randomIntFromInterval(
+        1,
+        totalArrowTrySound,
+      )}.mp3`;
+    }
+  } else if (success) {
+    if (name.toLowerCase().includes('throwing knife')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('knife')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('spear')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('great axe')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('axe')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('greatsword')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('shortsword')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('maul')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('rapier')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('mace')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
+        1,
+        totalMeleeHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('bow')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Arrow Impact/arrow-impact-${randomIntFromInterval(
+        1,
+        totalArrowHitSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('crossbow')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Arrow Impact/arrow-impact-${randomIntFromInterval(
+        1,
+        totalArrowHitSound,
+      )}.mp3`;
+    }
+  } else if (!success) {
+    if (name.toLowerCase().includes('throwing knife')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('knife')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('spear')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('great axe')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('axe')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('greatsword')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('shortsword')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('maul')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('rapier')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('mace')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('bow')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/melee-miss-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    } else if (name.toLowerCase().includes('crossbow')) {
+      sound = `modules/soundfxlibrary/Combat/Single/Melee Miss/arrow-fly-by-${randomIntFromInterval(
+        1,
+        totalMeleeMissSound,
+      )}.mp3`;
+    }
+  }
+
+  console.log(sound);
+  if (sound) GURPS.executeOTF(`/sound ${sound}`, false, null, actor);
+}
+
 export async function rollAttack(actor: Actor, attack: Attack, type: 'melee' | 'ranged'): Promise<GurpsRoll> {
   await GURPS.performAction(
     {
@@ -103,8 +289,13 @@ export async function makeAttackInner(
 
   applyModifiers(modifiers.attack);
 
+  doAnimation(target.actor, attack.name);
+  doSound(target.actor, attack.name, true, false);
   const roll = await rollAttack(attacker, attack, type);
-  if (roll.failure) return;
+  if (roll.failure) {
+    doSound(target.actor, attack.name, false, false);
+    return;
+  }
   if (!roll.isCritSuccess) {
     if (isCounterAttack) {
       modifiers.defense.push({ mod: -2, desc: 'Por contraataque' });
@@ -126,6 +317,7 @@ export async function makeAttackInner(
     }
     const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
     if (defenseSucess) {
+      doSound(target.actor, attack.name, false, false);
       const successDefenses = <{ attackers: string[]; round: number } | undefined>(
         target.document.getFlag(MODULE_NAME, 'successDefenses')
       );
@@ -141,6 +333,18 @@ export async function makeAttackInner(
       }
       return;
     }
+  } else {
+    ensureDefined(game.tables, 'game not initialized');
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    game.tables?.getName('Critical Hit')?.draw();
+  }
+
+  if (roll.isCritFailure) {
+    ensureDefined(game.tables, 'game not initialized');
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    game.tables?.getName('Critical Miss')?.draw();
   }
 
   if (isDisarmingAttack) {
@@ -178,6 +382,7 @@ export async function makeAttackInner(
     }
     return;
   }
+  doSound(target.actor, attack.name, false, true);
 
   const damageParts = attack.damage.split(' ');
   const damage = { formula: damageParts[0], type: damageParts[1], extra: damageParts[2] };
@@ -271,11 +476,6 @@ export function getRangedModifiers(
     defense: <Modifier[]>[],
     damage: <Modifier[]>[],
   };
-  const lastAim = <{ bonus: number } | undefined>token.document.getFlag(MODULE_NAME, 'lastAim');
-  if (lastAim) {
-    token.document.unsetFlag(MODULE_NAME, 'lastAim');
-    modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
-  }
 
   const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
   if (location && location.bonus) {
@@ -292,7 +492,13 @@ export function getRangedModifiers(
       modifiers.attack.push({ mod: 1, desc: 'determined' });
       break;
   }
-
+  if (getManeuver(token.actor) !== 'move_and_attack') {
+    const lastAim = <{ bonus: number } | undefined>token.document.getFlag(MODULE_NAME, 'lastAim');
+    if (lastAim) {
+      token.document.unsetFlag(MODULE_NAME, 'lastAim');
+      modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
+    }
+  }
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const distance = game.canvas.grid.measureDistance(token.center, target.center, { gridSpaces: true }) || 0;

@@ -6,12 +6,12 @@ import ManeuverChooser from '../../applications/maneuverChooser';
 import { ensureDefined } from '../miscellaneous';
 const functionsToRegister = {
   chooseManeuver: (token: string) => {
+    debugger;
     ensureDefined(game.user, 'game not initialized');
+    ensureDefined(game.canvas.tokens, 'game not initialized');
+    const tokens = game.canvas.tokens.controlled;
 
-    const tokenDocument = token && game?.actors?.tokens[token]?.parent;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const tokenSelected = tokenDocument?.object;
+    const tokenSelected: Token = tokens.find((tok) => tok.id === token) as Token;
     new ManeuverChooser(tokenSelected).render(true);
   },
   attemptDefense: DefenseChooser.attemptDefense,

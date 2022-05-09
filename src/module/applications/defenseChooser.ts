@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
 import { getDefenseModifiers } from '../defenseWorkflow';
 import { ACROBATICS, allOutAttackManeuvers, FENCING_WEAPONS, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants';
 import { getBlocks, getDodge, getParries } from '../dataExtractor';
@@ -13,12 +16,16 @@ import {
 } from '../util/miscellaneous';
 import { Modifier, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
+import { getValidBlocks, getValidParries } from '../util/readyWeapons';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
   reject(reason: string): void;
   modifiers: Modifier[];
 }
+
+export const DEFENSE_NONE = 'none';
+export const DEFENSE_DODGEBLOCK = 'dodge-block';
 
 export default class DefenseChooser extends BaseActorController {
   data: DefenseData;
@@ -32,16 +39,26 @@ export default class DefenseChooser extends BaseActorController {
     this.data.modifiers = [...this.data.modifiers, ...getDefenseModifiers(token).defense];
   }
   getData(): {
+    canBlock: boolean;
+    canDodge: boolean;
+    canParry: boolean;
     dodge: number;
     acrobaticDodge: Skill;
     parry: Record<string, number>;
     block: Record<string, number>;
   } {
+    const actor = this.token?.actor;
+    ensureDefined(actor, 'Ese token necesita un actor');
+    const maneuver = Maneuvers.getAll()[getManeuver(actor)]._data;
+
     return {
+      canBlock: maneuver?.defense !== DEFENSE_NONE,
+      canDodge: maneuver?.defense !== DEFENSE_NONE,
+      canParry: ![DEFENSE_DODGEBLOCK, DEFENSE_NONE].includes(maneuver?.defense),
       acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
       dodge: getDodge(this.actor),
-      parry: getParries(this.actor),
-      block: getBlocks(this.actor),
+      parry: getValidParries(this.token),
+      block: getValidBlocks(this.token),
     };
   }
   async close(): Promise<void> {
@@ -178,6 +195,11 @@ export default class DefenseChooser extends BaseActorController {
       return false;
     }
     const promise = new Promise<boolean>((resolve, reject) => {
+      const maneuver = Maneuvers.getAll()[getManeuver(actor)]._data;
+      if (maneuver.defense === DEFENSE_NONE) {
+        reject(false);
+        return;
+      }
       const instance = new DefenseChooser(token, { resolve, reject, modifiers });
       instance.render(true);
     });
@@ -194,6 +216,7 @@ export default class DefenseChooser extends BaseActorController {
           ensureDefined(user.id, 'user without id');
           ensureDefined(token.id, 'token without id');
           ensureDefined(token.scene.id, 'scene without id');
+
           return EasyCombat.socket.executeAsUser('attemptDefense', user.id, token.scene.id, token.id, modifiers);
         }),
       { allowRejects: false, default: false, filter: isDefined },

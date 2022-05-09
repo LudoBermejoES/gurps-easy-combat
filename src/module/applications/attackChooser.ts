@@ -1,14 +1,7 @@
 import { getMeleeModifiers, getRangedModifiers, makeAttackInner } from '../attackWorkflow.js';
-import {
-  ACROBATICS,
-  FAST_DRAW_ARROW_SEARCH,
-  FAST_DRAW_ARROW_WEAPONS,
-  FENCING_WEAPONS,
-  MODULE_NAME,
-  TEMPLATES_FOLDER,
-} from '../util/constants.js';
-import { getAttacks, getHitLocations } from '../dataExtractor.js';
-import { ChooserData, MeleeAttack, PromiseFunctions, RangedAttack, ReadyManeouverNeeded } from '../types.js';
+import { FAST_DRAW_SKILLS, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants.js';
+import { getAttacks, getEquipment, getHitLocations } from '../dataExtractor.js';
+import { ChooserData, Item, MeleeAttack, PromiseFunctions, RangedAttack, ReadyManeouverNeeded } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
 import {
   activateChooser,
@@ -20,6 +13,7 @@ import {
   getTargets,
 } from '../util/miscellaneous.js';
 import ManeuverChooser from './maneuverChooser';
+import { getReadyActionsWeaponNeeded } from '../util/readyWeapons';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 
@@ -42,6 +36,13 @@ export default class AttackChooser extends BaseActorController {
     ranged: getRangedModifiers,
   };
 
+  weaponsToBeReadyData: {
+    itemid: string;
+    remainingRounds: number;
+    name: string;
+    weapon: string;
+  }[];
+
   attackCount = 1;
   twoWeaponAttacksCount = 1;
 
@@ -61,42 +62,8 @@ export default class AttackChooser extends BaseActorController {
     });
     this.data = data;
     this.attacks = getAttacks(this.actor);
-
+    this.weaponsToBeReadyData = [];
     this.promiseFuncs = promiseFuncs;
-  }
-
-  doAnimation(actor: Actor, name: string) {
-    let anim = '';
-
-    if (name.toLowerCase().includes('throwing knife')) {
-      anim = '/anim Dagger01_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('knife')) {
-      anim = '/anim Dagger02_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('spear')) {
-      anim = '/anim Spear00_01* *0.3';
-    } else if (name.toLowerCase().includes('great axe')) {
-      anim = '/anim GreatAxe01_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('axe')) {
-      anim = '/anim HandAxe02_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('greatsword')) {
-      anim = '/anim GreatSword01_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('shortsword')) {
-      anim = '/anim Sword01_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('maul')) {
-      anim = '/anim Maul01_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('rapier')) {
-      anim = '/anim Rapier01_01_Regular_White* *0.3';
-    } else if (name.toLowerCase().includes('mace')) {
-      anim = '/anim Mace01_01* *0.3';
-    } else if (name.toLowerCase().includes('bow')) {
-      anim = '/anim Arrow01_01* *0.3';
-    } else if (name.toLowerCase().includes('crossbow')) {
-      anim = '/anim Bolt01_01_Regular* *0.3';
-    }
-
-    console.log(anim);
-    2;
-    if (anim) GURPS.executeOTF(anim, false, null, actor);
   }
 
   getData(): {
@@ -110,19 +77,29 @@ export default class AttackChooser extends BaseActorController {
   } {
     const { melee, ranged } = getAttacks(this.actor);
 
-    const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
-      this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
-    );
+    const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
 
-    const meleeData = melee.map(({ name, mode, level, damage, reach, notes, itemid }) => ({
-      weapon: name,
-      mode,
-      level,
-      damage,
-      reach,
-      notes,
-      itemid,
-    }));
+    const meleeDataOriginal = melee.map(({ name, mode, level, damage, reach, notes, itemid }) => {
+      const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
+        itemId: '',
+        remainingRounds: 0,
+      };
+      return {
+        weapon: name,
+        mode,
+        level,
+        damage,
+        reach,
+        notes,
+        itemid,
+        remainingRounds: readyNeeded?.remainingRounds || 0,
+      };
+    });
+
+    const meleeData = meleeDataOriginal.filter(
+      (item: { mode: string; weapon: string; damage: string; notes: string; level: number; remainingRounds: number }) =>
+        !item.remainingRounds,
+    );
 
     const rangedDataOriginal = ranged.map(({ name, mode, level, damage, range, acc, bulk, notes, itemid }) => {
       const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
@@ -138,6 +115,7 @@ export default class AttackChooser extends BaseActorController {
         accuracy: acc,
         bulk,
         notes,
+        itemid,
         remainingRounds: readyNeeded?.remainingRounds || 0,
       };
     });
@@ -156,35 +134,66 @@ export default class AttackChooser extends BaseActorController {
       }) => !item.remainingRounds,
     );
 
-    const weaponsToBeReadyData = rangedDataOriginal.filter(
-      (item: {
-        mode: string;
-        weapon: string;
-        damage: string;
-        notes: string;
-        level: number;
-        range: string;
-        accuracy: string;
-        bulk: string;
-        remainingRounds: number;
-      }) => item.remainingRounds,
-    );
+    const items: Item[] = getEquipment(this.actor);
 
-    const counterAttackData = melee.map(({ name, mode, level, damage, reach }) => {
+    const attacksToBeReadyData = [
+      ...rangedDataOriginal.filter(
+        (item: {
+          mode: string;
+          weapon: string;
+          damage: string;
+          notes: string;
+          level: number;
+          range: string;
+          accuracy: string;
+          bulk: string;
+          remainingRounds: number;
+        }) => item.remainingRounds,
+      ),
+      ...meleeDataOriginal.filter(
+        (item: {
+          mode: string;
+          weapon: string;
+          damage: string;
+          notes: string;
+          level: number;
+          remainingRounds: number;
+        }) => item.remainingRounds,
+      ),
+    ];
+
+    const weaponsToBeReadyData: any = [];
+
+    attacksToBeReadyData.map((attack) => {
+      const itemFound: Item | undefined = items.find((item) => item.itemid === attack.itemid);
+      if (itemFound) {
+        const weaponAlreadyExists: any = weaponsToBeReadyData.filter((w: Item) => w.itemid === itemFound.itemid);
+        if (!weaponAlreadyExists.length) {
+          weaponsToBeReadyData.push({
+            itemid: itemFound.itemid,
+            weapon: itemFound.name,
+            name: itemFound.name,
+            remainingRounds: attack.remainingRounds,
+          });
+        }
+      }
+    });
+
+    const counterAttackData = meleeData.map(({ weapon, mode, level, damage, reach }) => {
       return {
-        weapon: name,
+        weapon,
         mode,
-        level: getCounterAttackLevel(this.actor, name, level),
+        level: getCounterAttackLevel(this.actor, weapon, level),
         damage,
         reach,
       };
     });
 
-    const disarmAttackData = melee.map(({ name, mode, level, damage, reach }) => {
+    const disarmAttackData = meleeData.map(({ weapon, mode, level, damage, reach }) => {
       return {
-        weapon: name,
+        weapon,
         mode,
-        level: getDisarmAttackLevel(this.actor, name, level),
+        level: getDisarmAttackLevel(this.actor, weapon, level),
         damage,
         reach,
       };
@@ -217,6 +226,7 @@ export default class AttackChooser extends BaseActorController {
         penalty,
       }));
 
+      this.weaponsToBeReadyData = weaponsToBeReadyData;
       return {
         disarmAttack: {
           items: disarmAttackData,
@@ -305,42 +315,47 @@ export default class AttackChooser extends BaseActorController {
   }
 
   async readyWeapon(index: number): Promise<void> {
-    const attack = getAttacks(this.actor).ranged[index];
-    const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
-      this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
-    );
+    debugger;
+    const weapon = this.weaponsToBeReadyData[index];
+
+    const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
+
     let remainingRounds =
-      (readyActionsWeaponNeeded.items.find((item) => item.itemId === attack.itemid) || {}).remainingRounds || 1;
+      (readyActionsWeaponNeeded.items.find((item) => item.itemId === weapon.itemid) || {}).remainingRounds || 1;
 
-    const hasFastDrawArrowSkills = findSkillSpell(this.actor, FAST_DRAW_ARROW_SEARCH, true, false);
-    const isArrowWeapon = FAST_DRAW_ARROW_WEAPONS.find((element) => {
-      if (attack.name.toUpperCase().includes(element)) {
-        return true;
-      }
-    });
-
-    if (hasFastDrawArrowSkills && isArrowWeapon && remainingRounds === 2) {
-      const result = await GURPS.executeOTF(`SK:${hasFastDrawArrowSkills.name}`, false, null, undefined);
-      if (result) {
-        remainingRounds = remainingRounds - 2;
-        this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
-          items: [...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== attack.itemid) || [])],
+    for (const SKILL of Object.keys(FAST_DRAW_SKILLS)) {
+      const fastDrawSkill = findSkillSpell(this.actor, SKILL, true, false);
+      if (fastDrawSkill) {
+        const SKILLS = FAST_DRAW_SKILLS[SKILL];
+        const hasWeapon = SKILLS.find((element: any) => {
+          if (weapon.name.toUpperCase().includes(element)) {
+            return true;
+          }
         });
-        if (remainingRounds === 0) {
-          const token = this.token;
-          ensureDefined(game.user, 'game not initialized');
-          new ManeuverChooser(token).render(true);
-          this.closeForEveryone();
-          return;
+        if (fastDrawSkill && hasWeapon && remainingRounds === 1) {
+          const result = await GURPS.executeOTF(`SK:${fastDrawSkill.name}`, false, null, undefined);
+          if (result) {
+            remainingRounds = remainingRounds - 2;
+            this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+              items: [...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== weapon.itemid) || [])],
+            });
+            if (remainingRounds <= 0) {
+              const token = this.token;
+              ensureDefined(game.user, 'game not initialized');
+              new ManeuverChooser(token).render(true);
+              this.closeForEveryone();
+              return;
+            }
+          }
         }
       }
     }
 
     this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
       items: [
-        ...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== attack.itemid) || []),
+        ...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== weapon.itemid) || []),
         {
-          itemId: attack.itemid,
+          itemId: weapon.itemid,
           remainingRounds: remainingRounds - 1,
         },
       ],
@@ -412,8 +427,6 @@ export default class AttackChooser extends BaseActorController {
         this.attackCount = 2;
       }
     }
-
-    this.doAnimation(target.actor, attack.name);
 
     await makeAttackInner(
       this.actor,

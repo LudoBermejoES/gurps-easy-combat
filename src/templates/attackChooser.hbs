@@ -1,24 +1,76 @@
+<style>
+  .container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 0px 0px;
+    grid-template-areas:
+    ". .";
+  }
+
+  .nostyles {
+    all: initial;
+  }
+</style>
 <div>
-  <div>Escoge ataque (tienes que tener seleccionado un objetivo)</div>
-<div><input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">keep window open after attack</label></div>
-  {{#if counterAttack.items.length}}
-    <h2>Contraataque</h2>
-    <p>Un contraataque exitoso penalizará la parada del contrincante en -2</p>
-    {{> choiceTable counterAttack}}
+  <div class="container">
+    <div class="nostyles">
+      <input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">Mantén la ventana
+      abierta después de atacar</label></div>
+    <div  class="nostyles">
+      <input type="button" class="clickable" id="closeAndReturn" value="Volver a escoger maniobra">
+    </div>
+  </div>
+
+
+  {{#if melee.items.length}}
+    <br>
+    <h2>Cuerpo a cuerpo</h2>
+    {{> choiceTable melee}}
   {{/if}}
-  {{#if weaponsToBeReady.items.length}}
-    <h2>Armas a preparar</h2>
-    {{> choiceTable weaponsToBeReady}}
-  {{/if}}
-  <h2>Melee</h2>
-  {{> choiceTable melee}}
   {{#if ranged.items.length}}
+    <br>
     <h2>A distancia</h2>
     {{> choiceTable ranged}}
   {{/if}}
-  <h2>Desarmar</h2>
-  {{> choiceTable disarmAttack}}
-  {{> choiceTable hitLocations}}
-  <div class="clickable" id="closeAndReturn">Volver a escoger maniobra</div>
+
+  {{#if weaponsToBeReady.items.length}}
+    <br>
+    <h2>Armas que tienes que preparar antes de atacar con ellas</h2>
+    {{> choiceTable weaponsToBeReady}}
+  {{/if}}
+  <br>
+
+  <h2>Maniobras de combate avanzadas</h2>
+  <br>
+  <details>
+    <summary><strong>Escoger una localización a atacar</strong></summary>
+    <div>
+      {{> choiceTable hitLocations}}
+    </div>
+  </details>
+
+  {{#if disarmAttack.items.length}}
+    <br>
+    <details>
+      <summary><strong>Desarmar</strong></summary>
+      <div>
+        {{> choiceTable disarmAttack}}
+      </div>
+    </details>
+  {{/if}}
+  {{#if counterAttack.items.length}}
+    <br>
+    <details>
+      <summary><strong>Contraataque</strong></summary>
+      <div>
+        <p>Un contraataque exitoso penalizará la parada del contrincante en -2</p>
+        {{> choiceTable counterAttack}}
+      </div>
+    </details>
+  {{/if}}
+
+  <h2></h2>
+
 </div>
-2
+

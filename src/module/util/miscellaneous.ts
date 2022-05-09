@@ -86,6 +86,7 @@ export function activateChooser(
   html: JQuery,
   id: string,
   callback: (index: number, element: JQuery<any>, type: string) => void,
+  callback2?: (index: number, element: JQuery<any>, type: string) => void,
 ): void {
   const selector = id
     .split(',')
@@ -107,6 +108,23 @@ export function activateChooser(
       callback(parseInt(indexString), element, 'basic');
     }
   });
+  if (callback2) {
+    html.on('mouseover', selector, (event) => {
+      const element = $(event.currentTarget);
+      const indexString = element.attr('index');
+      if (!indexString) {
+        ui.notifications?.error('no index on clicked element');
+        throw new Error('no index on clicked element');
+      }
+
+      const id = $(element).parent().parent().attr('id');
+      if (id && id.includes('2')) {
+        callback2(parseInt(indexString), element, 'advanced');
+      } else {
+        callback2(parseInt(indexString), element, 'basic');
+      }
+    });
+  }
 }
 
 export function getFullName(attack: Attack): string {

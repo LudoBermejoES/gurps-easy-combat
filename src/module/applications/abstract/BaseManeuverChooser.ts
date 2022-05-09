@@ -61,10 +61,12 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
     const maneuversDescriptionsBasic = this.getManeuversData().basic.map((maneuver) => ({
       Maneuver: maneuver.name,
       Description: maneuver.tooltip,
+      type: maneuver.key,
     }));
     const maneuversDescriptionsAdvanced = this.getManeuversData().advanced.map((maneuver) => ({
       Maneuver: maneuver.name,
       Description: maneuver.tooltip,
+      type: maneuver.key,
     }));
     return {
       basicManeuver: { items: maneuversDescriptionsBasic, headers: ['Maneuver', 'Description'], id: 'manuever_choice' },
@@ -76,27 +78,43 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
     };
   }
   activateListeners(html: JQuery): void {
-    activateChooser(html, 'manuever_choice,manuever_choice2', (index, element, type) => {
-      const selected = type || 'basic';
-      const maneuver =
-        selected === 'basic' ? this.getManeuversData().basic[index] : this.getManeuversData().advanced[index];
-      let target;
-      if (['aim', 'evaluate', 'attack', 'feint', 'allout_attack', 'move_and_attack'].includes(maneuver.key)) {
-        ensureDefined(game.user, 'game not initialized');
-        if (checkSingleTarget(game.user)) {
-          target = getTargets(game.user)[0];
-          ensureDefined(target.actor, 'target has no actor');
+    activateChooser(
+      html,
+      'manuever_choice,manuever_choice2',
+      (index, element, type) => {
+        const selected = type || 'basic';
+        const maneuver =
+          selected === 'basic' ? this.getManeuversData().basic[index] : this.getManeuversData().advanced[index];
+        let target;
+        if (['aim', 'evaluate', 'attack', 'feint', 'allout_attack', 'move_and_attack'].includes(maneuver.key)) {
+          ensureDefined(game.user, 'game not initialized');
+          if (checkSingleTarget(game.user)) {
+            target = getTargets(game.user)[0];
+            ensureDefined(target.actor, 'target has no actor');
+          }
+          if (!target) return;
         }
-        if (!target) return;
-      }
 
-      this.token.setManeuver(maneuver.key);
-      ChatMessage.create({
-        content: `${this.token.name} uses the "${maneuver.name}" maneuver [PDF:${maneuver.page}]`,
-      });
-      this.closeForEveryone();
-      maneuver.callback?.(this.token);
-    });
+        this.token.setManeuver(maneuver.key);
+        ChatMessage.create({
+          content: `${this.token.name} uses the "${maneuver.name}" maneuver [PDF:${maneuver.page}]`,
+        });
+        this.closeForEveryone();
+        maneuver.callback?.(this.token);
+      },
+      (index, element, type) => {
+        const content = element.closest('.window-content');
+        $('#maneuver_details').remove();
+        const selected = type || 'basic';
+        const maneuver =
+          selected === 'basic' ? this.getManeuversData().basic[index] : this.getManeuversData().advanced[index];
+
+        const html = $(`#${maneuver.key}`).clone().html();
+        content.append(
+          `<div class="app window-app" id='maneuver_details' style="z-index: 101; width: 300px; left: 100%; height: '${content.height()}'">${html}</div>`,
+        );
+      },
+    );
     $('#closeAndReturn', html).click(() => {
       const token = this.token;
       ensureDefined(game.user, 'game not initialized');

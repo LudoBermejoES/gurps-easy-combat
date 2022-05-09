@@ -28,6 +28,7 @@ export default class BaseActorController extends Application {
   }
 
   closeForEveryone(): void {
+    $('#maneuver_details').remove();
     EasyCombat.socket.executeForEveryone('closeController', this.id);
   }
 

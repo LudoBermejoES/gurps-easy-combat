@@ -5,6 +5,8 @@ import ManeuverChooser from '../../applications/maneuverChooser.js';
 import { ensureDefined, highestPriorityUsers } from '../miscellaneous.js';
 import AttackChooser from '../../applications/attackChooser.js';
 import { registerFunctions } from './socketkib.js';
+import { getAttacks } from '../../dataExtractor.js';
+import { MeleeAttack, RangedAttack } from '../../types';
 
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
@@ -32,6 +34,29 @@ export function registerHooks(): void {
       combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
     });
   };
+
+  // on create combatant, set the maneuver
+  Hooks.on('createCombatant', (combatant: Combatant) => {
+    ensureDefined(combatant.token, 'No actor selected');
+    const actor = combatant.token.actor;
+    ensureDefined(actor, 'No actor selected');
+    const attacks: {
+      melee: MeleeAttack[];
+      ranged: RangedAttack[];
+    } = getAttacks(actor);
+
+    const meleeWeaponIds: string[] = attacks.melee.map((melee) => melee.itemid).filter((i) => i !== undefined);
+    const rangedWeaponIds: string[] = attacks.ranged.map((melee) => melee.itemid).filter((i) => i !== undefined);
+    console.log('Hago a ', actor);
+    console.log('con ', meleeWeaponIds);
+
+    combatant.token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+      items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds])).map((item) => ({
+        itemId: item,
+        remainingRounds: 1,
+      })),
+    });
+  });
 
   Hooks.on('deleteCombat', async (combat: Combat) => {
     deleteFlags(combat);

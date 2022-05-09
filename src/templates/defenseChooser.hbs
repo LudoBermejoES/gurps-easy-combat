@@ -3,53 +3,63 @@
 
   <table>
     <tr>
-      <td><input type="checkbox" id="retreat"/>Retroceder</td>
-      <td>Retrocedes un paso y ganas un +3 a Esquivar (o un +1 a Parar y Bloquear). Tendrás un -2 al Ataque en el próximo turno</td>
+      <td><input type="checkbox" id="retreat" />Retroceder</td>
+      <td>Retrocedes un paso para ganar +3 a Esquivar (o un +1 a Parar y Bloquear). Tendrás un -2 al Ataque en el
+        próximo turno
+      </td>
     </tr>
   </table>
+  {{#if canDodge}}
 
-  <table>
-    <tr class="clickable" id="dodge">
-      <td>dodge</td>
-      <td>{{dodge}}</td>
-    </tr>
-    {{#if acrobaticDodge}}
-      <tr class="clickable" id="acrobatic-dodge">
-        <td>
-          Esquiva acrobática
-        </td>
-        <td>
-          {{ acrobaticDodge.level }}
-        </td>
-        <td>
-          Se tirará primero Acrobacias, si la sacas ganas un +2 a Esquiva, si fallas pierdes un -2 a Esquiva
-        </td>
+    <table>
+      <tr class="clickable" id="dodge">
+        <td>Esquivar</td>
+        <td>{{dodge}}</td>
+        <td>¡Intenta esquivar el golpe!</td>
       </tr>
-    {{/if}}
-  </table>
-  <table>
-    <tr class="header">
-      <td>Parar con</td>
-      <td>Nivel</td>
-    </tr>
-    {{#each parry as |parryValue|}}
-      <tr class="clickable parryRow" weapon="{{@key}}">
-        <td>{{@key}}</td>
-        <td>{{parryValue}}</td>
+      {{#if acrobaticDodge}}
+        <tr class="clickable" id="acrobatic-dodge">
+          <td>
+            Esquiva acrobática
+          </td>
+          <td>
+            {{ acrobaticDodge.level }}
+          </td>
+          <td>
+            Se tirará primero Acrobacias, si la sacas ganas un +2 a Esquiva, si fallas pierdes un -2 a Esquiva
+          </td>
+        </tr>
+      {{/if}}
+    </table>
+  {{/if}}
+
+  {{#if canParry}}
+    <table>
+      <tr class="header">
+        <td>Parar con</td>
+        <td>Nivel</td>
       </tr>
-    {{/each}}
-  </table>
-  <table>
-    <tr class="header">
-      <td>Bloquear con</td>
-      <td>Nivel</td>
-    </tr>
-    {{#each block as |blockValue|}}
-      <tr class="clickable blockRow" weapon="{{@key}}">
-        <td>{{@key}}</td>
-        <td>{{blockValue}}</td>
+      {{#each parry as |parryValue|}}
+        <tr class="clickable parryRow" weapon="{{@key}}">
+          <td>{{@key}}</td>
+          <td>{{parryValue}}</td>
+        </tr>
+      {{/each}}
+    </table>
+  {{/if}}
+  {{#if canBlock}}
+    <table>
+      <tr class="header">
+        <td>Bloquear con</td>
+        <td>Nivel</td>
       </tr>
-    {{/each}}
-  </table>
+      {{#each block as |blockValue|}}
+        <tr class="clickable blockRow" weapon="{{@key}}">
+          <td>{{@key}}</td>
+          <td>{{blockValue}}</td>
+        </tr>
+      {{/each}}
+    </table>
+  {{/if}}
 </div>
 
