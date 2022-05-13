@@ -159,16 +159,18 @@ export default class AttackChooser extends BaseActorController {
     this.rangedData = rangedData;
     const rangedAttackWithROFMoreThan1 = rangedAttackValid.filter((attack) => attack.rof !== '1');
     rangedAttackWithROFMoreThan1.forEach((attack) => {
-      const rof = Number(attack.rof.split('!').join(''));
-      for (let i = 1; i <= rof; i++) {
-        const newAttack = { ...attack };
-        newAttack.weapon += ` -- Disparar ${i} proyectiles`;
-        newAttack.rof = String(i);
-        if (i > 4) {
-          const extraToHit = Math.ceil(i / 4) - 1;
-          newAttack.level += extraToHit;
+      if (attack.rof) {
+        const rof = Number(attack.rof.split('!').join(''));
+        for (let i = 1; i <= rof; i++) {
+          const newAttack = { ...attack };
+          newAttack.weapon += ` -- Disparar ${i} proyectiles`;
+          newAttack.rof = String(i);
+          if (i > 4) {
+            const extraToHit = Math.ceil(i / 4) - 1;
+            newAttack.level += extraToHit;
+          }
+          rangedData.push(newAttack);
         }
-        rangedData.push(newAttack);
       }
     });
 

@@ -8,6 +8,14 @@ import { registerFunctions } from './socketkib.js';
 import { getAttacks } from '../../dataExtractor.js';
 import { MeleeAttack, RangedAttack } from '../../types';
 
+function getPriority(user: User, actor: Actor) {
+  let priority = 0;
+  if (user.character === actor) priority += 100;
+  if (actor.testUserPermission(user, 'OWNER')) priority += 10;
+  if (user.isGM) priority -= 1;
+  if (!user.active) priority -= 1000;
+  return priority;
+}
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
 
@@ -75,6 +83,7 @@ export function registerHooks(): void {
 
     combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
     combatant?.token?.unsetFlag(MODULE_NAME, 'location');
+    combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
     combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
     combatant?.token?.unsetFlag(MODULE_NAME, 'lastParry');
     combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
@@ -118,5 +127,31 @@ export function registerHooks(): void {
     if (highestPriorityUsers(actor).includes(game.user) && game.settings.get(MODULE_NAME, 'maneuver-chooser-on-turn')) {
       new ManeuverChooser(token).render(true);
     }
+  });
+
+  Hooks.on('getCombatTrackerEntryContext', function (html: any, menu: any) {
+    const entry = {
+      name: 'Resetear y volver a abrir la pantalla de maniobras',
+      icon: '<i class="fas fa-undo-alt"></i>',
+      callback: (li: any) => {
+        const combatantId = li.data('combatant-id');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const combat = ui?.combat?.viewed;
+        const combatant = combat.combatants.get(combatantId);
+        combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const priorities = new Map(game.users.map((user) => [user, getPriority(user, combatant.token)]));
+        const maxPriority = Math.max(...priorities.values());
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const user = game.users.filter((user) => priorities.get(user) === maxPriority);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.EasyCombat.socket.executeAsUser('chooseManeuver', user[0].id, combatant.data.tokenId);
+      },
+    };
+    menu.splice(1, 0, entry);
   });
 }

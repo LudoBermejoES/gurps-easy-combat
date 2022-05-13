@@ -78,8 +78,15 @@ export default class DefenseChooser extends BaseActorController {
     html.on('click', '#dodge', () => {
       applyModifiers(this.data.modifiers);
       const isRetreating = $('#retreat').val();
+      const isProne = $('#prone').val();
+
       if (isRetreating === 'on') {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
+        this.addRetreatMalus();
+      }
+
+      if (isProne === 'on') {
+        this.data.modifiers.push({ mod: +3, desc: 'En el suelo (cambias tu posición a tumbado)' });
         this.addRetreatMalus();
       }
 
@@ -92,6 +99,11 @@ export default class DefenseChooser extends BaseActorController {
         this.actor,
       );
       this.data.resolve(result);
+      if (isProne === 'on') {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.actor.replacePosture('prone');
+      }
       this.closeForEveryone();
     });
     html.on('click', '#acrobatic-dodge', async () => {

@@ -155,11 +155,11 @@ export function getManeuver(actor: Actor): string {
 
 export function checkSingleTarget(user: User): boolean {
   if (user.targets.size === 0) {
-    ui.notifications?.warn('you must select a target');
+    ui.notifications?.warn('Tienes que seleccionar un objetivo');
     return false;
   }
   if (user.targets.size > 1) {
-    ui.notifications?.warn('you must select only one target');
+    ui.notifications?.warn('Solo puedes seleccionar un objetivo');
     return false;
   }
   return true;

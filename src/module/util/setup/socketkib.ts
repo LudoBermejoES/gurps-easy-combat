@@ -8,8 +8,13 @@ const functionsToRegister = {
   chooseManeuver: (token: string) => {
     ensureDefined(game.user, 'game not initialized');
     ensureDefined(game.canvas.tokens, 'game not initialized');
+    const tokenFound = game.canvas.tokens.placeables.find((tokenF) => tokenF.id === token);
+    if (tokenFound) {
+      new ManeuverChooser(tokenFound).render(true);
+      return;
+    }
     const tokens = game.canvas.tokens.controlled;
-
+    debugger;
     const tokenSelected: Token = tokens.find((tok) => tok.id === token) as Token;
     new ManeuverChooser(tokenSelected).render(true);
   },
