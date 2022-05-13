@@ -28,8 +28,8 @@
 }
 
 table .selected {
-  background: #333;
-  color: #fff;
+  background: #333; !important;
+  color: #fff; !important;
 }
 
 .card-container {

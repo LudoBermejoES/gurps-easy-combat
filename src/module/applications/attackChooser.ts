@@ -43,6 +43,20 @@ export default class AttackChooser extends BaseActorController {
     weapon: string;
   }[];
 
+  rangedData: {
+    mode: string;
+    weapon: string;
+    damage: string;
+    notes: string;
+    level: number;
+    range: string;
+    accuracy: string;
+    bulk: string;
+    remainingRounds: number;
+    rof: string;
+    rcl: string;
+  }[];
+
   attackCount = 1;
   twoWeaponAttacksCount = 1;
 
@@ -60,6 +74,7 @@ export default class AttackChooser extends BaseActorController {
       title: `Attack Chooser - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/attackChooser.hbs`,
     });
+    this.rangedData = [];
     this.data = data;
     this.attacks = getAttacks(this.actor);
     this.weaponsToBeReadyData = [];
@@ -70,7 +85,7 @@ export default class AttackChooser extends BaseActorController {
     disarmAttack: ChooserData<['weapon', 'mode', 'level', 'reach']>;
     counterAttack: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
     melee: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
-    ranged: ChooserData<['weapon', 'mode', 'level', 'damage', 'range', 'accuracy', 'bulk']>;
+    ranged: ChooserData<['weapon', 'rof', 'level', 'damage', 'range', 'accuracy', 'bulk']>;
     hitLocations: ChooserData<['roll', 'where', 'penalty']>;
     weaponsToBeReady: ChooserData<['weapon', 'remainingRounds']>;
     data: AttackData;
@@ -101,26 +116,30 @@ export default class AttackChooser extends BaseActorController {
         !item.remainingRounds,
     );
 
-    const rangedDataOriginal = ranged.map(({ name, mode, level, damage, range, acc, bulk, notes, itemid }) => {
-      const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
-        itemId: '',
-        remainingRounds: 0,
-      };
-      return {
-        weapon: name,
-        mode,
-        level,
-        damage,
-        range,
-        accuracy: acc,
-        bulk,
-        notes,
-        itemid,
-        remainingRounds: readyNeeded?.remainingRounds || 0,
-      };
-    });
+    const rangedDataOriginal = ranged.map(
+      ({ name, mode, level, damage, range, acc, bulk, notes, itemid, rof, rcl }) => {
+        const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
+          itemId: '',
+          remainingRounds: 0,
+        };
+        return {
+          weapon: name,
+          mode,
+          level,
+          damage,
+          range,
+          accuracy: acc,
+          bulk,
+          notes,
+          itemid,
+          rof,
+          rcl,
+          remainingRounds: readyNeeded?.remainingRounds || 0,
+        };
+      },
+    );
 
-    const rangedData = rangedDataOriginal.filter(
+    const rangedAttackValid = rangedDataOriginal.filter(
       (item: {
         mode: string;
         weapon: string;
@@ -131,8 +150,27 @@ export default class AttackChooser extends BaseActorController {
         accuracy: string;
         bulk: string;
         remainingRounds: number;
+        rof: string;
+        rcl: string;
       }) => !item.remainingRounds,
     );
+
+    const rangedData = rangedAttackValid.filter((attack) => attack.rof === '1');
+    this.rangedData = rangedData;
+    const rangedAttackWithROFMoreThan1 = rangedAttackValid.filter((attack) => attack.rof !== '1');
+    rangedAttackWithROFMoreThan1.forEach((attack) => {
+      const rof = Number(attack.rof.split('!').join(''));
+      for (let i = 1; i <= rof; i++) {
+        const newAttack = { ...attack };
+        newAttack.weapon += ` -- Disparar ${i} proyectiles`;
+        newAttack.rof = String(i);
+        if (i > 4) {
+          const extraToHit = Math.ceil(i / 4) - 1;
+          newAttack.level += extraToHit;
+        }
+        rangedData.push(newAttack);
+      }
+    });
 
     const items: Item[] = getEquipment(this.actor);
 
@@ -245,7 +283,7 @@ export default class AttackChooser extends BaseActorController {
         },
         ranged: {
           items: rangedData,
-          headers: ['weapon', 'mode', 'level', 'damage', 'range', 'accuracy', 'bulk'],
+          headers: ['weapon', 'rof', 'level', 'damage', 'range', 'accuracy', 'bulk'],
           id: 'ranged_attacks',
         },
         hitLocations: {
@@ -280,7 +318,7 @@ export default class AttackChooser extends BaseActorController {
       },
       ranged: {
         items: rangedData,
-        headers: ['weapon', 'mode', 'level', 'damage', 'range', 'accuracy', 'bulk'],
+        headers: ['weapon', 'rof', 'level', 'damage', 'range', 'accuracy', 'bulk'],
         id: 'ranged_attacks',
       },
       hitLocations: {
@@ -297,10 +335,10 @@ export default class AttackChooser extends BaseActorController {
     };
   }
   activateListeners(html: JQuery): void {
-    activateChooser(html, 'disarm_attacks', (index) => this.makeAttack('disarm_attack', index));
-    activateChooser(html, 'counter_attacks', (index) => this.makeAttack('counter_attack', index));
-    activateChooser(html, 'melee_attacks', (index) => this.makeAttack('melee', index));
-    activateChooser(html, 'ranged_attacks', (index) => this.makeAttack('ranged', index));
+    activateChooser(html, 'disarm_attacks', (index) => this.makeAttack('disarm_attack', index, undefined));
+    activateChooser(html, 'counter_attacks', (index) => this.makeAttack('counter_attack', index, undefined));
+    activateChooser(html, 'melee_attacks', (index) => this.makeAttack('melee', index, undefined));
+    activateChooser(html, 'ranged_attacks', (index, element) => this.makeAttack('ranged', index, element));
     activateChooser(html, 'weapons_to_be_ready', (index) => this.readyWeapon(index));
     activateChooser(html, 'hit_locations', (index, element) => this.chooseLocation(index, element));
     html.on('change', '#keepOpen', (event) => {
@@ -315,7 +353,6 @@ export default class AttackChooser extends BaseActorController {
   }
 
   async readyWeapon(index: number): Promise<void> {
-    debugger;
     const weapon = this.weaponsToBeReadyData[index];
 
     const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
@@ -364,13 +401,28 @@ export default class AttackChooser extends BaseActorController {
     this.closeForEveryone();
   }
 
-  async makeAttack(mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack', index: number): Promise<void> {
+  async makeAttack(
+    mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
+    index: number,
+    element: any | undefined,
+  ): Promise<void> {
     const iMode = mode === 'counter_attack' || mode === 'disarm_attack' ? 'melee' : mode;
     ensureDefined(game.user, 'game not initialized');
     if (!checkSingleTarget(game.user)) return;
     const target = getTargets(game.user)[0];
     ensureDefined(target.actor, 'target has no actor');
-    const attack = getAttacks(this.actor)[iMode][index];
+    let attack = getAttacks(this.actor)[iMode][index];
+
+    if (mode === 'ranged') {
+      const attackData = this.rangedData[index];
+      const rangedAttacks = getAttacks(this.actor)[iMode] as RangedAttack[];
+      const originalAttack = rangedAttacks.find((attack: any) => attack.name === attackData.weapon.split(' --')[0]);
+      ensureDefined(element, 'target has no actor');
+      if (originalAttack) {
+        attack = { ...originalAttack };
+        attack.level = Number(element.find('.level').text());
+      }
+    }
 
     if (iMode === 'melee') {
       const reach = (attack as MeleeAttack).reach;
@@ -384,13 +436,13 @@ export default class AttackChooser extends BaseActorController {
       ensureDefined(canAttack, `No estás a distancia de ataque, el alcance de tu arma es ${reach}`);
     }
 
-    const twoWeaponsAttack = attack.notes.toUpperCase().includes('DOUBLE ATTACK');
+    const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
     const modifiers = AttackChooser.modifiersGetters[iMode](attack as RangedAttack & MeleeAttack, this.token, target);
 
     const rangedAttack = attack as RangedAttack;
     if (mode === 'ranged') {
       let remainingRounds = 0;
-      if (rangedAttack.shots.includes('(')) {
+      if (rangedAttack.shots && rangedAttack.shots.includes('(') && Number(rangedAttack.shots.split('(')[0]) === 1) {
         remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
       }
       if (remainingRounds) {
@@ -452,7 +504,7 @@ export default class AttackChooser extends BaseActorController {
       where,
       penalty,
     }));
-    $(element).parent().find('*').removeAttr('selected');
+    $(element).parent().find('*').removeClass('selected');
     $(element).addClass('selected');
 
     const where = hitLocationsData[index].where || '';

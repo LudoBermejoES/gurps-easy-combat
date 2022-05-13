@@ -128,7 +128,7 @@ export function activateChooser(
 }
 
 export function getFullName(attack: Attack): string {
-  const modeSuffix = attack.mode !== '' ? ` (${attack.mode})` : '';
+  const modeSuffix = attack.mode ? ` (${attack.mode})` : '';
   return `${attack.name}${modeSuffix}`;
 }
 

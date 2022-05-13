@@ -31,3 +31,50 @@ table .selected {
   background: #333;
   color: #fff;
 }
+
+table .selected {
+  background: #333; !important;
+  color: #fff; !important;
+}
+
+.card-container {
+  border: 1px solid #ccc;
+  background-color: #f4f4f4;
+  padding: 20px;
+  margin-bottom: 10px;
+  width: 33%;
+  float: left;
+  min-height: 300px;
+}
+
+.card-container .gurpslink {
+  visibility: hidden;
+  position: relative;
+}
+
+.card-container .gurpslink:after {
+  visibility: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 1em;
+  content: "Escoger";
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 5px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+
+.card-title {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--color-underline-header);
+}
+
+.card-bottom {
+  border-top: 1px solid var(--color-underline-header);
+}
+

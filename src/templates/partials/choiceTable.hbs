@@ -7,7 +7,7 @@
 {{#each items as |item|}}
   <tr class="clickable" index="{{@index}}">
     {{#each ../headers as |header|}}
-      <td>{{get item header}}
+      <td class="{{header}}">{{get item header}}
       {{#ifEquals header "weapon"}}
         <small><br>{{get item "notes"}}</small>
       {{/ifEquals}}

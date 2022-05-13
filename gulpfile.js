@@ -36,6 +36,8 @@ async function buildCode() {
  * Build style sheets
  */
 function buildStyles() {
+  console.log(`${stylesDirectory}/${name}.${stylesExtension}`);
+  console.log(`${distDirectory}/styles`);
   return gulp.src(`${stylesDirectory}/${name}.${stylesExtension}`).pipe(gulp.dest(`${distDirectory}/styles`));
 }
 

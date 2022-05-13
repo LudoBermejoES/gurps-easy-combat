@@ -6,7 +6,6 @@ import ManeuverChooser from '../../applications/maneuverChooser';
 import { ensureDefined } from '../miscellaneous';
 const functionsToRegister = {
   chooseManeuver: (token: string) => {
-    debugger;
     ensureDefined(game.user, 'game not initialized');
     ensureDefined(game.canvas.tokens, 'game not initialized');
     const tokens = game.canvas.tokens.controlled;

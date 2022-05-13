@@ -27,11 +27,6 @@
   color: #fff;
 }
 
-table .selected {
-  background: #333;
-  color: #fff;
-}
-
 .card-container {
   border: 1px solid #ccc;
   background-color: #f4f4f4;
@@ -62,7 +57,6 @@ table .selected {
   text-decoration: none;
   display: inline-block;
 }
-
 
 .card-title {
   font-size: 1.5em;

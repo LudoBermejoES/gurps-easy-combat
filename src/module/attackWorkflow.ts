@@ -46,6 +46,8 @@ function doAnimation(actor: Actor, name: string) {
     anim = '/anim Arrow01_01* *0.3';
   } else if (name.toLowerCase().includes('crossbow')) {
     anim = '/anim Bolt01_01_Regular* *0.3';
+  } else if (['sig-sauer', 'imi uzi', 'walter'].filter((n) => n.includes(name.toLowerCase()))) {
+    anim = '/anim Bullet_02_Regular_Orange* *0.3';
   }
   if (anim) GURPS.executeOTF(anim, false, null, actor);
 }
@@ -71,7 +73,9 @@ function doSound(actor: Actor, name: string, tryAttack: boolean, success: boolea
       )}.mp3`;
     }
   } else if (success) {
-    if (name.toLowerCase().includes('throwing knife')) {
+    if (['sig-sauer', 'imi uzi', 'walter'].filter((n) => n.includes(name.toLowerCase()))) {
+      sound = 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3';
+    } else if (name.toLowerCase().includes('throwing knife')) {
       sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
         1,
         totalMeleeHitSound,
@@ -193,11 +197,17 @@ function doSound(actor: Actor, name: string, tryAttack: boolean, success: boolea
         1,
         totalMeleeMissSound,
       )}.mp3`;
+    } else if (['sig-sauer', 'imi uzi', 'walter'].filter((n) => n.includes(name.toLowerCase()))) {
+      sound = 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3';
     }
   }
 
   console.log(sound);
-  if (sound) GURPS.executeOTF(`/sound ${sound}`, false, null, actor);
+  if (sound) {
+    setTimeout(() => {
+      GURPS.executeOTF(`/sound ${sound}`, false, null, actor);
+    }, 500);
+  }
 }
 
 export async function rollAttack(actor: Actor, attack: Attack, type: 'melee' | 'ranged'): Promise<GurpsRoll> {
@@ -344,7 +354,7 @@ export async function makeAttackInner(
     ensureDefined(game.tables, 'game not initialized');
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    game.tables?.getName('Critical Miss')?.draw();
+    await game.tables?.getName('Critical Miss')?.draw();
   }
 
   if (isDisarmingAttack) {
@@ -386,7 +396,11 @@ export async function makeAttackInner(
 
   const damageParts = attack.damage.split(' ');
   const damage = { formula: damageParts[0], type: damageParts[1], extra: damageParts[2] };
-  rollDamage(attacker, damage, target, modifiers.damage);
+  if (roll.rofrcl) {
+    for (let i = 1; i <= roll.rofrcl; i++) {
+      rollDamage(attacker, damage, target, modifiers.damage);
+    }
+  } else rollDamage(attacker, damage, target, modifiers.damage);
 }
 
 export function getMeleeModifiers(

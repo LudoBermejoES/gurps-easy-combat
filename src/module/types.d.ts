@@ -289,6 +289,7 @@ export interface GurpsRoll {
   rolls: string;
   rtotal: number;
   seventeen: boolean;
+  rofrcl: number;
   targetmods: {
     desc: string;
     mod: string;
