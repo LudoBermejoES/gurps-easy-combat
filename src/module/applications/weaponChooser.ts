@@ -4,6 +4,7 @@ import { Attack, ChooserData, Item, PromiseFunctions } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
 import { activateChooser, ensureDefined } from '../util/miscellaneous.js';
 import ManeuverChooser from './maneuverChooser';
+import { getWeaponsFromAttacks } from '../util/weapons';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 
@@ -22,19 +23,7 @@ export default class WeaponChooser extends BaseActorController {
   getData(): {
     weapons: ChooserData<['name']>;
   } {
-    const { melee, ranged } = getAttacks(this.actor);
-
-    const weapons = new Set();
-    melee.filter((m) => m.itemid).forEach((attack) => weapons.add(attack.itemid));
-    ranged.filter((m) => m.itemid).forEach((attack) => weapons.add(attack.itemid));
-
-    const items: Item[] = getEquipment(this.actor);
-    weapons.forEach((weapon) => {
-      const weaponItem = items.filter((item) => item.itemid === weapon);
-      if (weaponItem.length) this.weaponData.push(weaponItem[0]);
-    });
-
-    ensureDefined(game.user, 'game not initialized');
+    this.weaponData = getWeaponsFromAttacks(this.actor);
 
     return {
       weapons: {

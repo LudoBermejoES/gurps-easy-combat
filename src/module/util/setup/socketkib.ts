@@ -4,19 +4,25 @@ import FeintDefense from '../../applications/feintDefense.js';
 import { MODULE_NAME } from '../constants.js';
 import ManeuverChooser from '../../applications/maneuverChooser';
 import { ensureDefined } from '../miscellaneous';
+import AttackChooser from '../../applications/attackChooser';
+
+function getToken(token: string): Token {
+  ensureDefined(game.user, 'game not initialized');
+  ensureDefined(game.canvas.tokens, 'game not initialized');
+  const tokenFound = game.canvas.tokens.placeables.find((tokenF) => tokenF.id === token);
+  if (tokenFound) {
+    return tokenFound;
+  }
+  const tokens = game.canvas.tokens.controlled;
+  return tokens.find((tok) => tok.id === token) as Token;
+}
+
 const functionsToRegister = {
+  readyWeaponsFirstRound: (token: string) => {
+    new AttackChooser(getToken(token), { onlyReadyActions: true, beforeCombat: true }).render(true);
+  },
   chooseManeuver: (token: string) => {
-    ensureDefined(game.user, 'game not initialized');
-    ensureDefined(game.canvas.tokens, 'game not initialized');
-    const tokenFound = game.canvas.tokens.placeables.find((tokenF) => tokenF.id === token);
-    if (tokenFound) {
-      new ManeuverChooser(tokenFound).render(true);
-      return;
-    }
-    const tokens = game.canvas.tokens.controlled;
-    debugger;
-    const tokenSelected: Token = tokens.find((tok) => tok.id === token) as Token;
-    new ManeuverChooser(tokenSelected).render(true);
+    new ManeuverChooser(getToken(token)).render(true);
   },
   attemptDefense: DefenseChooser.attemptDefense,
   attemptFeintDefense: FeintDefense.attemptDefense,

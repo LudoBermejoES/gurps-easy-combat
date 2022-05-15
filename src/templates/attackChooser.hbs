@@ -18,63 +18,79 @@
 </style>
 <div>
   <div class="container">
+    {{#unless beforeCombat}}
     <div class="nostyles">
-      <input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">Mantén la ventana
-      abierta después de atacar</label></div>
+        <input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">Mantén la ventana
+        abierta después de atacar</label></div>
     <div  class="nostyles">
       <input type="button" class="clickable" id="closeAndReturn" value="Volver a escoger maniobra">
     </div>
+    {{ else }}
+      <div  class="nostyles">
+        <input type="button" class="clickable" id="close" value="Cerrar ventana">
+      </div>
+    {{/unless}}
   </div>
 
+  {{#if onlyReadyActions }}
+    {{#if weaponsToBeReady.items.length}}
+      <br>
+      {{#if beforeCombat}}
+          <h2>Armas preparadas ANTES DEL COMBATE</h2>
+      {{else}}
+          <h2>Armas que tienes que preparar antes de atacar con ellas</h2>
+      {{/if}}
+      {{> choiceTable weaponsToBeReady}}
+    {{/if}}
+  {{else}}
+    {{#if melee.items.length}}
+      <br>
+      <h2>Cuerpo a cuerpo</h2>
+      {{> choiceTable melee}}
+    {{/if}}
+    {{#if ranged.items.length}}
+      <br>
+      <h2>A distancia</h2>
+      {{> choiceTable ranged}}
+    {{/if}}
 
-  {{#if melee.items.length}}
+    {{#if weaponsToBeReady.items.length}}
+      <br>
+      <h2>Armas que tienes que preparar antes de atacar con ellas</h2>
+      {{> choiceTable weaponsToBeReady}}
+    {{/if}}
     <br>
-    <h2>Cuerpo a cuerpo</h2>
-    {{> choiceTable melee}}
-  {{/if}}
-  {{#if ranged.items.length}}
-    <br>
-    <h2>A distancia</h2>
-    {{> choiceTable ranged}}
-  {{/if}}
 
-  {{#if weaponsToBeReady.items.length}}
-    <br>
-    <h2>Armas que tienes que preparar antes de atacar con ellas</h2>
-    {{> choiceTable weaponsToBeReady}}
-  {{/if}}
-  <br>
-
-  <h2>Maniobras de combate avanzadas</h2>
-  <br>
-  <details>
-    <summary><strong>Escoger una localización a atacar</strong></summary>
-    <div>
-      {{> choiceTable hitLocations}}
-    </div>
-  </details>
-
-  {{#if disarmAttack.items.length}}
-    <br>
-    <details>
-      <summary><strong>Desarmar</strong></summary>
-      <div>
-        {{> choiceTable disarmAttack}}
-      </div>
-    </details>
-  {{/if}}
-  {{#if counterAttack.items.length}}
+    <h2>Maniobras de combate avanzadas</h2>
     <br>
     <details>
-      <summary><strong>Contraataque</strong></summary>
+      <summary><strong>Escoger una localización a atacar</strong></summary>
       <div>
-        <p>Un contraataque exitoso penalizará la parada del contrincante en -2</p>
-        {{> choiceTable counterAttack}}
+        {{> choiceTable hitLocations}}
       </div>
     </details>
+
+    {{#if disarmAttack.items.length}}
+      <br>
+      <details>
+        <summary><strong>Desarmar</strong></summary>
+        <div>
+          {{> choiceTable disarmAttack}}
+        </div>
+      </details>
+    {{/if}}
+    {{#if counterAttack.items.length}}
+      <br>
+      <details>
+        <summary><strong>Contraataque</strong></summary>
+        <div>
+          <p>Un contraataque exitoso penalizará la parada del contrincante en -2</p>
+          {{> choiceTable counterAttack}}
+        </div>
+      </details>
+    {{/if}}
+
+    <h2></h2>
   {{/if}}
-
-  <h2></h2>
-
 </div>
 

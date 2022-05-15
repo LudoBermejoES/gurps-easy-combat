@@ -22,6 +22,8 @@ interface AttackData {
   rangedOnly?: boolean;
   keepOpen?: boolean;
   twoAttacks?: boolean;
+  onlyReadyActions?: boolean;
+  beforeCombat?: boolean;
 }
 
 interface Location {
@@ -82,6 +84,8 @@ export default class AttackChooser extends BaseActorController {
   }
 
   getData(): {
+    onlyReadyActions: boolean;
+    beforeCombat: boolean;
     disarmAttack: ChooserData<['weapon', 'mode', 'level', 'reach']>;
     counterAttack: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
     melee: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
@@ -155,9 +159,9 @@ export default class AttackChooser extends BaseActorController {
       }) => !item.remainingRounds,
     );
 
-    const rangedData = rangedAttackValid.filter((attack) => attack.rof === '1');
+    const rangedData = rangedAttackValid.filter((attack) => !attack.rof || attack.rof === '1');
     this.rangedData = rangedData;
-    const rangedAttackWithROFMoreThan1 = rangedAttackValid.filter((attack) => attack.rof !== '1');
+    const rangedAttackWithROFMoreThan1 = rangedAttackValid.filter((attack) => attack.rof && attack.rof !== '1');
     rangedAttackWithROFMoreThan1.forEach((attack) => {
       if (attack.rof) {
         const rof = Number(attack.rof.split('!').join(''));
@@ -268,6 +272,8 @@ export default class AttackChooser extends BaseActorController {
 
       this.weaponsToBeReadyData = weaponsToBeReadyData;
       return {
+        onlyReadyActions: this.data.onlyReadyActions || false,
+        beforeCombat: this.data.beforeCombat || false,
         disarmAttack: {
           items: disarmAttackData,
           headers: ['weapon', 'mode', 'level', 'reach'],
@@ -302,7 +308,10 @@ export default class AttackChooser extends BaseActorController {
       };
     }
 
+    this.weaponsToBeReadyData = weaponsToBeReadyData;
     return {
+      onlyReadyActions: this.data.onlyReadyActions || false,
+      beforeCombat: this.data.beforeCombat || false,
       disarmAttack: {
         items: disarmAttackData,
         headers: ['weapon', 'mode', 'level', 'reach'],
@@ -352,6 +361,13 @@ export default class AttackChooser extends BaseActorController {
       new ManeuverChooser(token).render(true);
       this.closeForEveryone();
     });
+    $('#close', html).click(() => {
+      this.closeForEveryone();
+    });
+  }
+
+  async closeWindow() {
+    this.closeForEveryone();
   }
 
   async readyWeapon(index: number): Promise<void> {
@@ -375,7 +391,7 @@ export default class AttackChooser extends BaseActorController {
           const result = await GURPS.executeOTF(`SK:${fastDrawSkill.name}`, false, null, undefined);
           if (result) {
             remainingRounds = remainingRounds - 2;
-            this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+            await this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
               items: [...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== weapon.itemid) || [])],
             });
             if (remainingRounds <= 0) {
@@ -383,6 +399,16 @@ export default class AttackChooser extends BaseActorController {
               ensureDefined(game.user, 'game not initialized');
               new ManeuverChooser(token).render(true);
               this.closeForEveryone();
+              if (this.data.keepOpen || this.data.beforeCombat) {
+                setTimeout(
+                  () =>
+                    new AttackChooser(this.token, {
+                      onlyReadyActions: this.data.onlyReadyActions,
+                      beforeCombat: this.data.beforeCombat,
+                    }).render(true),
+                  500,
+                );
+              }
               return;
             }
           }
@@ -390,7 +416,7 @@ export default class AttackChooser extends BaseActorController {
       }
     }
 
-    this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+    await this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
       items: [
         ...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== weapon.itemid) || []),
         {
@@ -399,8 +425,20 @@ export default class AttackChooser extends BaseActorController {
         },
       ],
     });
-    await this.token.setManeuver('ready');
+
+    if (!this.data.beforeCombat) await this.token.setManeuver('ready');
     this.closeForEveryone();
+
+    if (this.data.keepOpen || this.data.beforeCombat) {
+      setTimeout(
+        () =>
+          new AttackChooser(this.token, {
+            onlyReadyActions: this.data.onlyReadyActions,
+            beforeCombat: this.data.beforeCombat,
+          }).render(true),
+        500,
+      );
+    }
   }
 
   async makeAttack(

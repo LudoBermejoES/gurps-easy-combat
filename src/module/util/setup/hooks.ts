@@ -7,15 +7,8 @@ import AttackChooser from '../../applications/attackChooser.js';
 import { registerFunctions } from './socketkib.js';
 import { getAttacks } from '../../dataExtractor.js';
 import { MeleeAttack, RangedAttack } from '../../types';
+import { getUserFromCombatant } from '../combatants';
 
-function getPriority(user: User, actor: Actor) {
-  let priority = 0;
-  if (user.character === actor) priority += 100;
-  if (actor.testUserPermission(user, 'OWNER')) priority += 10;
-  if (user.isGM) priority -= 1;
-  if (!user.active) priority -= 1000;
-  return priority;
-}
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
 
@@ -33,7 +26,6 @@ export function registerHooks(): void {
 
   const deleteFlags = (combat: Combat) => {
     combat.combatants.forEach((combatant) => {
-      combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
       combatant?.token?.unsetFlag(MODULE_NAME, 'location');
       combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
       combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
@@ -41,16 +33,24 @@ export function registerHooks(): void {
       combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
       combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
       combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
+      combatant?.token?.unsetFlag(MODULE_NAME, 'choosingManeuver');
     });
   };
 
   Hooks.on('preUpdateToken', (token: Token, changes: any, data: any) => {
     // If position hasn't changed, or animate is false, don't change anything.
+
     if (!game.combat) return;
+
     const combatants = game.combat.combatants || [];
     let foundToken = false;
     combatants.forEach((combatant) => (combatant.data.tokenId === token.id ? (foundToken = true) : ''));
     if (!(changes.x || changes.y) || !foundToken) return;
+    const choosingManeuver: any = token.getFlag(MODULE_NAME, 'choosingManeuver');
+    if (choosingManeuver.choosing) {
+      ui.notifications?.error('Antes de poder moverte tienes que escoger una maniobra');
+      return false;
+    }
     const originalMove = { x: token.data.x, y: token.data.y };
     const newMove = { x: changes.x || token.data.x, y: changes.y || token.data.y };
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -76,19 +76,14 @@ export function registerHooks(): void {
   });
 
   // on create combatant, set the maneuver
-  Hooks.on('createCombatant', (combatant: Combatant) => {
+  Hooks.on('createCombatant', async (combatant: Combatant) => {
     ensureDefined(combatant.token, 'No actor selected');
     const actor = combatant.token.actor;
     ensureDefined(actor, 'No actor selected');
 
+    ensureDefined(game.combat, 'No hay combate activo');
     combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'location');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'lastParry');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
+    deleteFlags(game.combat);
 
     const attacks: {
       melee: MeleeAttack[];
@@ -98,12 +93,17 @@ export function registerHooks(): void {
     const meleeWeaponIds: string[] = attacks.melee.map((melee) => melee.itemid).filter((i) => i !== undefined);
     const rangedWeaponIds: string[] = attacks.ranged.map((melee) => melee.itemid).filter((i) => i !== undefined);
 
-    combatant.token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+    console.log('Añado maniobra ready action');
+    await combatant.token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
       items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds])).map((item) => ({
         itemId: item,
         remainingRounds: 1,
       })),
     });
+    const user: User = getUserFromCombatant(combatant);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, combatant.data.tokenId);
   });
 
   Hooks.on('deleteCombat', async (combat: Combat) => {
@@ -139,14 +139,7 @@ export function registerHooks(): void {
         // @ts-ignore
         const combat = ui?.combat?.viewed;
         const combatant = combat.combatants.get(combatantId);
-        combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const priorities = new Map(game.users.map((user) => [user, getPriority(user, combatant.token)]));
-        const maxPriority = Math.max(...priorities.values());
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const user = game.users.filter((user) => priorities.get(user) === maxPriority);
+        const user: User = getUserFromCombatant(combatant);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         window.EasyCombat.socket.executeAsUser('chooseManeuver', user[0].id, combatant.data.tokenId);

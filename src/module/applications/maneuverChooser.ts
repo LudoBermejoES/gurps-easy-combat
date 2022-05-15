@@ -20,7 +20,6 @@ export default class ManeuverChooser extends BaseManeuverChooser {
       title: `Elección de maniobra - ${token.name}`,
       template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
     });
-
     this.maneuversInfo = {
       basic: {
         move: {
@@ -43,6 +42,9 @@ export default class ManeuverChooser extends BaseManeuverChooser {
         ready: {
           tooltip: 'Preparar un arma u otro equipo',
           page: 'B:366',
+          callback: (token: Token) => {
+            new AttackChooser(token, { onlyReadyActions: true }).render(true);
+          },
         },
         concentrate: {
           tooltip: 'Enfocarse en una tarea mental, como un hechizo',

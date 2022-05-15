@@ -77,17 +77,19 @@ export default class DefenseChooser extends BaseActorController {
   activateListeners(html: JQuery): void {
     html.on('click', '#dodge', () => {
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreat').val();
-      const isProne = $('#prone').val();
+      const isRetreating = $('#retreat').is(':checked');
+      const isProne = $('#prone').is(':checked');
 
-      if (isRetreating === 'on') {
+      if (isRetreating) {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
       }
 
-      if (isProne === 'on') {
+      if (isProne) {
         this.data.modifiers.push({ mod: +3, desc: 'En el suelo (cambias tu posición a tumbado)' });
-        this.addRetreatMalus();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.actor.replacePosture('prone');
       }
 
       const result = GURPS.performAction(
@@ -99,11 +101,7 @@ export default class DefenseChooser extends BaseActorController {
         this.actor,
       );
       this.data.resolve(result);
-      if (isProne === 'on') {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.actor.replacePosture('prone');
-      }
+
       this.closeForEveryone();
     });
     html.on('click', '#acrobatic-dodge', async () => {

@@ -53,6 +53,9 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
       template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
       ...options,
     });
+    this.token.document.setFlag(MODULE_NAME, 'choosingManeuver', {
+      choosing: true,
+    });
   }
   getData(): {
     basicManeuver: ChooserData<['Maneuver', 'Description']>;
@@ -82,6 +85,9 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
       html,
       'manuever_choice,manuever_choice2',
       (index, element, type) => {
+        this.token.document.setFlag(MODULE_NAME, 'choosingManeuver', {
+          choosing: false,
+        });
         const selected = type || 'basic';
         const maneuver =
           selected === 'basic' ? this.getManeuversData().basic[index] : this.getManeuversData().advanced[index];
