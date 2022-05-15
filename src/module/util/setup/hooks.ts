@@ -25,22 +25,29 @@ export function registerHooks(): void {
   });
 
   const deleteFlags = (combat: Combat) => {
-    combat.combatants.forEach((combatant) => {
-      combatant?.token?.unsetFlag(MODULE_NAME, 'location');
-      combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
-      combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
-      combatant?.token?.unsetFlag(MODULE_NAME, 'lastParry');
-      combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
-      combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
-      combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
-      combatant?.token?.unsetFlag(MODULE_NAME, 'choosingManeuver');
-    });
+    if (game.user?.isGM) {
+      combat.combatants.forEach((combatant) => {
+        combatant?.token?.unsetFlag(MODULE_NAME, 'location');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastParry');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'choosingManeuver');
+      });
+    }
   };
 
   Hooks.on('preUpdateToken', (token: Token, changes: any, data: any) => {
     // If position hasn't changed, or animate is false, don't change anything.
-
     if (!game.combat) return;
+    const actor = token.actor;
+    ensureDefined(actor, 'No actor selected');
+    ensureDefined(game.user, 'No user selected');
+    if (!highestPriorityUsers(actor).includes(game.user)) {
+      return;
+    }
 
     const combatants = game.combat.combatants || [];
     let foundToken = false;
@@ -80,6 +87,10 @@ export function registerHooks(): void {
     ensureDefined(combatant.token, 'No actor selected');
     const actor = combatant.token.actor;
     ensureDefined(actor, 'No actor selected');
+    ensureDefined(game.user, 'No user selected');
+    if (!highestPriorityUsers(actor).includes(game.user)) {
+      return;
+    }
 
     ensureDefined(game.combat, 'No hay combate activo');
     combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
@@ -140,9 +151,10 @@ export function registerHooks(): void {
         const combat = ui?.combat?.viewed;
         const combatant = combat.combatants.get(combatantId);
         const user: User = getUserFromCombatant(combatant);
+        debugger;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        window.EasyCombat.socket.executeAsUser('chooseManeuver', user[0].id, combatant.data.tokenId);
+        window.EasyCombat.socket.executeAsUser('chooseManeuver', user.id, combatant.data.tokenId);
       },
     };
     menu.splice(1, 0, entry);
