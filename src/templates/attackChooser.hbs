@@ -36,11 +36,16 @@
     {{#if weaponsToBeReady.items.length}}
       <br>
       {{#if beforeCombat}}
-          <h2>Armas preparadas ANTES DEL COMBATE</h2>
+          <h2>Armas que tenías equipadas ANTES DEL COMBATE</h2>
       {{else}}
-          <h2>Armas que tienes que preparar antes de atacar con ellas</h2>
+          <h2>Armas que tienes que equipar antes de atacar con ellas</h2>
       {{/if}}
       {{> choiceTable weaponsToBeReady}}
+    {{/if}}
+    {{#if weaponsNotToBeReady.items.length}}
+      <br>
+      <h2>Armas ya equipadas</h2>
+      {{> choiceTable weaponsNotToBeReady}}
     {{/if}}
   {{else}}
     {{#if melee.items.length}}

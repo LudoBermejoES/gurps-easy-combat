@@ -1,7 +1,6 @@
 import { ReadyManeouverNeeded } from '../types';
 import { MODULE_NAME } from './constants';
 import { ensureDefined, getFullName } from './miscellaneous';
-import { getParries } from '../dataExtractor';
 
 export function getReadyActionsWeaponNeeded(
   document: TokenDocument,

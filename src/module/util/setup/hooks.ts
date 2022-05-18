@@ -8,6 +8,7 @@ import { registerFunctions } from './socketkib.js';
 import { getAttacks } from '../../dataExtractor.js';
 import { MeleeAttack, RangedAttack } from '../../types';
 import { getUserFromCombatant } from '../combatants';
+import { clearEquipment, getEquippedItems } from '../weaponMacrosCTA';
 
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
@@ -95,6 +96,7 @@ export function registerHooks(): void {
     ensureDefined(game.combat, 'No hay combate activo');
     combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
     deleteFlags(game.combat);
+    //clearEquipment(combatant.token.id);
 
     const attacks: {
       melee: MeleeAttack[];
@@ -103,13 +105,14 @@ export function registerHooks(): void {
 
     const meleeWeaponIds: string[] = attacks.melee.map((melee) => melee.itemid).filter((i) => i !== undefined);
     const rangedWeaponIds: string[] = attacks.ranged.map((melee) => melee.itemid).filter((i) => i !== undefined);
-
-    console.log('Añado maniobra ready action');
+    const equippedItems: string[] = await getEquippedItems(combatant?.token);
     await combatant.token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
-      items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds])).map((item) => ({
-        itemId: item,
-        remainingRounds: 1,
-      })),
+      items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds]))
+        .filter((item) => !equippedItems.includes(item))
+        .map((item) => ({
+          itemId: item,
+          remainingRounds: 1,
+        })),
     });
     const user: User = getUserFromCombatant(combatant);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -119,6 +122,12 @@ export function registerHooks(): void {
 
   Hooks.on('deleteCombat', async (combat: Combat) => {
     deleteFlags(combat);
+    if (game.user?.isGM) {
+      combat.combatants.forEach((combatant) => {
+        ensureDefined('combatant.token', 'Token exists');
+        // clearEquipment(combatant?.token?.id || '');
+      });
+    }
   });
 
   Hooks.on('updateCombat', async (combat: Combat) => {
@@ -151,7 +160,6 @@ export function registerHooks(): void {
         const combat = ui?.combat?.viewed;
         const combatant = combat.combatants.get(combatantId);
         const user: User = getUserFromCombatant(combatant);
-        debugger;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         window.EasyCombat.socket.executeAsUser('chooseManeuver', user.id, combatant.data.tokenId);

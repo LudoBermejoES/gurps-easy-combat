@@ -19,13 +19,13 @@ export const FAST_DRAW_SWORD_WEAPONS = ['RAPIER', ' SHORTSWORD', 'BASTARD SWORD'
 export const FAST_DRAW_TWO_HANDED_SWORD_WEAPONS = ['GREATSWORD'];
 
 export const FAST_DRAW_SKILLS: any = {
-  'FAST-DRAW (Arrows)': ['CROSSBOW', ' BOW'],
+  'FAST-DRAW (Arrow)': ['CROSSBOW', ' BOW'],
   'FAST-DRAW (Force Sword)': ['FORCE SWORD'],
   'FAST-DRAW (Knife)': ['DAGGER', 'KNIFE'],
   'FAST-DRAW (Pistol)': ['PISTOL', 'REVOLVER'],
-  'FAST-DRAW (SWORD)': ['RAPIER', ' SHORTSWORD', 'BASTARD SWORD', 'BROADSWORD', 'LONGSWORD'],
-  'FAST-DRAW (TWO-HANDED SWORD)': ['GREATSWORD'],
-  'FAST-DRAW/TL* (AMMO)': ['AMMO'],
+  'FAST-DRAW (Sword)': ['RAPIER', ' SHORTSWORD', 'BASTARD SWORD', 'BROADSWORD', 'LONGSWORD'],
+  'FAST-DRAW (Two-handed sword)': ['GREATSWORD'],
+  'FAST-DRAW/TL* (Ammo)': ['AMMO'],
 };
 export const FAST_DRAW_ARROW_SEARCH = 'Fast-Draw/TL* (Arrows)';
 

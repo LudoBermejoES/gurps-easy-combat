@@ -8,13 +8,11 @@ function getPriority(user: User, actor: Actor) {
   return priority;
 }
 export function getUserFromCombatant(combatant: Combatant): User {
-  debugger;
   combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const priorities = new Map(game.users.map((user) => [user, getPriority(user, combatant.token._actor)]));
   const maxPriority = Math.max(...priorities.values());
-  debugger;
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return game.users.find((user) => priorities.get(user) === maxPriority);

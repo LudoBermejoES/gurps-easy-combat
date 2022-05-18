@@ -76,11 +76,9 @@ export default class DefenseChooser extends BaseActorController {
 
   activateListeners(html: JQuery): void {
     html.on('click', '#dodge', () => {
-      applyModifiers(this.data.modifiers);
       const isRetreating = $('#retreat').is(':checked');
       const isProne = $('#prone').is(':checked');
 
-      debugger;
       if (isRetreating) {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
@@ -93,6 +91,7 @@ export default class DefenseChooser extends BaseActorController {
         this.actor.replacePosture('prone');
       }
 
+      applyModifiers(this.data.modifiers);
       const result = GURPS.performAction(
         {
           orig: 'Dodge',
@@ -202,7 +201,7 @@ export default class DefenseChooser extends BaseActorController {
     const actor = token.actor;
     ensureDefined(actor, 'token without actor');
     if (allOutAttackManeuvers.includes(getManeuver(actor))) {
-      ChatMessage.create({ content: `${actor.name} can't defend because he is using all out attack` });
+      ChatMessage.create({ content: `${actor.name} no puede defenderse porque ha utilizado Ataque total (lo siento)` });
       return false;
     }
     const promise = new Promise<boolean>((resolve, reject) => {
