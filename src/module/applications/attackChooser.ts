@@ -552,12 +552,47 @@ export default class AttackChooser extends BaseActorController {
     const rangedAttack = attack as RangedAttack;
     if (mode === 'ranged') {
       let remainingRounds = 0;
-      if (rangedAttack.shots && rangedAttack.shots.includes('(') && Number(rangedAttack.shots.split('(')[0]) === 1) {
-        remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
+
+      // Shots
+      debugger;
+      if (rangedAttack.shots && rangedAttack.shots.includes('(')) {
+        // Throw weapon
+        if (rangedAttack.shots.split('(')[0] === 'T') {
+          remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
+        } else {
+          const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
+            this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
+          );
+          let weapon: ReadyManeouverNeeded | undefined = readyActionsWeaponNeeded?.items?.find(
+            (item: ReadyManeouverNeeded) => item.itemId === rangedAttack.itemid,
+          );
+
+          if (!weapon) {
+            weapon = {
+              itemId: rangedAttack.itemid,
+              remainingRounds: 0,
+              remainingShots: Number(eval(rangedAttack.shots.split('(')[0])),
+            };
+          } else if (weapon.remainingShots === undefined) {
+            weapon.remainingShots = Number(eval(rangedAttack.shots.split('(')[0]));
+          }
+
+          weapon.remainingShots -= Number(rangedAttack.rof) || 1;
+
+          if (weapon.remainingShots <= 0) {
+            remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
+          } else {
+            const items =
+              readyActionsWeaponNeeded?.items?.filter(
+                (item: ReadyManeouverNeeded) => item.itemId !== rangedAttack.itemid,
+              ) || [];
+            this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+              items: [...(items || []), weapon],
+            });
+          }
+        }
       }
-      if (rangedAttack.shots && rangedAttack.shots.includes('(') && rangedAttack.shots.split('(')[0] === 'T') {
-        remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
-      }
+
       if (remainingRounds) {
         const weapons: Item[] = getWeaponsFromAttacks(this.actor);
         const weaponToRemoveAmmo: Item | undefined = weapons.find((w) => w.itemid === rangedAttack.itemid);
@@ -577,6 +612,7 @@ export default class AttackChooser extends BaseActorController {
             {
               itemId: rangedAttack.itemid,
               remainingRounds,
+              remainingShots: Number(eval(rangedAttack.shots.split('(')[0])),
             },
           ],
         });

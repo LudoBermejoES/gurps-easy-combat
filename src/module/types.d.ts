@@ -61,6 +61,7 @@ interface Spell extends BaseSkill {
 export interface ReadyManeouverNeeded {
   itemId: string;
   remainingRounds: number;
+  remainingShots: number;
 }
 
 export interface Attack {
