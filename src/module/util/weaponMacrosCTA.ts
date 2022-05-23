@@ -1,5 +1,3 @@
-import { ensureDefined } from './miscellaneous';
-
 declare global {
   interface Window {
     CTA: any;
@@ -8,24 +6,66 @@ declare global {
 
 const CTA = window.CTA;
 
-async function addOrRemoveItem(token: Token, textureData: any, actor: boolean, name: string, r: any, id: string) {
-  if (await window.CTA.hasAnim(token, name)) {
-    CTA.removeAnimByName(token, name);
-    return;
+async function addOrRemoveItem(
+  token: Token,
+  textureData: any,
+  actor: boolean,
+  name: string,
+  hand: string,
+  r: any,
+  id: string,
+  toRemove: boolean,
+) {
+  if (toRemove === undefined) {
+    if (await window.CTA.hasAnim(token, name)) {
+      CTA.removeAnimByName(token, name);
+      return;
+    }
+    CTA.addAnimation(token, textureData, actor, name, r, id, hand);
+  } else if (toRemove) {
+    CTA.removeByItemId(token, id);
+  } else {
+    CTA.addAnimation(token, textureData, actor, name, r, id, hand);
   }
-
-  CTA.addAnimation(token, textureData, actor, name, r, id);
 }
 
-function cloak(token: Token, id: string) {
+export async function removeItemById(token: string, id: string): Promise<void> {
+  return CTA.removeByItemId(token, id);
+}
+
+function getPositionByHands(hand: string) {
+  if (hand === 'LEFT') {
+    return {
+      xScale: 0,
+      yScale: 0.5,
+    };
+  } else if (hand === 'RIGHT') {
+    return {
+      xScale: 1,
+      yScale: 0.5,
+    };
+  } else if (hand === 'BOTH') {
+    return {
+      xScale: 1,
+      yScale: 0.5,
+    };
+  } else if (hand === 'BOTH') {
+    return {
+      xScale: 0.5,
+      yScale: 0,
+    };
+  }
+}
+
+function cloak(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'icons/equipment/back/cloakcollared-red-gold.webp',
     scale: '0.5',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -33,18 +73,18 @@ function cloak(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Cloack', null, id);
+  addOrRemoveItem(token, textureData, false, 'Cloack', hand, null, id, toRemove);
 }
 
-function arrow(token: Token, id: string) {
+function arrow(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Arrow_01.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -52,18 +92,17 @@ function arrow(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Arrow', null, id);
+  addOrRemoveItem(token, textureData, false, 'Arrow', hand, null, id, toRemove);
 }
 
-function bullet(token: Token, id: string) {
+function bullets(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
-    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/bullet.png',
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/bullets.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -71,17 +110,18 @@ function bullet(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Bullet', null, id);
+  textureData.yScale = 1;
+  addOrRemoveItem(token, textureData, false, 'bullets', hand, null, id, toRemove);
 }
-function longbow(token: Token, id: string) {
+function longbow(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Longbow_01.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -89,18 +129,18 @@ function longbow(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Longbow', null, id);
+  addOrRemoveItem(token, textureData, false, 'Longbow', hand, null, id, toRemove);
 }
 
-function walterPPK(token: Token, id: string) {
+function walterPPK(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Walter%20PPK.png',
     scale: '0.5',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -108,18 +148,18 @@ function walterPPK(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'WalterPPK', null, id);
+  addOrRemoveItem(token, textureData, false, 'WalterPPK', hand, null, id, toRemove);
 }
 
-function imiUzi(token: Token, id: string) {
+function imiUzi(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/imi_uzi.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -127,18 +167,18 @@ function imiUzi(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'ImiUzi', null, id);
+  addOrRemoveItem(token, textureData, false, 'ImiUzi', hand, null, id, toRemove);
 }
 
-function sIGSauerP226(token: Token, id: string) {
+function sIGSauerP226(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/SIG_P226.png',
     scale: '0.5',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -146,18 +186,18 @@ function sIGSauerP226(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'WalterPPK', null, id);
+  addOrRemoveItem(token, textureData, false, 'WalterPPK', hand, null, id, toRemove);
 }
 
-function katana(token: Token, id: string) {
+function katana(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Katana.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -165,18 +205,18 @@ function katana(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Katana', null, id);
+  addOrRemoveItem(token, textureData, false, 'Katana', hand, null, id, toRemove);
 }
 
-function expandableBaton(token: Token, id: string) {
+function expandableBaton(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/extensible-baton.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -184,18 +224,37 @@ function expandableBaton(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'ExpandableBaton', null, id);
+  addOrRemoveItem(token, textureData, false, 'ExpandableBaton', hand, null, id, toRemove);
 }
 
-function shuriken(token: Token, id: string) {
+function blowPipe(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20antiguas/blowpipe.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'ExpandableBaton', hand, null, id, toRemove);
+}
+
+function shuriken(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'icons/skills/ranged/shuriken-thrown-orange.webp',
     scale: '0.5',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -203,18 +262,18 @@ function shuriken(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Shuriken', null, id);
+  addOrRemoveItem(token, textureData, false, 'Shuriken', hand, null, id, toRemove);
 }
 
-function pistolCrossbow(token: Token, id: string) {
+function pistolCrossbow(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Crossbow_Hand_01.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -222,18 +281,18 @@ function pistolCrossbow(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Pistol Crossbow', null, id);
+  addOrRemoveItem(token, textureData, false, 'Pistol Crossbow', hand, null, id, toRemove);
 }
 
-function rapier(token: Token, id: string) {
+function rapier(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Swords/Rapier_A_01_1x1.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -241,18 +300,18 @@ function rapier(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Rapier', null, id);
+  addOrRemoveItem(token, textureData, false, 'Rapier', hand, null, id, toRemove);
 }
 
-function mace(token: Token, id: string) {
+function mace(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Mace_01.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -260,18 +319,18 @@ function mace(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Mace', null, id);
+  addOrRemoveItem(token, textureData, false, 'Mace', hand, null, id, toRemove);
 }
 
-function knife(token: Token, id: string) {
+function knife(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Dagger_01.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -279,10 +338,10 @@ function knife(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Dagger', null, id);
+  addOrRemoveItem(token, textureData, false, 'Dagger', hand, null, id, toRemove);
 }
 
-function throwingKnife(token: Token, id: string) {
+function throwingKnife(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath:
       'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Special/Throwing_Knife_Metal_Gray_Black_A_1x1.png',
@@ -290,8 +349,8 @@ function throwingKnife(token: Token, id: string) {
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -299,18 +358,18 @@ function throwingKnife(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'ThrowingKnife', null, id);
+  addOrRemoveItem(token, textureData, false, 'ThrowingKnife', hand, null, id, toRemove);
 }
 
-function shortSword(token: Token, id: string) {
+function shortSword(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Shortsword_01.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 0,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -318,18 +377,18 @@ function shortSword(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Shortsword', null, id);
+  addOrRemoveItem(token, textureData, false, 'Shortsword', hand, null, id, toRemove);
 }
 
-function smallShield(token: Token, id: string) {
+function smallShield(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Shields/Shield_Metal_Gray_B_1x1.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -337,18 +396,18 @@ function smallShield(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Shield', null, id);
+  addOrRemoveItem(token, textureData, false, 'Shield', hand, null, id, toRemove);
 }
 
-function mediumShield(token: Token, id: string) {
+function mediumShield(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Shields/Shield_Metal_Gray_A_1x1.png',
     scale: '1',
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -356,10 +415,10 @@ function mediumShield(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Shield', null, id);
+  addOrRemoveItem(token, textureData, false, 'Shield', hand, null, id, toRemove);
 }
 
-function largeShield(token: Token, id: string) {
+function largeShield(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath:
       'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Shields/Shield_Metal_Gray_Gold_C_1x1.png',
@@ -367,8 +426,8 @@ function largeShield(token: Token, id: string) {
     speed: 0,
     multiple: 1,
     rotation: 'static',
-    xScale: 1,
-    yScale: 0.5,
+    ...getPositionByHands(hand),
+
     belowToken: false,
     radius: 2,
     opacity: 1,
@@ -376,10 +435,14 @@ function largeShield(token: Token, id: string) {
     equip: false,
     lock: true,
   };
-  addOrRemoveItem(token, textureData, false, 'Shield', null, id);
+  addOrRemoveItem(token, textureData, false, 'Shield', hand, null, id, toRemove);
 }
 
 export function clearEquipment(token: string | null) {
+  CTA.removeAll(token, false);
+}
+
+export function removeEquipment(token: string | null) {
   CTA.removeAll(token, false);
 }
 
@@ -394,73 +457,84 @@ export async function clearAmmunition(name: string, token: Token) {
   } else if (nameToLook.includes('SHURIKEN')) {
     CTA.removeAnimByName(token.id, 'Shuriken');
   } else if (nameToLook.includes('WALTHER PPK')) {
-    CTA.removeAnimByName(token.id, 'Bullet');
+    CTA.removeAnimByName(token.id, 'bullets');
   } else if (nameToLook.includes('SIG-SAUER P226')) {
-    CTA.removeAnimByName(token.id, 'Bullet');
+    CTA.removeAnimByName(token.id, 'bullets');
   } else if (nameToLook.includes('IMI UZI')) {
-    CTA.removeAnimByName(token.id, 'Bullet');
+    CTA.removeAnimByName(token.id, 'bullets');
   }
 }
 
-export async function addAmmunition(name: string, token: Token, id: string) {
+export async function addAmmunition(name: string, token: Token, id: string, hand: string) {
   const nameToLook = name.toUpperCase();
   if (nameToLook.includes('REFLEX BOW')) {
-    await arrow(token, id);
+    arrow(token, id, hand, false);
   } else if (nameToLook.includes('REGULAR BOW')) {
-    await arrow(token, id);
-  } else if (nameToLook.includes('THROWING KNIFE')) {
-    await throwingKnife(token, id);
+    arrow(token, id, hand, false);
+  } else if (nameToLook.includes('WALTHER PPK')) {
+    bullets(token, id, hand, false);
+  } else if (nameToLook.includes('SIG-SAUER P226')) {
+    bullets(token, id, hand, false);
+  } else if (nameToLook.includes('IMI UZI')) {
+    bullets(token, id, hand, false);
   }
 }
 
-export async function drawEquipment(name: string, token: Token, id: string) {
+export async function drawEquipment(name: string, token: Token, id: string, hand: string, toRemove: boolean) {
   const nameToLook = name.toUpperCase();
   if (nameToLook.includes('PISTOL CROSSBOW')) {
-    await pistolCrossbow(token, id);
+    await pistolCrossbow(token, id, hand, toRemove);
   } else if (nameToLook.includes('SHORTSWORD')) {
-    await shortSword(token, id);
+    await shortSword(token, id, hand, toRemove);
   } else if (nameToLook.includes('RAPIER')) {
-    await rapier(token, id);
+    await rapier(token, id, hand, toRemove);
   } else if (nameToLook.includes('LARGE SHIELD')) {
-    await largeShield(token, id);
+    await largeShield(token, id, hand, toRemove);
   } else if (nameToLook.includes('SMALL SHIELD')) {
-    await smallShield(token, id);
+    await smallShield(token, id, hand, toRemove);
   } else if (nameToLook.includes('MEDIUM SHIELD')) {
-    await mediumShield(token, id);
+    await mediumShield(token, id, hand, toRemove);
   } else if (nameToLook.includes('MACE')) {
-    await mace(token, id);
+    await mace(token, id, hand, toRemove);
   } else if (nameToLook.includes('REFLEX BOW')) {
-    await longbow(token, id);
-    setTimeout(() => arrow(token, id), 500);
+    await longbow(token, id, hand, toRemove);
+    setTimeout(() => arrow(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('REGULAR BOW')) {
-    await longbow(token, id);
-    setTimeout(() => arrow(token, id), 500);
+    await longbow(token, id, hand, toRemove);
+    setTimeout(() => arrow(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('BOW')) {
-    await longbow(token, id);
-    setTimeout(() => arrow(token, id), 500);
+    await longbow(token, id, hand, toRemove);
+    setTimeout(() => arrow(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('THROWING KNIFE')) {
-    await throwingKnife(token, id);
+    await throwingKnife(token, id, hand, toRemove);
   } else if (nameToLook.includes('KNIFE')) {
-    await knife(token, id);
+    await knife(token, id, hand, toRemove);
   } else if (nameToLook.includes('CLOAK')) {
-    await cloak(token, id);
+    await cloak(token, id, hand, toRemove);
   } else if (nameToLook.includes('KATANA')) {
-    await katana(token, id);
+    await katana(token, id, hand, toRemove);
   } else if (nameToLook.includes('SHURIKEN')) {
-    await shuriken(token, id);
+    await shuriken(token, id, hand, toRemove);
   } else if (nameToLook.includes('WALTHER PPK')) {
-    await walterPPK(token, id);
-    setTimeout(() => bullet(token, id), 500);
+    await walterPPK(token, id, hand, toRemove);
+    setTimeout(() => bullets(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('SIG-SAUER P226')) {
-    await sIGSauerP226(token, id);
-    setTimeout(() => bullet(token, id), 500);
+    await sIGSauerP226(token, id, hand, toRemove);
+    setTimeout(() => bullets(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('IMI UZI')) {
-    await imiUzi(token, id);
-    setTimeout(() => bullet(token, id), 500);
+    await imiUzi(token, id, hand, toRemove);
+    setTimeout(() => bullets(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('EXPANDABLE BATON')) {
-    await expandableBaton(token, id);
+    await expandableBaton(token, id, hand, toRemove);
+  } else if (nameToLook.includes('BLOWPIPE')) {
+    await blowPipe(token, id, hand, toRemove);
   }
 }
-export async function getEquippedItems(token: TokenDocument) {
+export async function getEquippedItems(token: TokenDocument): Promise<
+  {
+    itemId: string;
+    hand: string;
+  }[]
+> {
   return CTA.getEquippedItems(token);
 }

@@ -13,6 +13,7 @@ export default class BaseActorController extends Application {
     BaseActorController.apps.set(id, this);
     ensureDefined(token.actor, 'token has no actor');
     this.actor = token.actor;
+    window.EasyCombat.appId = id;
   }
 
   async close(options?: Application.CloseOptions): Promise<void> {

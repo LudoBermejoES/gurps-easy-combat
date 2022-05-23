@@ -14,10 +14,18 @@ import {
 } from '../util/miscellaneous.js';
 import ManeuverChooser from './maneuverChooser';
 import { getReadyActionsWeaponNeeded } from '../util/readyWeapons';
-import { clearAmmunition, drawEquipment } from '../util/weaponMacrosCTA';
-import { getWeaponsFromAttacks } from '../util/weapons';
+import {
+  addAmmunition,
+  clearAmmunition,
+  drawEquipment,
+  getEquippedItems,
+  removeItemById,
+} from '../util/weaponMacrosCTA';
+import { getWeaponsFromAttacks, getAmmunnitionFromInventory } from '../util/weapons';
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
+window.drawEquipment = drawEquipment;
 
 interface AttackData {
   meleeOnly?: boolean;
@@ -68,6 +76,16 @@ export default class AttackChooser extends BaseActorController {
     rcl: string;
   }[];
 
+  meleeData: {
+    mode: string;
+    weapon: string;
+    damage: string;
+    notes: string;
+    level: number;
+    itemid: string;
+    remainingRounds: number;
+  }[];
+
   attackCount = 1;
   twoWeaponAttacksCount = 1;
 
@@ -85,6 +103,7 @@ export default class AttackChooser extends BaseActorController {
       title: `Attack Chooser - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/attackChooser.hbs`,
     });
+    this.meleeData = [];
     this.rangedData = [];
     this.data = data;
     this.attacks = getAttacks(this.actor);
@@ -106,33 +125,61 @@ export default class AttackChooser extends BaseActorController {
     data: AttackData;
   } {
     const { melee, ranged } = getAttacks(this.actor);
+    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
 
     const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
 
-    const meleeDataOriginal = melee.map(({ name, mode, level, damage, reach, notes, itemid }) => {
-      const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
-        itemId: '',
-        remainingRounds: 0,
-      };
-      return {
-        weapon: name,
-        mode,
-        level,
-        damage,
-        reach,
-        notes,
-        itemid,
-        remainingRounds: readyNeeded?.remainingRounds || 0,
-      };
-    });
+    const meleeDataOriginal = melee
+      .map(({ name, mode, level, damage, reach, notes, itemid }) => {
+        const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
+          itemId: '',
+          remainingRounds: 0,
+        };
+        return {
+          weapon: name,
+          mode,
+          level,
+          damage,
+          reach,
+          notes,
+          itemid,
+          remainingRounds: readyNeeded?.remainingRounds || 0,
+        };
+      })
+      .filter(
+        (item: {
+          mode: string;
+          weapon: string;
+          damage: string;
+          notes: string;
+          level: number;
+          itemid: string;
+          remainingRounds: number;
+        }) => {
+          const weapon = weapons.find((w) => w.itemid === item.itemid);
+          if (weapon && weapon.count === 0) {
+            return false;
+          }
+          return true;
+        },
+      );
 
     const meleeData = meleeDataOriginal.filter(
-      (item: { mode: string; weapon: string; damage: string; notes: string; level: number; remainingRounds: number }) =>
-        !item.remainingRounds,
+      (item: {
+        mode: string;
+        weapon: string;
+        damage: string;
+        notes: string;
+        level: number;
+        itemid: string;
+        remainingRounds: number;
+      }) => {
+        return !item.remainingRounds;
+      },
     );
-
-    const rangedDataOriginal = ranged.map(
-      ({ name, mode, level, damage, range, acc, bulk, notes, itemid, rof, rcl }) => {
+    this.meleeData = meleeData;
+    const rangedDataOriginal = ranged
+      .map(({ name, mode, level, damage, range, acc, bulk, notes, itemid, rof, rcl }) => {
         const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
           itemId: '',
           remainingRounds: 0,
@@ -151,8 +198,35 @@ export default class AttackChooser extends BaseActorController {
           rcl,
           remainingRounds: readyNeeded?.remainingRounds || 0,
         };
-      },
-    );
+      })
+      .filter(
+        (item: {
+          mode: string;
+          weapon: string;
+          damage: string;
+          itemid: string;
+          notes: string;
+          level: number;
+          range: string;
+          accuracy: string;
+          bulk: string;
+          remainingRounds: number;
+          rof: string;
+          rcl: string;
+        }) => {
+          const rAttack = ranged.find((r) => r.itemid === item.itemid);
+          if (rAttack) {
+            const weapon = getAmmunnitionFromInventory(this.actor, rAttack, 'data.equipment.carried');
+            if (!weapon?.ammo) {
+              return false;
+            }
+            if (weapon.ammo.count === 0) {
+              return false;
+            }
+          }
+          return true;
+        },
+      );
 
     const rangedAttackValid = rangedDataOriginal.filter(
       (item: {
@@ -167,15 +241,38 @@ export default class AttackChooser extends BaseActorController {
         remainingRounds: number;
         rof: string;
         rcl: string;
-      }) => !item.remainingRounds,
+      }) => {
+        return !item.remainingRounds;
+      },
     );
 
     const rangedData = rangedAttackValid.filter((attack) => !attack.rof || attack.rof === '1');
     this.rangedData = rangedData;
     const rangedAttackWithROFMoreThan1 = rangedAttackValid.filter((attack) => attack.rof && attack.rof !== '1');
+
     rangedAttackWithROFMoreThan1.forEach((attack) => {
       if (attack.rof) {
-        const rof = Number(attack.rof.split('!').join(''));
+        let rof = Number(attack.rof.split('!').join(''));
+
+        const weapon: ReadyManeouverNeeded | undefined = readyActionsWeaponNeeded?.items?.find(
+          (item: ReadyManeouverNeeded) => item.itemId === attack.itemid,
+        );
+
+        if (weapon && weapon.remainingShots && weapon.remainingShots < rof) {
+          rof = weapon.remainingShots;
+        }
+
+        let maxROF = 1000;
+        const rAttack = ranged.find((r) => r.itemid === attack.itemid);
+        if (rAttack) {
+          const weapon = getAmmunnitionFromInventory(this.actor, rAttack, 'data.equipment.carried');
+          if (weapon?.ammo) {
+            maxROF = weapon.ammo.count;
+          }
+        }
+
+        rof = Math.min(rof, maxROF);
+
         for (let i = 1; i <= rof; i++) {
           const newAttack = { ...attack };
           newAttack.weapon += ` -- Disparar ${i} proyectiles`;
@@ -390,7 +487,7 @@ export default class AttackChooser extends BaseActorController {
     activateChooser(html, 'melee_attacks', (index) => this.makeAttack('melee', index, undefined));
     activateChooser(html, 'ranged_attacks', (index, element) => this.makeAttack('ranged', index, element));
     activateChooser(html, 'weapons_to_be_ready', (index) => this.readyWeapon(index));
-    activateChooser(html, 'weapons_not_to_be_ready', (index) => this.unReadyWeapon(index));
+    activateChooser(html, 'weapons_not_to_be_ready', (index) => this.unReadyWeaponChooser(index));
     activateChooser(html, 'hit_locations', (index, element) => this.chooseLocation(index, element));
     html.on('change', '#keepOpen', (event) => {
       this.data.keepOpen = $(event.currentTarget).is(':checked');
@@ -410,21 +507,32 @@ export default class AttackChooser extends BaseActorController {
     this.closeForEveryone();
   }
 
-  async unReadyWeapon(index: number): Promise<void> {
-    const weapon = this.weaponsNotToBeReadyData[index];
-    const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
+  async unReadyWeapon(weapon: any, token: TokenDocument): Promise<void> {
+    const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(token);
+    let remainingRounds = 1;
+    if (token.actor) {
+      const { ranged } = getAttacks(token.actor);
+      const rangedAttack: RangedAttack | undefined = ranged.find((i) => i.itemid === weapon.itemid);
+      if (rangedAttack) {
+        const numberOfShots: string = rangedAttack.shots.split('(')[0];
+        if (!isNaN(Number(numberOfShots)) && Number(numberOfShots) === 1) {
+          remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]) + 1;
+        }
+      }
+    }
 
     await this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
       items: [
         ...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== weapon.itemid) || []),
         {
           itemId: weapon.itemid,
-          remainingRounds: 1,
+          remainingRounds,
         },
       ],
     });
-
-    await drawEquipment(weapon.name, this.token, weapon.itemid);
+    console.log('Actualizo', weapon);
+    console.log(await this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded'));
+    await removeItemById(token.id as string, weapon.itemid);
     if (this.data.keepOpen || this.data.beforeCombat) {
       setTimeout(
         () =>
@@ -436,50 +544,134 @@ export default class AttackChooser extends BaseActorController {
       );
     }
   }
+  async unReadyWeaponChooser(index: number): Promise<void> {
+    const weapon = this.weaponsNotToBeReadyData[index];
+    return this.unReadyWeapon(weapon, this.token.document);
+  }
 
-  async readyWeapon(index: number): Promise<void> {
-    const weapon = this.weaponsToBeReadyData[index];
+  async removeWeapon(token: TokenDocument, weapon: any) {
+    console.log('TRATO DE ELIMINAR ', weapon);
+    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
+    const weaponToRemove: Item | undefined = weapons.find((w) => w.itemid === weapon.itemId);
+    if (weaponToRemove) {
+      console.log('ELIMINO ', weaponToRemove);
+      return this.unReadyWeapon(weaponToRemove, token);
+    }
+    return Promise.resolve();
+  }
 
+  async checkIfRemoveWeaponFromHandNeeded(token: TokenDocument, hand: string) {
+    const equipped = await getEquippedItems(token);
+    const removeFromHandItems = equipped.filter((e) => e.hand === hand || e.hand === 'BOTH' || hand === 'BOTH');
+    console.log('Total a eliminar', removeFromHandItems);
+    const promises: Promise<void>[] = [];
+    if (removeFromHandItems.length >= 0) {
+      removeFromHandItems.forEach((weapon) => promises.push(this.removeWeapon(token, weapon)));
+    }
+    await Promise.allSettled(promises);
+  }
+
+  async fastDrawSkillCheck(weapon: any, remainingRounds: number): Promise<boolean> {
     const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
 
-    let remainingRounds =
-      (readyActionsWeaponNeeded.items.find((item) => item.itemId === weapon.itemid) || {}).remainingRounds || 1;
-
-    if (!this.data.beforeCombat) {
-      for (const SKILL of Object.keys(FAST_DRAW_SKILLS)) {
-        const fastDrawSkill = findSkillSpell(this.actor, SKILL, true, false);
-        if (fastDrawSkill) {
-          const SKILLS = FAST_DRAW_SKILLS[SKILL];
-          const hasWeapon = SKILLS.find((element: any) => {
-            if (weapon.name.toUpperCase().includes(element)) {
-              return true;
-            }
-          });
-          if (fastDrawSkill && hasWeapon && remainingRounds === 1) {
-            const result = await GURPS.executeOTF(`SK:${fastDrawSkill.name}`, false, null, undefined);
-            if (result) {
-              remainingRounds = remainingRounds - 2;
-              await this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
-                items: [...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== weapon.itemid) || [])],
-              });
-              if (remainingRounds <= 0) {
-                const token = this.token;
-                await drawEquipment(weapon.name, token, weapon.itemid);
-                this.closeForEveryone();
-                setTimeout(
-                  () =>
-                    new AttackChooser(this.token, {
-                      onlyReadyActions: this.data.onlyReadyActions,
-                      beforeCombat: this.data.beforeCombat,
-                    }).render(true),
-                  500,
-                );
-                return;
+    for (const SKILL of Object.keys(FAST_DRAW_SKILLS)) {
+      const fastDrawSkill = findSkillSpell(this.actor, SKILL, true, false);
+      if (fastDrawSkill) {
+        const SKILLS = FAST_DRAW_SKILLS[SKILL];
+        const hasWeapon = SKILLS.find((element: any) => {
+          if (weapon.name.toUpperCase().includes(element)) {
+            return true;
+          }
+        });
+        if (fastDrawSkill && hasWeapon && remainingRounds === 1) {
+          const result = await GURPS.executeOTF(`SK:${fastDrawSkill.name}`, false, null, undefined);
+          if (result) {
+            remainingRounds = remainingRounds - 2;
+            await this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+              items: [...(readyActionsWeaponNeeded.items.filter((item) => item.itemId !== weapon.itemid) || [])],
+            });
+            if (remainingRounds <= 0) {
+              const token = this.token;
+              this.closeForEveryone();
+              const equippedWeapons = await getEquippedItems(this.token.document);
+              const equippedWeapon = equippedWeapons.find((i) => i.itemId === weapon.itemid);
+              if (!equippedWeapon) {
+                const hand = await this.chooseHand();
+                await this.checkIfRemoveWeaponFromHandNeeded(token.document, hand);
+                await drawEquipment(weapon.name, token, weapon.itemid, hand, false);
               }
+              setTimeout(
+                () =>
+                  new AttackChooser(this.token, {
+                    onlyReadyActions: this.data.onlyReadyActions,
+                    beforeCombat: this.data.beforeCombat,
+                  }).render(true),
+                500,
+              );
+              return true;
             }
           }
         }
       }
+    }
+    return false;
+  }
+
+  async chooseHand(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const d: Dialog = new Dialog({
+        title: 'Test Dialog',
+        content: '<p>You must choose either Option 1, or Option 2</p>',
+        buttons: {
+          left: {
+            icon: '<i class="fas fa-check"></i>',
+            label: 'Mano hábil',
+            callback: () => resolve('LEFT'),
+          },
+          right: {
+            icon: '<i class="fas fa-times"></i>',
+            label: 'Mano torpe',
+            callback: () => resolve('RIGHT'),
+          },
+          both: {
+            icon: '<i class="fas fa-times"></i>',
+            label: 'Ambas manos (como un arco)',
+            callback: () => resolve('BOTH'),
+          },
+        },
+        default: 'right',
+        render: (html) => console.log('Register interactivity in the rendered dialog'),
+        close: (html) => console.log('This always is logged no matter which option is chosen'),
+      });
+      d.render(true);
+    });
+  }
+
+  async readyWeapon(index: number): Promise<void> {
+    const weapon = this.weaponsToBeReadyData[index];
+    const equippedWeapons = await getEquippedItems(this.token.document);
+    const equippedWeapon = equippedWeapons.find((i) => i.itemId === weapon.itemid);
+    let handWeapon = 'NONE';
+    if (!equippedWeapon) {
+      const hand: string = await this.chooseHand();
+      await this.checkIfRemoveWeaponFromHandNeeded(this.token.document, hand);
+      await drawEquipment(weapon.name, this.token, weapon.itemid, hand, false);
+      handWeapon = hand;
+    } else {
+      handWeapon = equippedWeapon.hand;
+    }
+
+    const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
+    let remainingRounds =
+      (readyActionsWeaponNeeded.items.find((item) => item.itemId === weapon.itemid) || {}).remainingRounds || 1;
+
+    if (!this.data.beforeCombat) {
+      await this.token.setManeuver('ready');
+      if (await this.fastDrawSkillCheck(weapon, remainingRounds)) {
+        return;
+      }
+    } else {
+      remainingRounds = 1;
     }
 
     await this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
@@ -492,11 +684,6 @@ export default class AttackChooser extends BaseActorController {
       ],
     });
 
-    if (remainingRounds - 1 <= 0) await drawEquipment(weapon.name, this.token, weapon.itemid);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.drawEquipment = drawEquipment;
-    if (!this.data.beforeCombat) await this.token.setManeuver('ready');
     this.closeForEveryone();
 
     if (this.data.keepOpen || this.data.beforeCombat) {
@@ -508,6 +695,9 @@ export default class AttackChooser extends BaseActorController {
           }).render(true),
         500,
       );
+    }
+    if (!this.data.beforeCombat && remainingRounds === 0) {
+      addAmmunition(weapon.name, this.token, weapon.itemid, handWeapon);
     }
   }
 
@@ -523,17 +713,35 @@ export default class AttackChooser extends BaseActorController {
     ensureDefined(target.actor, 'target has no actor');
     let attack = getAttacks(this.actor)[iMode][index];
 
+    const attackModifiers = [];
     if (mode === 'ranged') {
       const attackData = this.rangedData[index];
       const rangedAttacks = getAttacks(this.actor)[iMode] as RangedAttack[];
       const originalAttack = rangedAttacks.find((attack: any) => attack.name === attackData.weapon.split(' --')[0]);
       ensureDefined(element, 'target has no actor');
       if (originalAttack) {
+        const attackValue = Number(element.find('.level').text());
+        const diff = attackValue - originalAttack.level;
+        if (diff) {
+          attackModifiers.push({ mod: diff, desc: 'Por número de balas' });
+        }
+
         attack = { ...originalAttack };
         attack.level = Number(element.find('.level').text());
+        attack.rof = element.find('.rof').text();
+      }
+    } else {
+      const attackData = this.meleeData[index];
+      const meleeAttacks = getAttacks(this.actor)[iMode] as MeleeAttack[];
+      const originalAttack = meleeAttacks.find(
+        (attack: MeleeAttack) => attack.name === attackData.weapon && attack.mode === attackData.mode,
+      );
+      if (originalAttack) {
+        attack = { ...originalAttack };
       }
     }
-
+    const modifiers = AttackChooser.modifiersGetters[iMode](attack as RangedAttack & MeleeAttack, this.token, target);
+    if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
     if (iMode === 'melee') {
       const reach = (attack as MeleeAttack).reach;
       const x = this.token.data.x;
@@ -547,19 +755,34 @@ export default class AttackChooser extends BaseActorController {
     }
 
     const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
-    const modifiers = AttackChooser.modifiersGetters[iMode](attack as RangedAttack & MeleeAttack, this.token, target);
 
     const rangedAttack = attack as RangedAttack;
     if (mode === 'ranged') {
       let remainingRounds = 0;
-
       // Shots
-      debugger;
       if (rangedAttack.shots && rangedAttack.shots.includes('(')) {
+        const item: { ammo: Item; st: string } | undefined = getAmmunnitionFromInventory(
+          this.actor,
+          rangedAttack,
+          'data.equipment.carried',
+        );
+        if (item) {
+          if (item.ammo.count === 0) {
+            ui.notifications?.warn('¡No te queda munición!');
+            return;
+          }
+          debugger;
+          const toRemove = Number(rangedAttack.rof) || 1;
+          (this.actor as any).updateEqtCount(item.st, item.ammo.count - toRemove);
+        }
+
         // Throw weapon
         if (rangedAttack.shots.split('(')[0] === 'T') {
           remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
         } else {
+          if (!rangedAttack.rof) {
+            remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
+          }
           const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
             this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
           );
@@ -568,16 +791,22 @@ export default class AttackChooser extends BaseActorController {
           );
 
           if (!weapon) {
+            const remainingShots =
+              rangedAttack.shots.toUpperCase().indexOf('T') > -1 ? 0 : Number(eval(rangedAttack.shots.split('(')[0]));
             weapon = {
               itemId: rangedAttack.itemid,
               remainingRounds: 0,
-              remainingShots: Number(eval(rangedAttack.shots.split('(')[0])),
+              remainingShots,
             };
           } else if (weapon.remainingShots === undefined) {
             weapon.remainingShots = Number(eval(rangedAttack.shots.split('(')[0]));
           }
 
-          weapon.remainingShots -= Number(rangedAttack.rof) || 1;
+          if (item?.ammo?.count) {
+            weapon.remainingShots = item?.ammo?.count;
+          } else {
+            weapon.remainingShots -= Number(rangedAttack.rof) || 1;
+          }
 
           if (weapon.remainingShots <= 0) {
             remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
@@ -606,13 +835,15 @@ export default class AttackChooser extends BaseActorController {
           readyActionsWeaponNeeded?.items?.filter(
             (item: ReadyManeouverNeeded) => item.itemId !== rangedAttack.itemid,
           ) || [];
+        const remainingShots =
+          rangedAttack.shots.toUpperCase().indexOf('T') > -1 ? 0 : Number(eval(rangedAttack.shots.split('(')[0]));
         this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
           items: [
             ...(items || []),
             {
               itemId: rangedAttack.itemid,
               remainingRounds,
-              remainingShots: Number(eval(rangedAttack.shots.split('(')[0])),
+              remainingShots,
             },
           ],
         });

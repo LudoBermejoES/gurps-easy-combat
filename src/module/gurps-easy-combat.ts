@@ -5,12 +5,17 @@ import AttackChooser from './applications/attackChooser.js';
 import { registerHooks } from './util/setup/hooks.js';
 import DefenceChooser from './applications/defenseChooser.js';
 import { SockerLibSocket } from './util/setup/socketkib.js';
+import { drawEquipment } from './util/weaponMacrosCTA';
 
+let appId = '';
+appId = '3';
 const globals = {
   dataExtractor,
   ManeuverChooser,
   AttackChooser,
   DefenceChooser,
+  drawEquipment,
+  appId,
 };
 
 declare global {

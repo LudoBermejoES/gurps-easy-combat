@@ -9,6 +9,7 @@ import { getAttacks } from '../../dataExtractor.js';
 import { MeleeAttack, RangedAttack } from '../../types';
 import { getUserFromCombatant } from '../combatants';
 import { clearEquipment, getEquippedItems } from '../weaponMacrosCTA';
+import { getWeaponsFromAttacks } from '../weapons';
 
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
@@ -19,6 +20,18 @@ export function registerHooks(): void {
 
     // Register custom module settings
     registerSettings();
+
+    window.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Alt') {
+        $(`#${window.EasyCombat.appId}`).hide();
+      }
+    });
+
+    window.addEventListener('keyup', (evt) => {
+      if (evt.key === 'Alt') {
+        $(`#${window.EasyCombat.appId}`).show();
+      }
+    });
 
     // register Handlebars helpers and partials
     registerHelpers();
@@ -105,14 +118,26 @@ export function registerHooks(): void {
 
     const meleeWeaponIds: string[] = attacks.melee.map((melee) => melee.itemid).filter((i) => i !== undefined);
     const rangedWeaponIds: string[] = attacks.ranged.map((melee) => melee.itemid).filter((i) => i !== undefined);
-    const equippedItems: string[] = await getEquippedItems(combatant?.token);
+    const equippedItems: { itemId: string; hand: string }[] = await getEquippedItems(combatant?.token);
     await combatant.token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
       items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds]))
-        .filter((item) => !equippedItems.includes(item))
-        .map((item) => ({
-          itemId: item,
-          remainingRounds: 1,
-        })),
+        .filter((item) => !equippedItems.find((i) => i.itemId === item))
+        .map((item) => {
+          let remainingRounds = 1;
+
+          const rangedAttack: RangedAttack | undefined = attacks.ranged.find((i) => i.itemid === item);
+          if (rangedAttack) {
+            const numberOfShots: string = rangedAttack.shots.split('(')[0];
+            if (!isNaN(Number(numberOfShots)) && Number(numberOfShots) === 1) {
+              remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]) + 1;
+            }
+          }
+
+          return {
+            itemId: item,
+            remainingRounds,
+          };
+        }),
     });
     const user: User = getUserFromCombatant(combatant);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

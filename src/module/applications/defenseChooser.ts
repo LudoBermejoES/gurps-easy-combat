@@ -79,6 +79,7 @@ export default class DefenseChooser extends BaseActorController {
       const isRetreating = $('#retreat').is(':checked');
       const isProne = $('#prone').is(':checked');
 
+      debugger;
       if (isRetreating) {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
@@ -114,8 +115,8 @@ export default class DefenseChooser extends BaseActorController {
         spantext: '<b>Sk:</b>Acrobatics',
       };
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreat').val();
-      if (isRetreating === 'on') {
+      const isRetreating = $('#retreat').is(':checked');
+      if (isRetreating) {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
       }
