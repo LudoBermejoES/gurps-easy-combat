@@ -14,6 +14,8 @@ export default class BaseActorController extends Application {
     ensureDefined(token.actor, 'token has no actor');
     this.actor = token.actor;
     window.EasyCombat.appId = id;
+
+    $(`#${id} .close`).hide();
   }
 
   async close(options?: Application.CloseOptions): Promise<void> {

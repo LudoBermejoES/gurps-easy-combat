@@ -571,6 +571,33 @@ export default class AttackChooser extends BaseActorController {
     await Promise.allSettled(promises);
   }
 
+  async checkOffHand(
+    token: TokenDocument,
+    attack: MeleeAttack | RangedAttack,
+  ): Promise<
+    | {
+        mod: number;
+        desc: string;
+      }
+    | undefined
+  > {
+    const equippedItems: {
+      itemId: string;
+      hand: string;
+    }[] = await getEquippedItems(token);
+
+    const weaponCarried = equippedItems.find((e) => e.itemId === attack.itemid);
+    if (weaponCarried) {
+      if (weaponCarried.hand === 'OFF') {
+        return {
+          mod: -4,
+          desc: 'Por atacar con la mano mala',
+        };
+      }
+    }
+    return undefined;
+  }
+
   async fastDrawSkillCheck(weapon: any, remainingRounds: number): Promise<boolean> {
     const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
 
@@ -626,12 +653,12 @@ export default class AttackChooser extends BaseActorController {
           left: {
             icon: '<i class="fas fa-check"></i>',
             label: 'Mano hábil',
-            callback: () => resolve('LEFT'),
+            callback: () => resolve('ON'),
           },
           right: {
             icon: '<i class="fas fa-times"></i>',
             label: 'Mano torpe',
-            callback: () => resolve('RIGHT'),
+            callback: () => resolve('OFF'),
           },
           both: {
             icon: '<i class="fas fa-times"></i>',
@@ -742,6 +769,10 @@ export default class AttackChooser extends BaseActorController {
     }
     const modifiers = AttackChooser.modifiersGetters[iMode](attack as RangedAttack & MeleeAttack, this.token, target);
     if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
+    const offHandModifier = await this.checkOffHand(this.token.document, attack);
+    if (offHandModifier) {
+      modifiers.attack = [...modifiers.attack, offHandModifier];
+    }
     if (iMode === 'melee') {
       const reach = (attack as MeleeAttack).reach;
       const x = this.token.data.x;

@@ -46,7 +46,7 @@ function doAnimation(actor: Actor, name: string) {
     anim = '/anim Arrow01_01* *0.3';
   } else if (name.toLowerCase().includes('crossbow')) {
     anim = '/anim Bolt01_01_Regular* *0.3';
-  } else if (['sig-sauer', 'imi uzi', 'walter'].filter((n) => n.includes(name.toLowerCase()))) {
+  } else if (['sig-sauer', 'imi uzi', 'walter', 'luger'].filter((n) => n.includes(name.toLowerCase()))) {
     anim = '/anim Bullet_02_Regular_Orange* *0.3';
   }
   if (anim) GURPS.executeOTF(anim, false, null, actor);
@@ -73,7 +73,7 @@ function doSound(actor: Actor, name: string, tryAttack: boolean, success: boolea
       )}.mp3`;
     }
   } else if (success) {
-    if (['sig-sauer', 'imi uzi', 'walter'].filter((n) => n.includes(name.toLowerCase()))) {
+    if (['sig-sauer', 'imi uzi', 'walter', 'luger'].filter((n) => n.includes(name.toLowerCase()))) {
       sound = 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3';
     } else if (name.toLowerCase().includes('throwing knife')) {
       sound = `modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-${randomIntFromInterval(
@@ -197,7 +197,7 @@ function doSound(actor: Actor, name: string, tryAttack: boolean, success: boolea
         1,
         totalMeleeMissSound,
       )}.mp3`;
-    } else if (['sig-sauer', 'imi uzi', 'walter'].filter((n) => n.includes(name.toLowerCase()))) {
+    } else if (['sig-sauer', 'imi uzi', 'walter', 'luger'].filter((n) => n.includes(name.toLowerCase()))) {
       sound = 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3';
     }
   }

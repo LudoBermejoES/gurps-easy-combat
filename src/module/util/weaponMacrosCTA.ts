@@ -21,7 +21,7 @@ async function addOrRemoveItem(
       CTA.removeAnimByName(token, name);
       return;
     }
-    CTA.addAnimation(token, textureData, actor, name, r, id, hand);
+    CTA.addAnimation(token, textureData, actor, name, r, id, hand);22''
   } else if (toRemove) {
     CTA.removeByItemId(token, id);
   } else {
@@ -34,12 +34,12 @@ export async function removeItemById(token: string, id: string): Promise<void> {
 }
 
 function getPositionByHands(hand: string) {
-  if (hand === 'LEFT') {
+  if (hand === 'ON') {
     return {
       xScale: 0,
       yScale: 0.5,
     };
-  } else if (hand === 'RIGHT') {
+  } else if (hand === 'OFF') {
     return {
       xScale: 1,
       yScale: 0.5,
@@ -48,11 +48,6 @@ function getPositionByHands(hand: string) {
     return {
       xScale: 1,
       yScale: 0.5,
-    };
-  } else if (hand === 'BOTH') {
-    return {
-      xScale: 0.5,
-      yScale: 0,
     };
   }
 }
@@ -168,6 +163,25 @@ function imiUzi(token: Token, id: string, hand: string, toRemove: boolean) {
     lock: true,
   };
   addOrRemoveItem(token, textureData, false, 'ImiUzi', hand, null, id, toRemove);
+}
+
+function luger08(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/luger_p08.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'luger08', hand, null, id, toRemove);
 }
 
 function sIGSauerP226(token: Token, id: string, hand: string, toRemove: boolean) {
@@ -380,6 +394,25 @@ function shortSword(token: Token, id: string, hand: string, toRemove: boolean) {
   addOrRemoveItem(token, textureData, false, 'Shortsword', hand, null, id, toRemove);
 }
 
+function spear(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Spear_A01.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'Spear', hand, null, id, toRemove);
+}
+
 function smallShield(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Shields/Shield_Metal_Gray_B_1x1.png',
@@ -486,6 +519,8 @@ export async function drawEquipment(name: string, token: Token, id: string, hand
     await pistolCrossbow(token, id, hand, toRemove);
   } else if (nameToLook.includes('SHORTSWORD')) {
     await shortSword(token, id, hand, toRemove);
+  } else if (nameToLook.includes('SPEAR')) {
+    await spear(token, id, hand, toRemove);
   } else if (nameToLook.includes('RAPIER')) {
     await rapier(token, id, hand, toRemove);
   } else if (nameToLook.includes('LARGE SHIELD')) {
@@ -523,6 +558,9 @@ export async function drawEquipment(name: string, token: Token, id: string, hand
     setTimeout(() => bullets(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('IMI UZI')) {
     await imiUzi(token, id, hand, toRemove);
+    setTimeout(() => bullets(token, id, hand, toRemove), 500);
+  } else if (nameToLook.includes('LUGER P08')) {
+    await luger08(token, id, hand, toRemove);
     setTimeout(() => bullets(token, id, hand, toRemove), 500);
   } else if (nameToLook.includes('EXPANDABLE BATON')) {
     await expandableBaton(token, id, hand, toRemove);

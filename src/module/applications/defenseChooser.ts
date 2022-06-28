@@ -14,9 +14,10 @@ import {
   isDefined,
   smartRace,
 } from '../util/miscellaneous';
-import { Modifier, Skill } from '../types';
+import { MeleeAttack, Modifier, RangedAttack, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
 import { getValidBlocks, getValidParries } from '../util/readyWeapons';
+import { getEquippedItems } from '../util/weaponMacrosCTA';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -38,7 +39,7 @@ export default class DefenseChooser extends BaseActorController {
     this.data = data;
     this.data.modifiers = [...this.data.modifiers, ...getDefenseModifiers(token).defense];
   }
-  getData(): {
+  async getData(): Promise<{
     canBlock: boolean;
     canDodge: boolean;
     canParry: boolean;
@@ -46,7 +47,7 @@ export default class DefenseChooser extends BaseActorController {
     acrobaticDodge: Skill;
     parry: Record<string, number>;
     block: Record<string, number>;
-  } {
+  }> {
     const actor = this.token?.actor;
     ensureDefined(actor, 'Ese token necesita un actor');
     const maneuver = Maneuvers.getAll()[getManeuver(actor)]._data;
@@ -57,7 +58,7 @@ export default class DefenseChooser extends BaseActorController {
       canParry: ![DEFENSE_DODGEBLOCK, DEFENSE_NONE].includes(maneuver?.defense),
       acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
       dodge: getDodge(this.actor),
-      parry: getValidParries(this.token),
+      parry: await getValidParries(this.token),
       block: getValidBlocks(this.token),
     };
   }
@@ -79,7 +80,6 @@ export default class DefenseChooser extends BaseActorController {
       const isRetreating = $('#retreat').is(':checked');
       const isProne = $('#prone').is(':checked');
 
-      debugger;
       if (isRetreating) {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
@@ -129,7 +129,7 @@ export default class DefenseChooser extends BaseActorController {
 
       $('#dodge')[0].click();
     });
-    html.on('click', '.parryRow', (event) => {
+    html.on('click', '.parryRow', async (event) => {
       applyModifiers(this.data.modifiers);
       const isRetreating = $('#retreat').val();
       if (isRetreating === 'on') {
