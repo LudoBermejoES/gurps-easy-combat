@@ -326,6 +326,7 @@ export async function makeAttackInner(
       }
     }
     const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
+    debugger;
     if (defenseSucess) {
       doSound(target.actor, attack.name, false, false);
       const successDefenses = <{ attackers: string[]; round: number } | undefined>(
@@ -348,6 +349,8 @@ export async function makeAttackInner(
         } else {
           roll.rofrcl = total;
         }
+      } else {
+        return;
       }
     }
   } else {

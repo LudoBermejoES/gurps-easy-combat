@@ -21,7 +21,7 @@ async function addOrRemoveItem(
       CTA.removeAnimByName(token, name);
       return;
     }
-    CTA.addAnimation(token, textureData, actor, name, r, id, hand);22''
+    CTA.addAnimation(token, textureData, actor, name, r, id, hand);
   } else if (toRemove) {
     CTA.removeByItemId(token, id);
   } else {
