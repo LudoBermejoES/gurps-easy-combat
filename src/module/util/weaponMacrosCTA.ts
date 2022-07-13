@@ -222,6 +222,82 @@ function katana(token: Token, id: string, hand: string, toRemove: boolean) {
   addOrRemoveItem(token, textureData, false, 'Katana', hand, null, id, toRemove);
 }
 
+function ALSPocketSmoke(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/ALS_Pocket_smoke.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'ALS_Pocket_smoke', hand, null, id, toRemove);
+}
+
+function GLIF4(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/GLI-F4.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'GLI-F4', hand, null, id, toRemove);
+}
+
+function SchermulyStun(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Schermuly_Stun.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'Schermuly_Stun', hand, null, id, toRemove);
+}
+
+function DiehlDM51(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Diehl_DM51.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'Diehl_DM51', hand, null, id, toRemove);
+}
+
 function expandableBaton(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/extensible-baton.png',
@@ -566,6 +642,14 @@ export async function drawEquipment(name: string, token: Token, id: string, hand
     await expandableBaton(token, id, hand, toRemove);
   } else if (nameToLook.includes('BLOWPIPE')) {
     await blowPipe(token, id, hand, toRemove);
+  } else if (nameToLook.includes('ALS POCKET')) {
+    await ALSPocketSmoke(token, id, hand, toRemove);
+  } else if (nameToLook.includes('GLI-F4')) {
+    await GLIF4(token, id, hand, toRemove);
+  } else if (nameToLook.includes('SCHERMULY STUN')) {
+    await SchermulyStun(token, id, hand, toRemove);
+  } else if (nameToLook.includes('Diehl DM51')) {
+    await DiehlDM51(token, id, hand, toRemove);
   }
 }
 export async function getEquippedItems(token: TokenDocument): Promise<
