@@ -648,7 +648,7 @@ export async function drawEquipment(name: string, token: Token, id: string, hand
     await GLIF4(token, id, hand, toRemove);
   } else if (nameToLook.includes('SCHERMULY STUN')) {
     await SchermulyStun(token, id, hand, toRemove);
-  } else if (nameToLook.includes('Diehl DM51')) {
+  } else if (nameToLook.includes('DIEHL DM51')) {
     await DiehlDM51(token, id, hand, toRemove);
   }
 }
