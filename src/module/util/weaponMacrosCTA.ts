@@ -279,6 +279,25 @@ function SchermulyStun(token: Token, id: string, hand: string, toRemove: boolean
   addOrRemoveItem(token, textureData, false, 'Schermuly_Stun', hand, null, id, toRemove);
 }
 
+function handFlameThrower(token: Token, id: string, hand: string, toRemove: boolean) {
+  const textureData = {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Hand_Flamethrower.png',
+    scale: '1',
+    speed: 0,
+    multiple: 1,
+    rotation: 'static',
+    ...getPositionByHands(hand),
+
+    belowToken: false,
+    radius: 2,
+    opacity: 1,
+    tint: 16777215,
+    equip: false,
+    lock: true,
+  };
+  addOrRemoveItem(token, textureData, false, 'Hand_Flamethrower', hand, null, id, toRemove);
+}
+
 function DiehlDM51(token: Token, id: string, hand: string, toRemove: boolean) {
   const textureData = {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Diehl_DM51.png',
@@ -650,6 +669,10 @@ export async function drawEquipment(name: string, token: Token, id: string, hand
     await SchermulyStun(token, id, hand, toRemove);
   } else if (nameToLook.includes('DIEHL DM51')) {
     await DiehlDM51(token, id, hand, toRemove);
+  } else if (nameToLook.includes('DIEHL DM51')) {
+    await DiehlDM51(token, id, hand, toRemove);
+  } else if (nameToLook.includes('LANZALLAMAS DE MANO')) {
+    await handFlameThrower(token, id, hand, toRemove);
   }
 }
 export async function getEquippedItems(token: TokenDocument): Promise<
