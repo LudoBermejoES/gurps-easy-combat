@@ -802,7 +802,6 @@ export default class AttackChooser extends BaseActorController {
             ui.notifications?.warn('¡No te queda munición!');
             return;
           }
-          debugger;
           const toRemove = Number(rangedAttack.rof) || 1;
           (this.actor as any).updateEqtCount(item.st, item.ammo.count - toRemove);
         }

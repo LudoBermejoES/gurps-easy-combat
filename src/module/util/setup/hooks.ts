@@ -41,6 +41,8 @@ export function registerHooks(): void {
   const deleteFlags = (combat: Combat) => {
     if (game.user?.isGM) {
       combat.combatants.forEach((combatant) => {
+        combatant?.token?.unsetFlag('token-attractor', 'movementAttracted');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'restrictedMovement');
         combatant?.token?.unsetFlag(MODULE_NAME, 'location');
         combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
         combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
@@ -54,19 +56,31 @@ export function registerHooks(): void {
   };
 
   Hooks.on('preUpdateToken', (token: Token, changes: any, data: any) => {
-    // If position hasn't changed, or animate is false, don't change anything.
-    if (!game.combat) return;
+    if (!game.combat) return true;
+
     const actor = token.actor;
     ensureDefined(actor, 'No actor selected');
     ensureDefined(game.user, 'No user selected');
     if (!highestPriorityUsers(actor).includes(game.user)) {
-      return;
+      return true;
     }
 
     const combatants = game.combat.combatants || [];
     let foundToken = false;
     combatants.forEach((combatant) => (combatant.data.tokenId === token.id ? (foundToken = true) : ''));
     if (!(changes.x || changes.y) || !foundToken) return;
+
+    const restrictedMovement = token.getFlag(MODULE_NAME, 'restrictedMovement');
+    if (restrictedMovement) {
+      ui.notifications?.error('Tu movimiento está restringido en este turno');
+      return false;
+    }
+
+    const isAttracted = token.getFlag('token-attractor', 'movementAttracted');
+    if (isAttracted) {
+      token.setFlag(MODULE_NAME, 'restrictedMovement', true);
+      return true;
+    }
     const choosingManeuver: any = token.getFlag(MODULE_NAME, 'choosingManeuver');
     if (choosingManeuver.choosing) {
       ui.notifications?.error('Antes de poder moverte tienes que escoger una maniobra');
@@ -77,6 +91,7 @@ export function registerHooks(): void {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const distance: number = game.canvas.grid.measureDistance(originalMove, newMove, { gridSpaces: true }) || 0;
+
     const alreadyMoved = <{ restOfMovement: number; round: number } | { round: -1; restOfMovement: 0 }>(
       token.getFlag(MODULE_NAME, 'combatRoundMovement')
     );
@@ -166,6 +181,8 @@ export function registerHooks(): void {
     const token = tokenDocument.object as Token;
     ensureDefined(game.user, 'game not initialized');
     const actor = token.actor;
+    await tokenDocument.unsetFlag(MODULE_NAME, 'restrictedMovement');
+    await tokenDocument.unsetFlag('token-attractor', 'movementAttracted');
     ensureDefined(actor, 'token without actor');
     await ManeuverChooser.closeAll();
     await AttackChooser.closeAll();
