@@ -216,6 +216,7 @@ export default class AttackChooser extends BaseActorController {
         }) => {
           const rAttack = ranged.find((r) => r.itemid === item.itemid);
           if (rAttack) {
+            if (item.mode.toUpperCase().includes('INNATE ATTACK')) return true;
             const weapon = getAmmunnitionFromInventory(this.actor, rAttack, 'data.equipment.carried');
             if (!weapon?.ammo) {
               return false;

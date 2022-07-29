@@ -10,6 +10,7 @@ import { MeleeAttack, RangedAttack } from '../../types';
 import { getUserFromCombatant } from '../combatants';
 import { clearEquipment, getEquippedItems } from '../weaponMacrosCTA';
 import { getWeaponsFromAttacks } from '../weapons';
+import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs';
 
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
@@ -111,21 +112,7 @@ export function registerHooks(): void {
     }
   });
 
-  // on create combatant, set the maneuver
-  Hooks.on('createCombatant', async (combatant: Combatant) => {
-    ensureDefined(combatant.token, 'No actor selected');
-    const actor = combatant.token.actor;
-    ensureDefined(actor, 'No actor selected');
-    ensureDefined(game.user, 'No user selected');
-    if (!highestPriorityUsers(actor).includes(game.user)) {
-      return;
-    }
-
-    ensureDefined(game.combat, 'No hay combate activo');
-    combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
-    deleteFlags(game.combat);
-    //clearEquipment(combatant.token.id);
-
+  async function showReadyWeapons(actor: Actor, token: TokenDocument, user: User) {
     const attacks: {
       melee: MeleeAttack[];
       ranged: RangedAttack[];
@@ -133,8 +120,8 @@ export function registerHooks(): void {
 
     const meleeWeaponIds: string[] = attacks.melee.map((melee) => melee.itemid).filter((i) => i !== undefined);
     const rangedWeaponIds: string[] = attacks.ranged.map((melee) => melee.itemid).filter((i) => i !== undefined);
-    const equippedItems: { itemId: string; hand: string }[] = await getEquippedItems(combatant?.token);
-    await combatant.token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+    const equippedItems: { itemId: string; hand: string }[] = await getEquippedItems(token);
+    await token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
       items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds]))
         .filter((item) => !equippedItems.find((i) => i.itemId === item))
         .map((item) => {
@@ -154,10 +141,96 @@ export function registerHooks(): void {
           };
         }),
     });
-    const user: User = getUserFromCombatant(combatant);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, combatant.data.tokenId);
+    window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, token.id);
+  }
+
+  // on create combatant, set the maneuver
+  Hooks.on('createCombatant', async (combatant: Combatant) => {
+    ensureDefined(combatant.token, 'No actor selected');
+    const actor = combatant.token.actor;
+    ensureDefined(actor, 'No actor selected');
+    ensureDefined(game.user, 'No user selected');
+    if (!highestPriorityUsers(actor).includes(game.user)) {
+      return;
+    }
+
+    ensureDefined(game.combat, 'No hay combate activo');
+    combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
+    deleteFlags(game.combat);
+    //clearEquipment(combatant.token.id);
+    const user: User = getUserFromCombatant(combatant);
+    showReadyWeapons(actor, combatant.token, user);
+  });
+
+  Hooks.on('renderTokenHUD', async (app: any, html: any, token: TokenData) => {
+    if (!app?.object?.document) {
+      return;
+    }
+    const isPlayerOwned = app?.object.document.isOwner;
+    if (!game.user?.isGM && !isPlayerOwned) {
+      return;
+    }
+    if (!token._id) {
+      return;
+    }
+    const tokenIn: Token | undefined = game.canvas.tokens?.get(token._id);
+    if (!tokenIn) return;
+
+    const buttonReadyWeapon = $(
+      `<div class="control-icon ready-weapon" title="Preparar arma"><img src="icons/svg/sword.svg" width="36" height="36" title="Preparar arma"></div>`,
+    );
+    const col = html.find('.col.right');
+    col.append(buttonReadyWeapon);
+
+    const buttonOpenActions = $(
+      `<div class="control-icon open-actions" title="Abrir acciones"><img src="icons/svg/card-hand.svg" width="36" height="36" title="Abrir acciones"></div>`,
+    );
+    const col2 = html.find('.col.right');
+    if (game?.combat?.started && game?.combat?.combatant?.token?.id === tokenIn.id) {
+      col2.append(buttonOpenActions);
+    }
+
+    $('.ready-weapon').on('click', () => {
+      const actor: Actor | undefined = game?.actors?.find((a) => a.id == token.actorId);
+      if (actor) {
+        const user: User = highestPriorityUsers(actor)[0];
+        if (user) showReadyWeapons(actor, tokenIn.document, user);
+      }
+    });
+
+    $('.open-actions').on('click', async () => {
+      if (!game?.combat?.started) {
+        ui.notifications?.error('No hay combate, así que no puedes sacar las acciones');
+        return;
+      }
+      if (!game?.combat?.combatant?.token) {
+        ui.notifications?.error('No hay combatiente');
+        return;
+      }
+      const tokenInCombat: TokenDocument = game.combat.combatant.token;
+      if (tokenInCombat.id !== tokenIn.id) {
+        ui.notifications?.error('No es tu turno de combate');
+        return;
+      }
+
+      const actor: Actor | undefined = game?.actors?.find((a) => a.id == token.actorId);
+      const tokenDocument = tokenIn.document;
+      ensureDefined(tokenDocument, 'current combatant has no actor');
+      ensureDefined(tokenDocument.object, 'token document without token');
+      const tokenSelected = tokenDocument.object as Token;
+      ensureDefined(game.user, 'game not initialized');
+      ensureDefined(actor, 'token without actor');
+      await ManeuverChooser.closeAll();
+      await AttackChooser.closeAll();
+      if (
+        highestPriorityUsers(actor).includes(game.user) &&
+        game.settings.get(MODULE_NAME, 'maneuver-chooser-on-turn')
+      ) {
+        new ManeuverChooser(tokenSelected).render(true);
+      }
+    });
   });
 
   Hooks.on('deleteCombat', async (combat: Combat) => {
