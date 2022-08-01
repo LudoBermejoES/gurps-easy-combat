@@ -66,6 +66,7 @@ export interface ReadyManeouverNeeded {
 
 export interface Attack {
   name: string;
+  alternateName: string;
   contains: Record<string, never>;
   notes: string;
   otf: string;
@@ -121,6 +122,7 @@ interface Note {
 interface Item {
   itemid: string;
   name: string;
+  alternateName: string;
   notes: string;
   pageref: string;
   contains: Record<string, Item>;

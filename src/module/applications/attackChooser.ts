@@ -130,13 +130,13 @@ export default class AttackChooser extends BaseActorController {
     const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
 
     const meleeDataOriginal = melee
-      .map(({ name, mode, level, damage, reach, notes, itemid }) => {
+      .map(({ name, alternateName, mode, level, damage, reach, notes, itemid }) => {
         const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
           itemId: '',
           remainingRounds: 0,
         };
         return {
-          weapon: name,
+          weapon: alternateName || name,
           mode,
           level,
           damage,
@@ -179,13 +179,13 @@ export default class AttackChooser extends BaseActorController {
     );
     this.meleeData = meleeData;
     const rangedDataOriginal = ranged
-      .map(({ name, mode, level, damage, range, acc, bulk, notes, itemid, rof, rcl }) => {
+      .map(({ name, alternateName, mode, level, damage, range, acc, bulk, notes, itemid, rof, rcl }) => {
         const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
           itemId: '',
           remainingRounds: 0,
         };
         return {
-          weapon: name,
+          weapon: alternateName || name,
           mode,
           level,
           damage,
@@ -216,7 +216,7 @@ export default class AttackChooser extends BaseActorController {
         }) => {
           const rAttack = ranged.find((r) => r.itemid === item.itemid);
           if (rAttack) {
-            if (item.mode.toUpperCase().includes('INNATE ATTACK')) return true;
+            if (item?.mode?.toUpperCase().includes('INNATE ATTACK')) return true;
             const weapon = getAmmunnitionFromInventory(this.actor, rAttack, 'data.equipment.carried');
             if (!weapon?.ammo) {
               return false;
@@ -324,7 +324,7 @@ export default class AttackChooser extends BaseActorController {
         if (!weaponAlreadyExists.length) {
           weaponsToBeReadyData.push({
             itemid: itemFound.itemid,
-            weapon: itemFound.name,
+            weapon: itemFound.alternateName || itemFound.name,
             name: itemFound.name,
             remainingRounds: attack.remainingRounds,
           });
@@ -340,7 +340,7 @@ export default class AttackChooser extends BaseActorController {
         if (!weaponAlreadyExists.length) {
           weaponsNotToBeReadyData.push({
             itemid: itemFound.itemid,
-            weapon: itemFound.name,
+            weapon: itemFound.alternateName || itemFound.name,
             name: itemFound.name,
             remainingRounds: attack.remainingRounds,
           });
@@ -648,8 +648,8 @@ export default class AttackChooser extends BaseActorController {
   async chooseHand(): Promise<string> {
     return new Promise((resolve, reject) => {
       const d: Dialog = new Dialog({
-        title: 'Test Dialog',
-        content: '<p>You must choose either Option 1, or Option 2</p>',
+        title: 'Escoge en qué mano(s) llevas el arma',
+        content: '<p>Tienes que escoger una opción</p>',
         buttons: {
           left: {
             icon: '<i class="fas fa-check"></i>',
@@ -668,8 +668,6 @@ export default class AttackChooser extends BaseActorController {
           },
         },
         default: 'right',
-        render: (html) => console.log('Register interactivity in the rendered dialog'),
-        close: (html) => console.log('This always is logged no matter which option is chosen'),
       });
       d.render(true);
     });

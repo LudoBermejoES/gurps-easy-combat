@@ -19,7 +19,6 @@ function getToken(token: string): Token {
 
 const functionsToRegister = {
   addStoredMovement: (restOfMovement: number, round: number) => {
-    debugger;
     game?.combat?.combatant?.token?.setFlag(MODULE_NAME, 'combatRoundMovement', {
       restOfMovement,
       round,
