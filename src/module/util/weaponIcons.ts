@@ -1,14 +1,20 @@
 export default {
   'PISTOL CROSSBOW': {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Crossbow_Hand_01.png',
+    name: 'Pistol crossbow',
     scale: '1',
-    speed: 0,
+    useBolts: true,
   },
   'REFLEX BOW': {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Longbow_01.png',
     scale: '1',
     name: 'Reflex bow',
     useArrows: true,
+  },
+  BOLT: {
+    texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Crossbow_Bolt_01.png',
+    scale: '1',
+    name: 'Arrow',
   },
   CLOAK: { texturePath: 'icons/equipment/back/cloakcollared-red-gold.webp', scale: '0.5', name: 'Cloak' },
   ARROW: {

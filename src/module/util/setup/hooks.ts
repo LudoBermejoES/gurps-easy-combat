@@ -143,7 +143,7 @@ export function registerHooks(): void {
     });
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, token.id);
+    // window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, token.id);
   }
 
   // on create combatant, set the maneuver

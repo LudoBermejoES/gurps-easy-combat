@@ -50,7 +50,7 @@ function getFinalItem(
 
 export function getAmmunnitionFromInventory(
   actor: Actor,
-  attack: RangedAttack,
+  itemid: string,
   st: string,
 ):
   | {
@@ -61,7 +61,7 @@ export function getAmmunnitionFromInventory(
   let weapon = '';
   Object.keys(actor.data.data.equipment.carried).forEach((key) => {
     const item: Item = actor.data.data.equipment.carried[key];
-    if (item.itemid === attack.itemid) {
+    if (item.itemid === itemid) {
       weapon = key;
     }
   });
@@ -71,7 +71,7 @@ export function getAmmunnitionFromInventory(
       actor.data.data.equipment.carried[weapon],
       st + '.' + weapon,
     );
-    if (found.ammo.itemid !== attack.itemid) {
+    if (found.ammo.itemid !== itemid) {
       return found;
     } else {
       return {

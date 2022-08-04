@@ -18,6 +18,7 @@ import {
   addAmmunition,
   clearAmmunition,
   drawEquipment,
+  refreshAmmo,
   getEquippedItems,
   removeItemById,
 } from '../util/weaponMacrosCTA';
@@ -217,7 +218,7 @@ export default class AttackChooser extends BaseActorController {
           const rAttack = ranged.find((r) => r.itemid === item.itemid);
           if (rAttack) {
             if (item?.mode?.toUpperCase().includes('INNATE ATTACK')) return true;
-            const weapon = getAmmunnitionFromInventory(this.actor, rAttack, 'data.equipment.carried');
+            const weapon = getAmmunnitionFromInventory(this.actor, rAttack.itemid, 'data.equipment.carried');
             if (!weapon?.ammo) {
               return false;
             }
@@ -266,7 +267,7 @@ export default class AttackChooser extends BaseActorController {
         let maxROF = 1000;
         const rAttack = ranged.find((r) => r.itemid === attack.itemid);
         if (rAttack) {
-          const weapon = getAmmunnitionFromInventory(this.actor, rAttack, 'data.equipment.carried');
+          const weapon = getAmmunnitionFromInventory(this.actor, rAttack.itemid, 'data.equipment.carried');
           if (weapon?.ammo) {
             maxROF = weapon.ammo.count;
           }
@@ -727,6 +728,21 @@ export default class AttackChooser extends BaseActorController {
     }
   }
 
+  getNameFromAttack(attack: any, attackData: any): boolean {
+    const nameToLook: string = attackData.weapon.split(' --')[0];
+    if (attack.alternateName) {
+      if (attack.alternateName === nameToLook) {
+        return true;
+      }
+    }
+
+    if (attack.name === nameToLook) {
+      return true;
+    }
+
+    return false;
+  }
+
   async makeAttack(
     mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
     index: number,
@@ -737,13 +753,14 @@ export default class AttackChooser extends BaseActorController {
     if (!checkSingleTarget(game.user)) return;
     const target = getTargets(game.user)[0];
     ensureDefined(target.actor, 'target has no actor');
+
     let attack = getAttacks(this.actor)[iMode][index];
 
     const attackModifiers = [];
     if (mode === 'ranged') {
       const attackData = this.rangedData[index];
       const rangedAttacks = getAttacks(this.actor)[iMode] as RangedAttack[];
-      const originalAttack = rangedAttacks.find((attack: any) => attack.name === attackData.weapon.split(' --')[0]);
+      const originalAttack = rangedAttacks.find((attack: any) => this.getNameFromAttack(attack, attackData));
       ensureDefined(element, 'target has no actor');
       if (originalAttack) {
         const attackValue = Number(element.find('.level').text());
@@ -751,17 +768,17 @@ export default class AttackChooser extends BaseActorController {
         if (diff) {
           attackModifiers.push({ mod: diff, desc: 'Por número de balas' });
         }
-
+        if (originalAttack.rof !== undefined) {
+          originalAttack.rof = originalAttack.rof.trim();
+        }
         attack = { ...originalAttack };
         attack.level = Number(element.find('.level').text());
-        attack.rof = element.find('.rof').text();
+        attack.rof = element.find('.rof').text().trim();
       }
     } else {
       const attackData = this.meleeData[index];
       const meleeAttacks = getAttacks(this.actor)[iMode] as MeleeAttack[];
-      const originalAttack = meleeAttacks.find(
-        (attack: MeleeAttack) => attack.name === attackData.weapon && attack.mode === attackData.mode,
-      );
+      const originalAttack = meleeAttacks.find((attack: MeleeAttack) => this.getNameFromAttack(attack, attackData));
       if (originalAttack) {
         attack = { ...originalAttack };
       }
@@ -793,16 +810,20 @@ export default class AttackChooser extends BaseActorController {
       if (rangedAttack.shots && rangedAttack.shots.includes('(')) {
         const item: { ammo: Item; st: string } | undefined = getAmmunnitionFromInventory(
           this.actor,
-          rangedAttack,
+          rangedAttack.itemid,
           'data.equipment.carried',
         );
         if (item) {
+          const weapons: Item[] = getWeaponsFromAttacks(this.actor);
+          const weapon: Item | undefined = weapons.find((w) => w.itemid === rangedAttack.itemid);
           if (item.ammo.count === 0) {
             ui.notifications?.warn('¡No te queda munición!');
+            if (weapon) await refreshAmmo(this.token, weapon, 0);
             return;
           }
           const toRemove = Number(rangedAttack.rof) || 1;
-          (this.actor as any).updateEqtCount(item.st, item.ammo.count - toRemove);
+          await (this.actor as any).updateEqtCount(item.st, item.ammo.count - toRemove);
+          if (weapon) await refreshAmmo(this.token, weapon, item.ammo.count - toRemove);
         }
 
         // Throw weapon
