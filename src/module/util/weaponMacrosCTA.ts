@@ -51,7 +51,6 @@ async function addOrRemoveItem(
 }
 
 export async function refreshAmmo(token: Token, weapon: Item, number: number) {
-  debugger;
   const name = `Ammo_${weapon.itemid}`;
   const equipment = await CTA.getEquippedItems(token);
   const item = equipment.find((i: any) => i.itemId === weapon.itemid);
@@ -172,20 +171,18 @@ export function clearEquipment(token: string | null) {
   CTA.removeAll(token, false);
 }
 
-export async function clearAmmunition(name: string, token: Token) {
+export async function clearAmmunition(item: Item, token: Token) {
+  const { name, itemid } = item;
   const nameToLook = name.toUpperCase();
   const weapon = getWeapon(nameToLook);
   if (weapon?.useArrows) {
-    CTA.removeAnimByName(token.id, 'Arrow');
-    CTA.removeAnimByName(token.id, 'Counter Ammo');
+    CTA.removeAnimByName(token.id, `Arrow_${itemid}`);
   }
   if (weapon?.useBolts) {
-    CTA.removeAnimByName(token.id, 'Bolt');
-    CTA.removeAnimByName(token.id, 'Counter Ammo');
+    CTA.removeAnimByName(token.id, `Bolt_${itemid}`);
   }
   if (weapon?.useBullets) {
-    CTA.removeAnimByName(token.id, 'bullets');
-    CTA.removeAnimByName(token.id, 'Counter Ammo');
+    CTA.removeAnimByName(token.id, `Bullets_${itemid}`);
   }
 
   if (nameToLook.includes('THROWING KNIFE')) {
@@ -193,6 +190,8 @@ export async function clearAmmunition(name: string, token: Token) {
   } else if (nameToLook.includes('SHURIKEN')) {
     CTA.removeAnimByName(token.id, 'Shuriken');
   }
+
+  //CTA.removeAnimByName(token.id, `Ammo_${itemid}`);
 }
 
 export async function addAmmunition(
@@ -215,14 +214,14 @@ export async function addAmmunition(
   }
 }
 
-function getWeapon(nameToLook: string): weapon | undefined {
+export function getWeapon(nameToLook: string): weapon | undefined {
   let result: weapon | undefined = undefined;
   Object.keys(weaponIcons).some((key) => {
-    if (nameToLook.includes(key)) {
+    if (nameToLook.toUpperCase().includes(key)) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       result = weaponIcons[key];
-      return true;
+      return result;
     }
   });
   return result;

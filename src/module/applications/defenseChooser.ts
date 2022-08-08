@@ -16,8 +16,8 @@ import {
 } from '../util/miscellaneous';
 import { MeleeAttack, Modifier, RangedAttack, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
-import { getValidBlocks, getValidParries } from '../util/readyWeapons';
 import { getEquippedItems } from '../util/weaponMacrosCTA';
+import { getValidBlocks, getValidParries } from './actions/defense';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -51,15 +51,18 @@ export default class DefenseChooser extends BaseActorController {
     const actor = this.token?.actor;
     ensureDefined(actor, 'Ese token necesita un actor');
     const maneuver = Maneuvers.getAll()[getManeuver(actor)]._data;
+    let sumAllModifiers = 0;
+
+    this.data.modifiers.forEach((m) => (sumAllModifiers += m.mod));
 
     return {
       canBlock: maneuver?.defense !== DEFENSE_NONE,
       canDodge: maneuver?.defense !== DEFENSE_NONE,
       canParry: ![DEFENSE_DODGEBLOCK, DEFENSE_NONE].includes(maneuver?.defense),
       acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
-      dodge: getDodge(this.actor),
-      parry: await getValidParries(this.token),
-      block: getValidBlocks(this.token),
+      dodge: getDodge(this.actor) + sumAllModifiers,
+      parry: await getValidParries(this.token, sumAllModifiers),
+      block: getValidBlocks(this.token, sumAllModifiers),
     };
   }
   async close(): Promise<void> {

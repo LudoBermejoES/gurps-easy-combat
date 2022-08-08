@@ -47,11 +47,11 @@ export default class Feint extends BaseActorController {
       const defenseResult = await FeintDefense.requestDefense(target);
       let successMargin = attackResult.margin - defenseResult.margin;
       if (successMargin <= 0) {
-        ChatMessage.create({ content: 'the feint was unsuccessfull' });
+        ChatMessage.create({ content: 'la finta no funcionó' });
         successMargin = 0;
       } else {
         ChatMessage.create({
-          content: `the feint was successful\nopponent gets [-${successMargin} to defense from feint]`,
+          content: `la finta funcionó. El enemigo recibirá [-${successMargin} a la defensa por la finta]`,
         });
       }
       this.token.document.setFlag(MODULE_NAME, 'lastFeint', {

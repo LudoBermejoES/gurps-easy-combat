@@ -1,4 +1,4 @@
-import { getMeleeModifiers, getRangedModifiers, makeAttackInner } from '../attackWorkflow.js';
+import { makeAttackInner } from '../attackWorkflow.js';
 import { FAST_DRAW_SKILLS, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants.js';
 import { getAttacks, getEquipment, getHitLocations } from '../dataExtractor.js';
 import { ChooserData, Item, MeleeAttack, PromiseFunctions, RangedAttack, ReadyManeouverNeeded } from '../types.js';
@@ -23,6 +23,7 @@ import {
   removeItemById,
 } from '../util/weaponMacrosCTA';
 import { getWeaponsFromAttacks, getAmmunnitionFromInventory } from '../util/weapons';
+import { getMeleeModifiers, getRangedModifiers } from './actions/modifiers';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -629,6 +630,7 @@ export default class AttackChooser extends BaseActorController {
                 await this.checkIfRemoveWeaponFromHandNeeded(token.document, hand);
                 await drawEquipment(weapon.name, token, weapon.itemid, hand, false);
               }
+
               setTimeout(
                 () =>
                   new AttackChooser(this.token, {
@@ -802,6 +804,8 @@ export default class AttackChooser extends BaseActorController {
     }
 
     const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
+    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
+    const weapon: Item | undefined = weapons.find((w) => w.itemid === attack.itemid);
 
     const rangedAttack = attack as RangedAttack;
     if (mode === 'ranged') {
@@ -814,8 +818,6 @@ export default class AttackChooser extends BaseActorController {
           'data.equipment.carried',
         );
         if (item) {
-          const weapons: Item[] = getWeaponsFromAttacks(this.actor);
-          const weapon: Item | undefined = weapons.find((w) => w.itemid === rangedAttack.itemid);
           if (item.ammo.count === 0) {
             ui.notifications?.warn('¡No te queda munición!');
             if (weapon) await refreshAmmo(this.token, weapon, 0);
@@ -876,7 +878,7 @@ export default class AttackChooser extends BaseActorController {
         const weapons: Item[] = getWeaponsFromAttacks(this.actor);
         const weaponToRemoveAmmo: Item | undefined = weapons.find((w) => w.itemid === rangedAttack.itemid);
         if (weaponToRemoveAmmo) {
-          clearAmmunition(weaponToRemoveAmmo.name, this.token);
+          clearAmmunition(weaponToRemoveAmmo, this.token);
         }
         const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
           this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
@@ -919,6 +921,7 @@ export default class AttackChooser extends BaseActorController {
       this.actor,
       target,
       attack,
+      weapon,
       iMode,
       modifiers,
       mode === 'counter_attack',
