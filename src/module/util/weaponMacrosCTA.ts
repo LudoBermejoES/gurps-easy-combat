@@ -10,6 +10,11 @@ declare global {
   }
 }
 
+export interface equippedItem {
+  itemId: string;
+  hand: string;
+}
+
 interface weapon {
   token: Token;
   textureData: any;
@@ -265,11 +270,6 @@ export async function drawEquipment(
     }
   }
 }
-export async function getEquippedItems(token: TokenDocument): Promise<
-  {
-    itemId: string;
-    hand: string;
-  }[]
-> {
+export async function getEquippedItems(token: TokenDocument): Promise<equippedItem[]> {
   return CTA.getEquippedItems(token);
 }

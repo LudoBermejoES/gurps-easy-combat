@@ -1,6 +1,6 @@
 import { makeAttackInner } from '../attackWorkflow.js';
 import { FAST_DRAW_SKILLS, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants.js';
-import { getAttacks, getEquipment, getHitLocations } from '../dataExtractor.js';
+import { getAttacks, getHitLocations } from '../dataExtractor.js';
 import { ChooserData, Item, MeleeAttack, PromiseFunctions, RangedAttack, ReadyManeouverNeeded } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
 import {
@@ -8,22 +8,37 @@ import {
   checkSingleTarget,
   ensureDefined,
   findSkillSpell,
-  getCounterAttackLevel,
-  getDisarmAttackLevel,
   getTargets,
 } from '../util/miscellaneous.js';
 import ManeuverChooser from './maneuverChooser';
-import { getReadyActionsWeaponNeeded } from '../util/readyWeapons';
+import { checkIfRemoveWeaponFromHandNeeded, getReadyActionsWeaponNeeded } from '../util/readyWeapons';
+import { addAmmunition, drawEquipment, getEquippedItems, removeItemById, equippedItem } from '../util/weaponMacrosCTA';
 import {
-  addAmmunition,
-  clearAmmunition,
-  drawEquipment,
-  refreshAmmo,
-  getEquippedItems,
-  removeItemById,
-} from '../util/weaponMacrosCTA';
-import { getWeaponsFromAttacks, getAmmunnitionFromInventory } from '../util/weapons';
+  getWeaponsFromAttacks,
+  weaponToBeReady,
+  getWeaponsToBeReady,
+  weaponNotToBeReady,
+  getWeaponsNotToBeReady,
+  getWeaponFromAttack,
+} from '../util/weapons';
 import { getMeleeModifiers, getRangedModifiers } from './actions/modifiers';
+import {
+  getAttacksWithModifiers,
+  getCounterAttackData,
+  getDisarmAttackData,
+  getExtraRangedAttacksPerROF,
+  getMeleeAttacksWithNotReamingRounds,
+  getMeleeAttacksWithReadyWeapons,
+  getRangedAttacksWithNotReamingRounds,
+  getRangedAttacksWithReadyWeapons,
+  getRangedDataWithROFMoreThan1,
+  meleeAttackWithRemainingRounds,
+  rangedAttackWithRemainingRounds,
+} from '../util/attacksDataTransformation';
+import { getHitLocationsObject } from '../util/locationsDataTransformation';
+import { calculateModifiersFromAttack } from '../util/modifiers';
+import { calculateAmmunitionForRangedAttacks } from '../util/ammo';
+import { useFatigue } from '../util/fatigue';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -36,12 +51,7 @@ interface AttackData {
   twoAttacks?: boolean;
   onlyReadyActions?: boolean;
   beforeCombat?: boolean;
-}
-
-interface Location {
-  roll: string;
-  where: string;
-  penalty: string;
+  maneuver?: string;
 }
 
 export default class AttackChooser extends BaseActorController {
@@ -64,29 +74,9 @@ export default class AttackChooser extends BaseActorController {
     weapon: string;
   }[];
 
-  rangedData: {
-    mode: string;
-    weapon: string;
-    damage: string;
-    notes: string;
-    level: number;
-    range: string;
-    accuracy: string;
-    bulk: string;
-    remainingRounds: number;
-    rof: string;
-    rcl: string;
-  }[];
+  rangedData: rangedAttackWithRemainingRounds[];
 
-  meleeData: {
-    mode: string;
-    weapon: string;
-    damage: string;
-    notes: string;
-    level: number;
-    itemid: string;
-    remainingRounds: number;
-  }[];
+  meleeData: meleeAttackWithRemainingRounds[];
 
   attackCount = 1;
   twoWeaponAttacksCount = 1;
@@ -96,11 +86,10 @@ export default class AttackChooser extends BaseActorController {
     melee: MeleeAttack[];
     ranged: RangedAttack[];
   };
-  indexLocation = 0;
 
   promiseFuncs: PromiseFunctions<void> | undefined;
 
-  constructor(token: Token, data: AttackData = {}, promiseFuncs?: PromiseFunctions<void>) {
+  constructor(token: Token, data: AttackData = {}, promiseFuncs?: PromiseFunctions<void>, maneuver?: string) {
     super('AttackChooser', token, {
       title: `Attack Chooser - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/attackChooser.hbs`,
@@ -114,336 +103,80 @@ export default class AttackChooser extends BaseActorController {
     this.promiseFuncs = promiseFuncs;
   }
 
-  getData(): {
+  async getData(): Promise<{
     onlyReadyActions: boolean;
     beforeCombat: boolean;
     disarmAttack: ChooserData<['weapon', 'mode', 'level', 'reach']>;
     counterAttack: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
-    melee: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
-    ranged: ChooserData<['weapon', 'rof', 'level', 'damage', 'range', 'accuracy', 'bulk']>;
+    melee: ChooserData<['weapon', 'mode', 'level', 'levelWithModifiers', 'damage', 'reach']>;
+    ranged: ChooserData<['weapon', 'rof', 'level', 'levelWithModifiers', 'damage', 'range', 'accuracy']>;
     hitLocations: ChooserData<['roll', 'where', 'penalty']>;
     weaponsToBeReady: ChooserData<['weapon', 'remainingRounds']>;
     weaponsNotToBeReady: ChooserData<['weapon', 'remainingRounds']>;
     data: AttackData;
-  } {
+    maneuver: string | undefined;
+  }> {
     const { melee, ranged } = getAttacks(this.actor);
     const weapons: Item[] = getWeaponsFromAttacks(this.actor);
 
-    const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(this.token.document);
-
-    const meleeDataOriginal = melee
-      .map(({ name, alternateName, mode, level, damage, reach, notes, itemid }) => {
-        const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
-          itemId: '',
-          remainingRounds: 0,
-        };
-        return {
-          weapon: alternateName || name,
-          mode,
-          level,
-          damage,
-          reach,
-          notes,
-          itemid,
-          remainingRounds: readyNeeded?.remainingRounds || 0,
-        };
-      })
-      .filter(
-        (item: {
-          mode: string;
-          weapon: string;
-          damage: string;
-          notes: string;
-          level: number;
-          itemid: string;
-          remainingRounds: number;
-        }) => {
-          const weapon = weapons.find((w) => w.itemid === item.itemid);
-          if (weapon && weapon.count === 0) {
-            return false;
-          }
-          return true;
-        },
-      );
-
-    const meleeData = meleeDataOriginal.filter(
-      (item: {
-        mode: string;
-        weapon: string;
-        damage: string;
-        notes: string;
-        level: number;
-        itemid: string;
-        remainingRounds: number;
-      }) => {
-        return !item.remainingRounds;
-      },
+    const readyActionsWeaponNeeded: { items: ReadyManeouverNeeded[] } = getReadyActionsWeaponNeeded(
+      this.token.document,
     );
+
+    const meleeDataOriginal: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithReadyWeapons(
+      melee,
+      readyActionsWeaponNeeded,
+      weapons,
+    );
+
+    const meleeData: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithNotReamingRounds(meleeDataOriginal);
     this.meleeData = meleeData;
-    const rangedDataOriginal = ranged
-      .map(({ name, alternateName, mode, level, damage, range, acc, bulk, notes, itemid, rof, rcl }) => {
-        const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
-          itemId: '',
-          remainingRounds: 0,
-        };
-        return {
-          weapon: alternateName || name,
-          mode,
-          level,
-          damage,
-          range,
-          accuracy: acc,
-          bulk,
-          notes,
-          itemid,
-          rof,
-          rcl,
-          remainingRounds: readyNeeded?.remainingRounds || 0,
-        };
-      })
-      .filter(
-        (item: {
-          mode: string;
-          weapon: string;
-          damage: string;
-          itemid: string;
-          notes: string;
-          level: number;
-          range: string;
-          accuracy: string;
-          bulk: string;
-          remainingRounds: number;
-          rof: string;
-          rcl: string;
-        }) => {
-          const rAttack = ranged.find((r) => r.itemid === item.itemid);
-          if (rAttack) {
-            if (item?.mode?.toUpperCase().includes('INNATE ATTACK')) return true;
-            const weapon = getAmmunnitionFromInventory(this.actor, rAttack.itemid, 'data.equipment.carried');
-            if (!weapon?.ammo) {
-              return false;
-            }
-            if (weapon.ammo.count === 0) {
-              return false;
-            }
-          }
-          return true;
-        },
-      );
 
-    const rangedAttackValid = rangedDataOriginal.filter(
-      (item: {
-        mode: string;
-        weapon: string;
-        damage: string;
-        notes: string;
-        level: number;
-        range: string;
-        accuracy: string;
-        bulk: string;
-        remainingRounds: number;
-        rof: string;
-        rcl: string;
-      }) => {
-        return !item.remainingRounds;
-      },
+    const rangedDataOriginal: rangedAttackWithRemainingRounds[] = getRangedAttacksWithReadyWeapons(
+      ranged,
+      readyActionsWeaponNeeded,
+      this.actor,
     );
 
-    const rangedData = rangedAttackValid.filter((attack) => !attack.rof || attack.rof === '1');
-    this.rangedData = rangedData;
-    const rangedAttackWithROFMoreThan1 = rangedAttackValid.filter((attack) => attack.rof && attack.rof !== '1');
+    const rangedAttackValid: rangedAttackWithRemainingRounds[] =
+      getRangedAttacksWithNotReamingRounds(rangedDataOriginal);
 
-    rangedAttackWithROFMoreThan1.forEach((attack) => {
-      if (attack.rof) {
-        let rof = Number(attack.rof.split('!').join(''));
+    const visibleRangedData: rangedAttackWithRemainingRounds[] = getRangedDataWithROFMoreThan1(rangedAttackValid);
 
-        const weapon: ReadyManeouverNeeded | undefined = readyActionsWeaponNeeded?.items?.find(
-          (item: ReadyManeouverNeeded) => item.itemId === attack.itemid,
-        );
-
-        if (weapon && weapon.remainingShots && weapon.remainingShots < rof) {
-          rof = weapon.remainingShots;
-        }
-
-        let maxROF = 1000;
-        const rAttack = ranged.find((r) => r.itemid === attack.itemid);
-        if (rAttack) {
-          const weapon = getAmmunnitionFromInventory(this.actor, rAttack.itemid, 'data.equipment.carried');
-          if (weapon?.ammo) {
-            maxROF = weapon.ammo.count;
-          }
-        }
-
-        rof = Math.min(rof, maxROF);
-
-        for (let i = 1; i <= rof; i++) {
-          const newAttack = { ...attack };
-          newAttack.weapon += ` -- Disparar ${i} proyectiles`;
-          newAttack.rof = String(i);
-          if (i > 4) {
-            const extraToHit = Math.ceil(i / 4) - 1;
-            newAttack.level += extraToHit;
-          }
-          rangedData.push(newAttack);
-        }
-      }
-    });
-
-    const items: Item[] = getEquipment(this.actor);
-
-    const attacksToBeReadyData = [
-      ...rangedDataOriginal.filter(
-        (item: {
-          mode: string;
-          weapon: string;
-          damage: string;
-          notes: string;
-          level: number;
-          range: string;
-          accuracy: string;
-          bulk: string;
-          remainingRounds: number;
-        }) => item.remainingRounds,
-      ),
-      ...meleeDataOriginal.filter(
-        (item: {
-          mode: string;
-          weapon: string;
-          damage: string;
-          notes: string;
-          level: number;
-          remainingRounds: number;
-        }) => item.remainingRounds,
-      ),
+    const rangedData: rangedAttackWithRemainingRounds[] = [
+      ...visibleRangedData,
+      ...getExtraRangedAttacksPerROF(visibleRangedData, readyActionsWeaponNeeded, this.actor),
     ];
 
-    const weaponsToBeReadyData: any = [];
+    this.rangedData = rangedData;
+    const weaponsToBeReadyData: weaponToBeReady[] = getWeaponsToBeReady(
+      meleeDataOriginal,
+      rangedDataOriginal,
+      this.actor,
+    );
 
-    attacksToBeReadyData.map((attack) => {
-      const itemFound: Item | undefined = items.find((item) => item.itemid === attack.itemid);
-      if (itemFound) {
-        const weaponAlreadyExists: any = weaponsToBeReadyData.filter((w: Item) => w.itemid === itemFound.itemid);
-        if (!weaponAlreadyExists.length) {
-          weaponsToBeReadyData.push({
-            itemid: itemFound.itemid,
-            weapon: itemFound.alternateName || itemFound.name,
-            name: itemFound.name,
-            remainingRounds: attack.remainingRounds,
-          });
-        }
-      }
-    });
+    const weaponsNotToBeReadyData: weaponNotToBeReady[] = getWeaponsNotToBeReady(
+      meleeDataOriginal,
+      rangedDataOriginal,
+      this.actor,
+    );
 
-    const weaponsNotToBeReadyData: any = [];
-    [...meleeData, ...rangedData].map((attack) => {
-      const itemFound: Item | undefined = items.find((item) => item.itemid === attack.itemid);
-      if (itemFound) {
-        const weaponAlreadyExists: any = weaponsNotToBeReadyData.filter((w: Item) => w.itemid === itemFound.itemid);
-        if (!weaponAlreadyExists.length) {
-          weaponsNotToBeReadyData.push({
-            itemid: itemFound.itemid,
-            weapon: itemFound.alternateName || itemFound.name,
-            name: itemFound.name,
-            remainingRounds: attack.remainingRounds,
-          });
-        }
-      }
-    });
-
-    const counterAttackData = meleeData.map(({ weapon, mode, level, damage, reach }) => {
-      return {
-        weapon,
-        mode,
-        level: getCounterAttackLevel(this.actor, weapon, level),
-        damage,
-        reach,
-      };
-    });
-
-    const disarmAttackData = meleeData.map(({ weapon, mode, level, damage, reach }) => {
-      return {
-        weapon,
-        mode,
-        level: getDisarmAttackLevel(this.actor, weapon, level),
-        damage,
-        reach,
-      };
-    });
-
-    ensureDefined(game.user, 'game not initialized');
-    if (checkSingleTarget(game.user)) {
-      const target = getTargets(game.user)[0];
-      ensureDefined(target.actor, 'target has no actor');
-      const hitLocationsValues = getHitLocations(target.actor);
-
-      const successDefenses = <{ attackers: string[]; round: number } | undefined>(
-        this.token.document.getFlag(MODULE_NAME, 'successDefenses')
-      );
-
-      const targetId = target?.id;
-      if (targetId) {
-        const roundSuccess = (successDefenses?.round || 0) === game.combat?.round ?? 0;
-        const attackers = (roundSuccess && successDefenses?.attackers) || [];
-        if (!attackers.includes(targetId)) {
-          counterAttackData.length = 0;
-        }
-      }
-
-      const hitLocationsData = hitLocationsValues.map(({ equipment, dr, roll, where, penalty }) => ({
-        equipment,
-        dr,
-        roll,
-        where,
-        penalty,
-      }));
-
-      this.weaponsToBeReadyData = weaponsToBeReadyData;
-      this.weaponsNotToBeReadyData = weaponsNotToBeReadyData;
-      return {
-        onlyReadyActions: this.data.onlyReadyActions || false,
-        beforeCombat: this.data.beforeCombat || false,
-        disarmAttack: {
-          items: disarmAttackData,
-          headers: ['weapon', 'mode', 'level', 'reach'],
-          id: 'disarm_attacks',
-        },
-        counterAttack: {
-          items: counterAttackData,
-          headers: ['weapon', 'mode', 'level', 'damage', 'reach'],
-          id: 'counter_attacks',
-        },
-        melee: {
-          items: meleeData,
-          headers: ['weapon', 'mode', 'level', 'damage', 'reach'],
-          id: 'melee_attacks',
-        },
-        ranged: {
-          items: rangedData,
-          headers: ['weapon', 'rof', 'level', 'damage', 'range', 'accuracy', 'bulk'],
-          id: 'ranged_attacks',
-        },
-        hitLocations: {
-          items: hitLocationsData,
-          headers: ['roll', 'where', 'penalty'],
-          id: 'hit_locations',
-        },
-        weaponsToBeReady: {
-          items: weaponsToBeReadyData,
-          headers: ['weapon', 'remainingRounds'],
-          id: 'weapons_to_be_ready',
-        },
-        weaponsNotToBeReady: {
-          items: weaponsNotToBeReadyData,
-          headers: ['weapon', 'remainingRounds'],
-          id: 'weapons_not_to_be_ready',
-        },
-        data: this.data,
-      };
-    }
+    const counterAttackData = getCounterAttackData(meleeData, this.actor);
+    const disarmAttackData = getDisarmAttackData(game, this.token, meleeData, this.actor);
+    const hitLocationsObject = getHitLocationsObject(game);
 
     this.weaponsToBeReadyData = weaponsToBeReadyData;
     this.weaponsNotToBeReadyData = weaponsNotToBeReadyData;
+
+    const { meleeAttacksWithModifier, rangedAttacksWithModifier } = await getAttacksWithModifiers(
+      meleeData,
+      rangedData,
+      this.actor,
+      this.token,
+    );
+
     return {
+      ...hitLocationsObject,
       onlyReadyActions: this.data.onlyReadyActions || false,
       beforeCombat: this.data.beforeCombat || false,
       disarmAttack: {
@@ -457,17 +190,17 @@ export default class AttackChooser extends BaseActorController {
         id: 'counter_attacks',
       },
       melee: {
-        items: meleeData,
-        headers: ['weapon', 'mode', 'level', 'damage', 'reach'],
+        items: meleeAttacksWithModifier,
+        headers: ['weapon', 'mode', 'level', 'levelWithModifiers', 'damage', 'reach'],
         id: 'melee_attacks',
       },
       ranged: {
-        items: rangedData,
-        headers: ['weapon', 'rof', 'level', 'damage', 'range', 'accuracy', 'bulk'],
+        items: rangedAttacksWithModifier,
+        headers: ['weapon', 'rof', 'level', 'levelWithModifiers', 'damage', 'range', 'accuracy'],
         id: 'ranged_attacks',
       },
       hitLocations: {
-        items: [],
+        items: hitLocationsObject.hitLocations?.items || [],
         headers: ['roll', 'where', 'penalty'],
         id: 'hit_locations',
       },
@@ -481,17 +214,23 @@ export default class AttackChooser extends BaseActorController {
         headers: ['weapon', 'remainingRounds'],
         id: 'weapons_not_to_be_ready',
       },
+      maneuver: this?.actor?.data?.data?.conditions?.maneuver,
       data: this.data,
     };
   }
+
   activateListeners(html: JQuery): void {
-    activateChooser(html, 'disarm_attacks', (index) => this.makeAttack('disarm_attack', index, undefined));
-    activateChooser(html, 'counter_attacks', (index) => this.makeAttack('counter_attack', index, undefined));
-    activateChooser(html, 'melee_attacks', (index) => this.makeAttack('melee', index, undefined));
-    activateChooser(html, 'ranged_attacks', (index, element) => this.makeAttack('ranged', index, element));
-    activateChooser(html, 'weapons_to_be_ready', (index) => this.readyWeapon(index));
-    activateChooser(html, 'weapons_not_to_be_ready', (index) => this.unReadyWeaponChooser(index));
-    activateChooser(html, 'hit_locations', (index, element) => this.chooseLocation(index, element));
+    activateChooser(html, 'disarm_attacks', (index: number) => this.makeAttack('disarm_attack', index, undefined));
+    activateChooser(html, 'counter_attacks', (index: number) => this.makeAttack('counter_attack', index, undefined));
+    activateChooser(html, 'melee_attacks', (index: number) => this.makeAttack('melee', index, undefined));
+    activateChooser(html, 'ranged_attacks', (index: number, element: JQuery<any>) =>
+      this.makeAttack('ranged', index, element),
+    );
+    activateChooser(html, 'weapons_to_be_ready', (index: number) => this.readyWeapon(index));
+    activateChooser(html, 'weapons_not_to_be_ready', (index: number) => this.unReadyWeaponChooser(index));
+    activateChooser(html, 'hit_locations', (index: number, element: JQuery<any>) =>
+      this.chooseLocation(index, element),
+    );
     html.on('change', '#keepOpen', (event) => {
       this.data.keepOpen = $(event.currentTarget).is(':checked');
     });
@@ -504,10 +243,6 @@ export default class AttackChooser extends BaseActorController {
     $('#close', html).click(() => {
       this.closeForEveryone();
     });
-  }
-
-  async closeWindow() {
-    this.closeForEveryone();
   }
 
   async unReadyWeapon(weapon: any, token: TokenDocument): Promise<void> {
@@ -547,58 +282,14 @@ export default class AttackChooser extends BaseActorController {
       );
     }
   }
+
+  async closeWindow() {
+    this.closeForEveryone();
+  }
+
   async unReadyWeaponChooser(index: number): Promise<void> {
     const weapon = this.weaponsNotToBeReadyData[index];
     return this.unReadyWeapon(weapon, this.token.document);
-  }
-
-  async removeWeapon(token: TokenDocument, weapon: any) {
-    console.log('TRATO DE ELIMINAR ', weapon);
-    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
-    const weaponToRemove: Item | undefined = weapons.find((w) => w.itemid === weapon.itemId);
-    if (weaponToRemove) {
-      console.log('ELIMINO ', weaponToRemove);
-      return this.unReadyWeapon(weaponToRemove, token);
-    }
-    return Promise.resolve();
-  }
-
-  async checkIfRemoveWeaponFromHandNeeded(token: TokenDocument, hand: string) {
-    const equipped = await getEquippedItems(token);
-    const removeFromHandItems = equipped.filter((e) => e.hand === hand || e.hand === 'BOTH' || hand === 'BOTH');
-    console.log('Total a eliminar', removeFromHandItems);
-    const promises: Promise<void>[] = [];
-    if (removeFromHandItems.length >= 0) {
-      removeFromHandItems.forEach((weapon) => promises.push(this.removeWeapon(token, weapon)));
-    }
-    await Promise.allSettled(promises);
-  }
-
-  async checkOffHand(
-    token: TokenDocument,
-    attack: MeleeAttack | RangedAttack,
-  ): Promise<
-    | {
-        mod: number;
-        desc: string;
-      }
-    | undefined
-  > {
-    const equippedItems: {
-      itemId: string;
-      hand: string;
-    }[] = await getEquippedItems(token);
-
-    const weaponCarried = equippedItems.find((e) => e.itemId === attack.itemid);
-    if (weaponCarried) {
-      if (weaponCarried.hand === 'OFF') {
-        return {
-          mod: -4,
-          desc: 'Por atacar con la mano mala',
-        };
-      }
-    }
-    return undefined;
   }
 
   async fastDrawSkillCheck(weapon: any, remainingRounds: number): Promise<boolean> {
@@ -627,7 +318,7 @@ export default class AttackChooser extends BaseActorController {
               const equippedWeapon = equippedWeapons.find((i) => i.itemId === weapon.itemid);
               if (!equippedWeapon) {
                 const hand = await this.chooseHand();
-                await this.checkIfRemoveWeaponFromHandNeeded(token.document, hand);
+                await checkIfRemoveWeaponFromHandNeeded(this, token.document, hand);
                 await drawEquipment(weapon.name, token, weapon.itemid, hand, false);
               }
 
@@ -678,12 +369,12 @@ export default class AttackChooser extends BaseActorController {
 
   async readyWeapon(index: number): Promise<void> {
     const weapon = this.weaponsToBeReadyData[index];
-    const equippedWeapons = await getEquippedItems(this.token.document);
-    const equippedWeapon = equippedWeapons.find((i) => i.itemId === weapon.itemid);
+    const equippedWeapons: equippedItem[] = await getEquippedItems(this.token.document);
+    const equippedWeapon: equippedItem | undefined = equippedWeapons.find((i) => i.itemId === weapon.itemid);
     let handWeapon = 'NONE';
     if (!equippedWeapon) {
       const hand: string = await this.chooseHand();
-      await this.checkIfRemoveWeaponFromHandNeeded(this.token.document, hand);
+      await checkIfRemoveWeaponFromHandNeeded(this, this.token.document, hand);
       await drawEquipment(weapon.name, this.token, weapon.itemid, hand, false);
       handWeapon = hand;
     } else {
@@ -730,177 +421,45 @@ export default class AttackChooser extends BaseActorController {
     }
   }
 
-  getNameFromAttack(attack: any, attackData: any): boolean {
-    const nameToLook: string = attackData.weapon.split(' --')[0];
-    if (attack.alternateName) {
-      if (attack.alternateName === nameToLook) {
-        return true;
-      }
-    }
-
-    if (attack.name === nameToLook) {
-      return true;
-    }
-
-    return false;
-  }
-
   async makeAttack(
     mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
     index: number,
     element: any | undefined,
   ): Promise<void> {
+    const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
+    if (isUsingFatigueForMoveAndAttack) {
+      useFatigue(this.actor);
+    }
+    const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
+    if (isUsingFatigueForMightyBlows) {
+      useFatigue(this.actor);
+    }
     const iMode = mode === 'counter_attack' || mode === 'disarm_attack' ? 'melee' : mode;
     ensureDefined(game.user, 'game not initialized');
     if (!checkSingleTarget(game.user)) return;
     const target = getTargets(game.user)[0];
     ensureDefined(target.actor, 'target has no actor');
 
-    let attack = getAttacks(this.actor)[iMode][index];
-
-    const attackModifiers = [];
-    if (mode === 'ranged') {
-      const attackData = this.rangedData[index];
-      const rangedAttacks = getAttacks(this.actor)[iMode] as RangedAttack[];
-      const originalAttack = rangedAttacks.find((attack: any) => this.getNameFromAttack(attack, attackData));
-      ensureDefined(element, 'target has no actor');
-      if (originalAttack) {
-        const attackValue = Number(element.find('.level').text());
-        const diff = attackValue - originalAttack.level;
-        if (diff) {
-          attackModifiers.push({ mod: diff, desc: 'Por número de balas' });
-        }
-        if (originalAttack.rof !== undefined) {
-          originalAttack.rof = originalAttack.rof.trim();
-        }
-        attack = { ...originalAttack };
-        attack.level = Number(element.find('.level').text());
-        attack.rof = element.find('.rof').text().trim();
-      }
-    } else {
-      const attackData = this.meleeData[index];
-      const meleeAttacks = getAttacks(this.actor)[iMode] as MeleeAttack[];
-      const originalAttack = meleeAttacks.find((attack: MeleeAttack) => this.getNameFromAttack(attack, attackData));
-      if (originalAttack) {
-        attack = { ...originalAttack };
-      }
-    }
-    const modifiers = AttackChooser.modifiersGetters[iMode](attack as RangedAttack & MeleeAttack, this.token, target);
-    if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
-    const offHandModifier = await this.checkOffHand(this.token.document, attack);
-    if (offHandModifier) {
-      modifiers.attack = [...modifiers.attack, offHandModifier];
-    }
-    if (iMode === 'melee') {
-      const reach = (attack as MeleeAttack).reach;
-      const x = this.token.data.x;
-      const y = this.token.data.y;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const distance = game.canvas.grid.measureDistance({ x, y }, target.center, { gridSpaces: true }) || 0;
-      const calculatedDistance = distance === 0 ? 'C' : String(distance);
-      const canAttack = reach.split(',').find((r) => calculatedDistance.toUpperCase() === r.toUpperCase());
-      ensureDefined(canAttack, `No estás a distancia de ataque, el alcance de tu arma es ${reach}`);
-    }
+    const { attack, modifiers } = await calculateModifiersFromAttack(
+      mode,
+      index,
+      element,
+      target,
+      this.actor,
+      this.token,
+      this.rangedData,
+      this.meleeData,
+      {
+        isUsingFatigueForMoveAndAttack,
+        isUsingFatigueForMightyBlows,
+      },
+    );
 
     const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
-    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
-    const weapon: Item | undefined = weapons.find((w) => w.itemid === attack.itemid);
+    const weapon: Item | undefined = getWeaponFromAttack(this.actor, attack);
 
-    const rangedAttack = attack as RangedAttack;
-    if (mode === 'ranged') {
-      let remainingRounds = 0;
-      // Shots
-      if (rangedAttack.shots && rangedAttack.shots.includes('(')) {
-        const item: { ammo: Item; st: string } | undefined = getAmmunnitionFromInventory(
-          this.actor,
-          rangedAttack.itemid,
-          'data.equipment.carried',
-        );
-        if (item) {
-          if (item.ammo.count === 0) {
-            ui.notifications?.warn('¡No te queda munición!');
-            if (weapon) await refreshAmmo(this.token, weapon, 0);
-            return;
-          }
-          const toRemove = Number(rangedAttack.rof) || 1;
-          await (this.actor as any).updateEqtCount(item.st, item.ammo.count - toRemove);
-          if (weapon) await refreshAmmo(this.token, weapon, item.ammo.count - toRemove);
-        }
-
-        // Throw weapon
-        if (rangedAttack.shots.split('(')[0] === 'T') {
-          remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
-        } else {
-          if (!rangedAttack.rof) {
-            remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
-          }
-          const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
-            this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
-          );
-          let weapon: ReadyManeouverNeeded | undefined = readyActionsWeaponNeeded?.items?.find(
-            (item: ReadyManeouverNeeded) => item.itemId === rangedAttack.itemid,
-          );
-
-          if (!weapon) {
-            const remainingShots =
-              rangedAttack.shots.toUpperCase().indexOf('T') > -1 ? 0 : Number(eval(rangedAttack.shots.split('(')[0]));
-            weapon = {
-              itemId: rangedAttack.itemid,
-              remainingRounds: 0,
-              remainingShots,
-            };
-          } else if (weapon.remainingShots === undefined) {
-            weapon.remainingShots = Number(eval(rangedAttack.shots.split('(')[0]));
-          }
-
-          if (item?.ammo?.count) {
-            weapon.remainingShots = item?.ammo?.count;
-          } else {
-            weapon.remainingShots -= Number(rangedAttack.rof) || 1;
-          }
-
-          if (weapon.remainingShots <= 0) {
-            remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
-          } else {
-            const items =
-              readyActionsWeaponNeeded?.items?.filter(
-                (item: ReadyManeouverNeeded) => item.itemId !== rangedAttack.itemid,
-              ) || [];
-            this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
-              items: [...(items || []), weapon],
-            });
-          }
-        }
-      }
-
-      if (remainingRounds) {
-        const weapons: Item[] = getWeaponsFromAttacks(this.actor);
-        const weaponToRemoveAmmo: Item | undefined = weapons.find((w) => w.itemid === rangedAttack.itemid);
-        if (weaponToRemoveAmmo) {
-          clearAmmunition(weaponToRemoveAmmo, this.token);
-        }
-        const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
-          this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
-        );
-        const items =
-          readyActionsWeaponNeeded?.items?.filter(
-            (item: ReadyManeouverNeeded) => item.itemId !== rangedAttack.itemid,
-          ) || [];
-        const remainingShots =
-          rangedAttack.shots.toUpperCase().indexOf('T') > -1 ? 0 : Number(eval(rangedAttack.shots.split('(')[0]));
-        this.token.document.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
-          items: [
-            ...(items || []),
-            {
-              itemId: rangedAttack.itemid,
-              remainingRounds,
-              remainingShots,
-            },
-          ],
-        });
-      }
-    }
+    const stillWithAmmo = calculateAmmunitionForRangedAttacks(attack, mode, weapon, this.actor, this.token);
+    if (!stillWithAmmo) return;
 
     if (
       !this.data.keepOpen &&

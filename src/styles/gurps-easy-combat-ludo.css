@@ -66,3 +66,8 @@
 .card-bottom {
   border-top: 1px solid var(--color-underline-header);
 }
+
+
+.levelWithModifiers {
+  color: #800000
+}

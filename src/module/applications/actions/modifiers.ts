@@ -6,6 +6,7 @@ export function getMeleeModifiers(
   attack: MeleeAttack,
   token: Token,
   target: Token,
+  { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false },
 ): {
   attack: Modifier[];
   defense: Modifier[];
@@ -19,13 +20,16 @@ export function getMeleeModifiers(
   ensureDefined(token.actor, 'token without actor');
   switch (getManeuver(token.actor)) {
     case 'move_and_attack':
-      modifiers.attack.push({ mod: -4, desc: 'Move and Attack *Max:9' });
+      if (!isUsingFatigueForMoveAndAttack) modifiers.attack.push({ mod: -4, desc: 'Move and Attack *Max:9' });
       break;
     case 'aoa_determined':
-      modifiers.attack.push({ mod: 4, desc: 'determined' });
+      modifiers.attack.push({ mod: 4, desc: 'Ataque determinado' });
       break;
     case 'aoa_strong':
-      modifiers.damage.push({ mod: 2, desc: 'strong' });
+      modifiers.damage.push({ mod: 2, desc: 'Ataque fuerte' });
+  }
+  if (isUsingFatigueForMightyBlows) {
+    modifiers.damage.push({ mod: 2, desc: 'Ataque poderoso' });
   }
   const lastFeint = <{ successMargin: number; targetId: string; round: number } | undefined>(
     token.document.getFlag(MODULE_NAME, 'lastFeint')
@@ -38,7 +42,7 @@ export function getMeleeModifiers(
     lastFeint.successMargin > 0
   ) {
     token.document.unsetFlag(MODULE_NAME, 'lastFeint');
-    modifiers.defense.push({ mod: -lastFeint.successMargin, desc: 'finta' });
+    modifiers.defense.push({ mod: -lastFeint.successMargin, desc: 'Por finta' });
   }
 
   const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
@@ -79,6 +83,7 @@ export function getRangedModifiers(
   attack: RangedAttack,
   token: Token,
   target: Token,
+  { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false },
 ): {
   attack: Modifier[];
   defense: Modifier[];
@@ -90,7 +95,9 @@ export function getRangedModifiers(
     damage: <Modifier[]>[],
   };
 
-  const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
+  const location = <{ bonus: number; where: string } | undefined>(
+    token.document.getFlag(MODULE_NAME, 'Por localización')
+  );
   if (location && location.bonus) {
     token.document.unsetFlag(MODULE_NAME, 'location');
     modifiers.attack.push({ mod: location.bonus, desc: location.where });
@@ -99,14 +106,15 @@ export function getRangedModifiers(
   ensureDefined(token.actor, 'token without actor');
   switch (getManeuver(token.actor)) {
     case 'move_and_attack':
-      modifiers.attack.push({ mod: -getBulk(attack), desc: 'Move and Attack' });
+      if (!isUsingFatigueForMoveAndAttack)
+        modifiers.attack.push({ mod: -getBulk(attack), desc: 'Por moverse y atacar' });
       break;
     case 'aoa_determined':
       modifiers.attack.push({ mod: 1, desc: 'determined' });
       break;
   }
   if (getManeuver(token.actor) !== 'move_and_attack') {
-    const lastAim = <{ bonus: number } | undefined>token.document.getFlag(MODULE_NAME, 'lastAim');
+    const lastAim = <{ bonus: number } | undefined>token.document.getFlag(MODULE_NAME, 'Por apuntar');
     if (lastAim) {
       token.document.unsetFlag(MODULE_NAME, 'lastAim');
       modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
@@ -117,7 +125,7 @@ export function getRangedModifiers(
   const distance = game.canvas.grid.measureDistance(token.center, target.center, { gridSpaces: true }) || 0;
   const modifierByDistance = GURPS.rangeObject.ranges;
   const modifier = modifierByDistance.find((d: any) => d.max >= distance);
-  modifiers.attack.push({ mod: modifier.penalty, desc: 'By distance' });
+  modifiers.attack.push({ mod: modifier.penalty, desc: `Por distancia ${distance} casillas` });
 
   return modifiers;
 }

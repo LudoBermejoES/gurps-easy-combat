@@ -101,12 +101,14 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
           if (!target) return;
         }
 
-        this.token.setManeuver(maneuver.key);
-        ChatMessage.create({
-          content: `${this.token.name} uses the "${maneuver.name}" maneuver [PDF:${maneuver.page}]`,
+        this.token.setManeuver(maneuver.key).then(() => {
+          ChatMessage.create({
+            content: `${this.token.name} uses the "${maneuver.name}" maneuver [PDF:${maneuver.page}]`,
+          });
+          this.closeForEveryone();
+          const token = this.token;
+          setTimeout(() => maneuver.callback?.(token), 500);
         });
-        this.closeForEveryone();
-        maneuver.callback?.(this.token);
       },
       (index, element, type) => {
         const content = element.closest('.window-content');

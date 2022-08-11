@@ -1,8 +1,5 @@
-import WeaponChooser from './applications/weaponChooser';
-import DefenseChooser from './applications/defenseChooser';
 import { Attack, GurpsRoll, Item, MeleeAttack, Modifier, RangedAttack } from './types';
 import { applyModifiers } from './util/actions';
-import { MODULE_NAME } from './util/constants';
 import { ensureDefined, getFullName, getTargets, setTargets } from './util/miscellaneous';
 import { doAnimationAttack, doAnimationCriticalSuccess, doAnimationDamage, doAnimationMiss } from './util/animations';
 import { playSound } from './util/sounds';
@@ -112,7 +109,7 @@ export async function makeAttackInner(
     const resultDefense = await rollDefense(roll, isCounterAttack, attacker, attack, modifiers, target);
     if (!resultDefense) return;
     if (roll.rofrcl) {
-      roll.rofrcl = roll.rofrcl - (GURPS.lastTargetedRoll.margin + 1);
+      //      roll.rofrcl = roll.rofrcl - (GURPS.lastTargetedRoll.margin + 1);
     }
   } else {
     await doAnimationCriticalSuccess(target.actor);

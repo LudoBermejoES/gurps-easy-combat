@@ -93,7 +93,7 @@ export function activateChooser(
     .map((i) => `#${i} tr.clickable`)
     .join(',');
 
-  html.on('click', selector, (event) => {
+  html.on('click', selector, async (event) => {
     const element = $(event.currentTarget);
     const indexString = element.attr('index');
     if (!indexString) {
@@ -103,13 +103,13 @@ export function activateChooser(
 
     const id = $(element).parent().parent().attr('id');
     if (id && id.includes('2')) {
-      callback(parseInt(indexString), element, 'advanced');
+      await callback(parseInt(indexString), element, 'advanced');
     } else {
-      callback(parseInt(indexString), element, 'basic');
+      await callback(parseInt(indexString), element, 'basic');
     }
   });
   if (callback2) {
-    html.on('mouseover', selector, (event) => {
+    html.on('mouseover', selector, async (event) => {
       const element = $(event.currentTarget);
       const indexString = element.attr('index');
       if (!indexString) {
@@ -119,9 +119,9 @@ export function activateChooser(
 
       const id = $(element).parent().parent().attr('id');
       if (id && id.includes('2')) {
-        callback2(parseInt(indexString), element, 'advanced');
+        await callback2(parseInt(indexString), element, 'advanced');
       } else {
-        callback2(parseInt(indexString), element, 'basic');
+        await callback2(parseInt(indexString), element, 'basic');
       }
     });
   }

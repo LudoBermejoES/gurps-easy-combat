@@ -18,6 +18,7 @@ import { MeleeAttack, Modifier, RangedAttack, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
 import { getEquippedItems } from '../util/weaponMacrosCTA';
 import { getValidBlocks, getValidParries } from './actions/defense';
+import { useFatigue } from '../util/fatigue';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -82,10 +83,16 @@ export default class DefenseChooser extends BaseActorController {
     html.on('click', '#dodge', () => {
       const isRetreating = $('#retreat').is(':checked');
       const isProne = $('#prone').is(':checked');
+      const isFeverishDefense = $('#feverishDefense').is(':checked');
 
       if (isRetreating) {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
+      }
+
+      if (isFeverishDefense) {
+        this.data.modifiers.push({ mod: +2, desc: 'Defensa desesperada' });
+        useFatigue(this.actor);
       }
 
       if (isProne) {

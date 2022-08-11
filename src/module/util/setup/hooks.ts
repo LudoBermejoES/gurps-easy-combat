@@ -5,12 +5,9 @@ import ManeuverChooser from '../../applications/maneuverChooser.js';
 import { ensureDefined, highestPriorityUsers } from '../miscellaneous.js';
 import AttackChooser from '../../applications/attackChooser.js';
 import { registerFunctions } from './socketkib.js';
-import { getAttacks } from '../../dataExtractor.js';
-import { MeleeAttack, RangedAttack } from '../../types';
 import { getUserFromCombatant } from '../combatants';
-import { clearEquipment, getEquippedItems } from '../weaponMacrosCTA';
-import { getWeaponsFromAttacks } from '../weapons';
 import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs';
+import { prepareReadyWeapons } from '../readyWeapons';
 
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
@@ -112,40 +109,6 @@ export function registerHooks(): void {
     }
   });
 
-  async function showReadyWeapons(actor: Actor, token: TokenDocument, user: User) {
-    const attacks: {
-      melee: MeleeAttack[];
-      ranged: RangedAttack[];
-    } = getAttacks(actor);
-
-    const meleeWeaponIds: string[] = attacks.melee.map((melee) => melee.itemid).filter((i) => i !== undefined);
-    const rangedWeaponIds: string[] = attacks.ranged.map((melee) => melee.itemid).filter((i) => i !== undefined);
-    const equippedItems: { itemId: string; hand: string }[] = await getEquippedItems(token);
-    await token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
-      items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds]))
-        .filter((item) => !equippedItems.find((i) => i.itemId === item))
-        .map((item) => {
-          let remainingRounds = 1;
-
-          const rangedAttack: RangedAttack | undefined = attacks.ranged.find((i) => i.itemid === item);
-          if (rangedAttack) {
-            const numberOfShots: string = rangedAttack.shots.split('(')[0];
-            if (!isNaN(Number(numberOfShots)) && Number(numberOfShots) === 1) {
-              remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]) + 1;
-            }
-          }
-
-          return {
-            itemId: item,
-            remainingRounds,
-          };
-        }),
-    });
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, token.id);
-  }
-
   // on create combatant, set the maneuver
   Hooks.on('createCombatant', async (combatant: Combatant) => {
     ensureDefined(combatant.token, 'No actor selected');
@@ -161,7 +124,7 @@ export function registerHooks(): void {
     deleteFlags(game.combat);
     //clearEquipment(combatant.token.id);
     const user: User = getUserFromCombatant(combatant);
-    showReadyWeapons(actor, combatant.token, user);
+    prepareReadyWeapons(actor, combatant.token, user);
   });
 
   Hooks.on('renderTokenHUD', async (app: any, html: any, token: TokenData) => {
@@ -192,11 +155,16 @@ export function registerHooks(): void {
       col2.append(buttonOpenActions);
     }
 
-    $('.ready-weapon').on('click', () => {
+    $('.ready-weapon').on('click', async () => {
       const actor: Actor | undefined = game?.actors?.find((a) => a.id == token.actorId);
       if (actor) {
         const user: User = highestPriorityUsers(actor)[0];
-        if (user) showReadyWeapons(actor, tokenIn.document, user);
+        if (user) {
+          await prepareReadyWeapons(actor, tokenIn.document, user);
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, tokenIn.document.id);
+        }
       }
     });
 

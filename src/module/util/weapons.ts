@@ -1,6 +1,26 @@
 import { getAttacks, getEquipment } from '../dataExtractor';
-import { Item, RangedAttack } from '../types';
+import { Item, MeleeAttack, RangedAttack } from '../types';
 import { ensureDefined } from './miscellaneous';
+import {
+  getAttacksNotToBeReady,
+  getAttacksToBeReady,
+  meleeAttackWithRemainingRounds,
+  rangedAttackWithRemainingRounds,
+} from './attacksDataTransformation';
+
+export interface weaponToBeReady {
+  itemid: string;
+  weapon: string;
+  name: string;
+  remainingRounds: number;
+}
+
+export interface weaponNotToBeReady {
+  itemid: string;
+  weapon: string;
+  name: string;
+  remainingRounds: number;
+}
 
 export function getWeaponsFromAttacks(actor: Actor): Item[] {
   const weaponData: Item[] = [];
@@ -18,11 +38,9 @@ export function getWeaponsFromAttacks(actor: Actor): Item[] {
   return weaponData;
 }
 
-export function getWeaponFromAttack(actor: Actor, attack: RangedAttack): Item | undefined {
-  const weapons: Item[] = getEquipment(actor);
-  const { ranged } = getAttacks(actor);
-  ensureDefined(ranged, 'No tienes ataques a distancia');
-  const weapon: Item | undefined = weapons.find((w: Item) => w.itemid === attack.itemid);
+export function getWeaponFromAttack(actor: Actor, attack: MeleeAttack | RangedAttack): Item | undefined {
+  const weapons: Item[] = getWeaponsFromAttacks(actor);
+  const weapon: Item | undefined = weapons.find((w) => w.itemid === attack.itemid);
   return weapon;
 }
 
@@ -81,4 +99,64 @@ export function getAmmunnitionFromInventory(
     }
   }
   return undefined;
+}
+
+export function getWeaponsToBeReady(
+  melee: meleeAttackWithRemainingRounds[],
+  ranged: rangedAttackWithRemainingRounds[],
+  actor: Actor,
+): weaponToBeReady[] {
+  const items: Item[] = getEquipment(actor);
+  const attacksToBeReadyData: (meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds)[] =
+    getAttacksToBeReady(melee, ranged);
+
+  const weaponsToBeReadyData: weaponToBeReady[] = [];
+
+  attacksToBeReadyData.map((attack: meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds) => {
+    const itemFound: Item | undefined = items.find((item) => item.itemid === attack.itemid);
+    if (itemFound) {
+      const weaponAlreadyExists: weaponToBeReady[] = weaponsToBeReadyData.filter(
+        (w: weaponToBeReady) => w.itemid === itemFound.itemid,
+      );
+      if (!weaponAlreadyExists.length) {
+        weaponsToBeReadyData.push({
+          itemid: itemFound.itemid,
+          weapon: itemFound.alternateName || itemFound.name,
+          name: itemFound.name,
+          remainingRounds: attack.remainingRounds,
+        });
+      }
+    }
+  });
+  return weaponsToBeReadyData;
+}
+
+export function getWeaponsNotToBeReady(
+  melee: meleeAttackWithRemainingRounds[],
+  ranged: rangedAttackWithRemainingRounds[],
+  actor: Actor,
+): weaponNotToBeReady[] {
+  const items: Item[] = getEquipment(actor);
+  const attacksNotToBeReadyData: (meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds)[] =
+    getAttacksNotToBeReady(melee, ranged);
+
+  const weaponsNotToBeReadyData: weaponNotToBeReady[] = [];
+
+  attacksNotToBeReadyData.map((attack: meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds) => {
+    const itemFound: Item | undefined = items.find((item) => item.itemid === attack.itemid);
+    if (itemFound) {
+      const weaponAlreadyExists: weaponNotToBeReady[] = weaponsNotToBeReadyData.filter(
+        (w: weaponToBeReady) => w.itemid === itemFound.itemid,
+      );
+      if (!weaponAlreadyExists.length) {
+        weaponsNotToBeReadyData.push({
+          itemid: itemFound.itemid,
+          weapon: itemFound.alternateName || itemFound.name,
+          name: itemFound.name,
+          remainingRounds: attack.remainingRounds,
+        });
+      }
+    }
+  });
+  return weaponsNotToBeReadyData;
 }

@@ -1,7 +1,7 @@
 <table class="choiceTable" id={{id}}>
   <tr class="header">
     {{#each headers as |header|}}
-      <td>{{header}}</td>
+      <td class="header_{{header}}">{{getHeader header}}</td>
     {{/each}}
   </tr>
 {{#each items as |item|}}
