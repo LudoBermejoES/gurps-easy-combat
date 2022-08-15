@@ -93,7 +93,8 @@ export async function calculateDefenseModifiersFromEquippedWeapons(
   equippedWeapons.forEach((weapon: equippedItem) => {
     const item: any = actor.data.items.contents.find((item: any) => item.data._id === weapon.itemId);
     if (!item) return;
-    if (item.data.name.toUpperCase().includes('SHIELD')) {
+    const found = ['SHIELD', 'CLOAK'].find((m) => item.data.name.toUpperCase().includes(m));
+    if (found) {
       const bonuses = item.data.data.bonuses.split('\n');
       for (const bonus of bonuses) {
         if (bonus.toUpperCase().includes('DODGE')) {

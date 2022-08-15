@@ -88,34 +88,52 @@ export default class DefenseChooser extends BaseActorController {
     });
   }
 
+  async setLastModifiers(mode: string) {
+    const isRetreating = $('#retreatDefense').is(':checked');
+    const isProne = $('#proneDefense').is(':checked');
+    const isFeverishDefense = $('#feverishDefense').is(':checked');
+
+    if (isRetreating) {
+      8;
+      this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
+      this.addRetreatMalus();
+    }
+
+    if (isFeverishDefense) {
+      this.data.modifiers.push({ mod: +2, desc: 'Defensa desesperada' });
+      useFatigue(this.actor);
+    }
+
+    if (isProne) {
+      this.data.modifiers.push({ mod: +3, desc: 'En el suelo (cambias tu posición a tumbado)' });
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.actor.replacePosture('prone');
+    }
+
+    const { bonusDodge, bonusParry, bonusBlock } = await calculateDefenseModifiersFromEquippedWeapons(
+      this.actor,
+      this.token.document,
+    );
+    if (mode === 'DODGE' && bonusDodge) {
+      this.data.modifiers.push({ mod: bonusDodge, desc: 'Bonus por escudo, capa u otro objeto' });
+    }
+    if (mode === 'PARRY' && bonusParry) {
+      this.data.modifiers.push({ mod: bonusDodge, desc: 'Bonus por escudo, capa u otro objeto' });
+    }
+    if (mode === 'BLOCK' && bonusBlock) {
+      this.data.modifiers.push({ mod: bonusDodge, desc: 'Bonus por escudo, capa u otro objeto' });
+    }
+  }
+
   activateListeners(html: JQuery): void {
     html.on('change', '.onlyOne', (evt) => {
       const lastValue = $(evt.target).prop('checked');
       $('.onlyOne').prop('checked', false);
       $(evt.target).prop('checked', lastValue);
     });
-    html.on('click', '#dodge', () => {
-      const isRetreating = $('#retreatDefense').is(':checked');
-      const isProne = $('#proneDefense').is(':checked');
-      const isFeverishDefense = $('#feverishDefense').is(':checked');
-
-      if (isRetreating) {
-        this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
-        this.addRetreatMalus();
-      }
-
-      if (isFeverishDefense) {
-        this.data.modifiers.push({ mod: +2, desc: 'Defensa desesperada' });
-        useFatigue(this.actor);
-      }
-
-      if (isProne) {
-        this.data.modifiers.push({ mod: +3, desc: 'En el suelo (cambias tu posición a tumbado)' });
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.actor.replacePosture('prone');
-      }
-
+    html.on('click', '#dodge', async () => {
+      await this.setLastModifiers('DODGE');
       applyModifiers(this.data.modifiers);
       const result = GURPS.performAction(
         {
@@ -139,11 +157,6 @@ export default class DefenseChooser extends BaseActorController {
         spantext: '<b>Sk:</b>Acrobatics',
       };
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreatDefense').is(':checked');
-      if (isRetreating) {
-        this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
-        this.addRetreatMalus();
-      }
       const resultAcrobatic = await GURPS.performAction(action, this.actor);
       if (!resultAcrobatic) {
         this.data.modifiers.push({ mod: -2, desc: 'Fallo en esquiva acrobática' });
@@ -154,12 +167,8 @@ export default class DefenseChooser extends BaseActorController {
       $('#dodge')[0].click();
     });
     html.on('click', '.parryRow', async (event) => {
+      await this.setLastModifiers('PARRY');
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreatDefense').val();
-      if (isRetreating === 'on') {
-        this.data.modifiers.push({ mod: +1, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
-        this.addRetreatMalus();
-      }
       let lastParry = <{ times: number; round: number } | undefined>(
         this?.actor?.token?.getFlag(MODULE_NAME, 'lastParry')
       );
@@ -197,13 +206,10 @@ export default class DefenseChooser extends BaseActorController {
       this.data.resolve(result);
     });
 
-    html.on('click', '.blockRow', (event) => {
+    html.on('click', '.blockRow', async (event) => {
+      await this.setLastModifiers('BLOCK');
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreatDefense').val();
-      if (isRetreating === 'on') {
-        this.data.modifiers.push({ mod: +1, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
-        this.addRetreatMalus();
-      }
+
       const weapon = $(event.currentTarget).attr('weapon');
       if (!weapon) {
         ui.notifications?.error('no weapon attribute on clicked element');
