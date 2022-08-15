@@ -29,7 +29,11 @@ export async function prepareReadyWeapons(actor: Actor, token: TokenDocument, us
         if (rangedAttack) {
           const numberOfShots: string = rangedAttack.shots.split('(')[0];
           if (!isNaN(Number(numberOfShots)) && Number(numberOfShots) === 1) {
-            remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]) + 1;
+            if (rangedAttack.shots.includes('(')) {
+              remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]) + 1;
+            } else {
+              remainingRounds = Number(rangedAttack.shots);
+            }
           }
         }
 

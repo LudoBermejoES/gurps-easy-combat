@@ -14,14 +14,31 @@
 
   .nostyles {
     all: initial;
+    font-family: "Roboto", sans-serif;
+    font-size: small;
+    font-weight: normal;
+  }
+
+  .nostyles input[type=checkbox] {
+    vertical-align: middle;
+    position: relative;
+    bottom: 1px;
+  }
+
+  .nostyles label {
+    display: block;
+
   }
 </style>
 <div>
   <div class="container">
     {{#unless beforeCombat}}
     <div class="nostyles">
-        <input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}><label for="keepOpen">Mantén la ventana
-        abierta después de atacar</label></div>
+      <label>
+        <input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}>Mantén la ventana
+        abierta después de atacar
+      </label>
+    </div>
     <div  class="nostyles">
       <input type="button" class="clickable" id="closeAndReturn" value="Volver a escoger maniobra">
     </div>
@@ -50,20 +67,22 @@
   {{else}}
 
     {{#ifEquals maneuver "move_and_attack"}}
-    <div class="nostyles">
-      <td><input type="checkbox" id="fatigueMoveAndAttack" />Gastar fatiga</td>
-      <td>Gastas uno de fatiga para poder mover y atacar sin el penalizador</td>
-    </div>
+      <div class="nostyles">
+        <label>
+          <input type="checkbox" id="fatigueMoveAndAttack" class="onlyOne" />Gastas uno de fatiga para poder mover y atacar sin el penalizador
+        </label>
+      </div>
     {{/ifEquals}}
 
 
     {{#if melee.items.length}}
-      <div class="nostyles">
-        <td><input type="checkbox" id="fatigueMightyBlows" />Golpe poderoso</td>
-        <td>Gastas uno de fatiga para hacer un +2 al daño</td>
-      </div>
       <br>
       <h2>Cuerpo a cuerpo</h2>
+      <div class="nostyles">
+        <label>
+         <input type="checkbox" id="fatigueMightyBlows"  class="onlyOne" />Gastas uno de fatiga para hacer un +2 al daño
+        </label>
+      </div>
       {{> choiceTable melee}}
     {{/if}}
     {{#if ranged.items.length}}

@@ -1,5 +1,5 @@
 import { Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverNeeded } from '../types';
-import { getAmmunnitionFromInventory } from '../util/weapons';
+import { getAmmunnitionFromInventory, getWeaponsFromAttacks } from '../util/weapons';
 import {
   checkSingleTarget,
   ensureDefined,
@@ -9,6 +9,8 @@ import {
 } from './miscellaneous';
 import { MODULE_NAME } from './constants';
 import { calculateModifiersFromAttack } from './modifiers';
+import { getAttacks } from '../dataExtractor';
+import { getReadyActionsWeaponNeeded } from './readyWeapons';
 
 export interface counterAndDisarmAttackData {
   weapon: string;
@@ -136,7 +138,7 @@ export function getRangedAttacksWithNotReamingRounds(melee: rangedAttackWithRema
 export function getRangedDataWithROFMoreThan1(
   ranged: rangedAttackWithRemainingRounds[],
 ): rangedAttackWithRemainingRounds[] {
-  return ranged.filter((attack: rangedAttackWithRemainingRounds) => attack.rof && attack.rof !== '1');
+  return ranged.filter((attack: rangedAttackWithRemainingRounds) => attack.rof); // && attack.rof !== '1');
 }
 
 export function getExtraRangedAttacksPerROF(

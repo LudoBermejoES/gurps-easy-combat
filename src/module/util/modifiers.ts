@@ -1,13 +1,15 @@
-import { MeleeAttack, RangedAttack } from '../types';
-import { getAttacks } from '../dataExtractor';
+import { Item, MeleeAttack, RangedAttack } from '../types';
+import { getAttacks, getEquipment } from '../dataExtractor';
 import {
   getNameFromAttack,
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from './attacksDataTransformation';
-import { ensureDefined } from './miscellaneous';
-import { checkOffHand } from './readyWeapons';
+import { ensureDefined, getFullName } from './miscellaneous';
+import { checkOffHand, getReadyActionsWeaponNeeded } from './readyWeapons';
 import AttackChooser from '../applications/attackChooser';
+import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
+import { ActorData } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs';
 
 export async function calculateModifiersFromAttack(
   mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
@@ -68,5 +70,49 @@ export async function calculateModifiersFromAttack(
   return {
     attack,
     modifiers,
+  };
+}
+
+export async function calculateDefenseModifiersFromEquippedWeapons(
+  actor: Actor,
+  token: TokenDocument,
+): Promise<{
+  bonusDodge: number;
+  bonusParry: number;
+  bonusBlock: number;
+}> {
+  const equippedWeapons: equippedItem[] = await getEquippedItems(token);
+  let bonusDodge = 0;
+  let bonusParry = 0;
+  let bonusBlock = 0;
+  equippedWeapons.forEach((weapon: equippedItem) => {
+    const item: any = actor.data.items.contents.find((item: any) => item.data._id === weapon.itemId);
+    if (!item) return;
+    if (item.data.name.toUpperCase().includes('SHIELD')) {
+      const bonuses = item.data.data.bonuses.split('\n');
+      for (const bonus of bonuses) {
+        if (bonus.toUpperCase().includes('DODGE')) {
+          const parts = bonus.toUpperCase().split('DODGE ');
+          if (parts.length === 2 && !isNaN(parts[1])) {
+            bonusDodge += Number(parts[1]);
+          }
+        } else if (bonus.toUpperCase().includes('PARRY')) {
+          const parts = bonus.toUpperCase().split('PARRY ');
+          if (parts.length === 2 && !isNaN(parts[1])) {
+            bonusParry += Number(parts[1]);
+          }
+        } else if (bonus.toUpperCase().includes('BLOCK')) {
+          const parts = bonus.toUpperCase().split('BLOCK ');
+          if (parts.length === 2 && !isNaN(parts[1])) {
+            bonusBlock += Number(parts[1]);
+          }
+        }
+      }
+    }
+  });
+  return {
+    bonusDodge,
+    bonusParry,
+    bonusBlock,
   };
 }

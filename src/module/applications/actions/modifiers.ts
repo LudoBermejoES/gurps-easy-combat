@@ -70,7 +70,7 @@ export function getMeleeModifiers(
   );
 
   const dif = (game.combat?.round ?? 0) - (retreating?.round ?? 0);
-  if (retreating && dif > 0 && dif <= 1) {
+  if (retreating && dif === 0) {
     modifiers.attack.push({ mod: retreating.bonus, desc: `por retroceder` });
   } else {
     token.document.unsetFlag(MODULE_NAME, 'roundRetreatMalus');

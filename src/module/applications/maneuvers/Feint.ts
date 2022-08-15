@@ -1,11 +1,19 @@
 import { rollAttack } from '../../attackWorkflow';
 import { getAttacks } from '../../dataExtractor';
-import { ChooserData, PromiseFunctions } from '../../types';
+import { ChooserData, Item, PromiseFunctions, ReadyManeouverNeeded } from '../../types';
 import { MODULE_NAME, TEMPLATES_FOLDER } from '../../util/constants';
 import { activateChooser, ensureDefined, checkSingleTarget, getTargets } from '../../util/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import FeintDefense from '../feintDefense';
 import ManeuverChooser from '../maneuverChooser';
+import { getWeaponsFromAttacks } from '../../util/weapons';
+import { getReadyActionsWeaponNeeded } from '../../util/readyWeapons';
+import {
+  getAttacksWithModifiers,
+  getMeleeAttacksWithNotReamingRounds,
+  getMeleeAttacksWithReadyWeapons,
+  meleeAttackWithRemainingRounds,
+} from '../../util/attacksDataTransformation';
 
 export default class Feint extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;
@@ -18,15 +26,24 @@ export default class Feint extends BaseActorController {
     this.promiseFuncs = promiseFuncs;
   }
 
-  getData(): ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']> {
-    const data = getAttacks(this.actor).melee.map(({ name, mode, level, damage, reach }) => ({
-      weapon: name,
-      mode,
-      level,
-      damage,
-      reach,
-    }));
-    return { items: data, headers: ['weapon', 'mode', 'level', 'damage', 'reach'], id: 'melee_attacks' };
+  async getData(): Promise<ChooserData<['weapon', 'mode', 'levelWithModifiers', 'level', 'damage', 'reach']>> {
+    const { melee } = getAttacks(this.actor);
+    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
+    const readyActionsWeaponNeeded: { items: ReadyManeouverNeeded[] } = getReadyActionsWeaponNeeded(
+      this.token.document,
+    );
+    const meleeDataOriginal: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithReadyWeapons(
+      melee.filter((m) => m.itemid !== undefined),
+      readyActionsWeaponNeeded,
+      weapons,
+    );
+    const meleeData: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithNotReamingRounds(meleeDataOriginal);
+    const { meleeAttacksWithModifier } = await getAttacksWithModifiers(meleeData, [], this.actor, this.token);
+    return {
+      items: meleeAttacksWithModifier,
+      headers: ['weapon', 'mode', 'levelWithModifiers', 'level', 'damage', 'reach'],
+      id: 'melee_attacks',
+    };
   }
 
   activateListeners(html: JQuery): void {

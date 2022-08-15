@@ -141,7 +141,7 @@ export function getBulk(attack: RangedAttack): number {
 export function getManeuver(actor: Actor): string {
   const maneuversEffects = Maneuvers.getActiveEffectManeuvers(actor.effects);
   if (!maneuversEffects || maneuversEffects.length === 0) {
-    ui.notifications?.error('no maneuver found');
+    // ui.notifications?.error('no maneuver found');
     console.error(new Error('no maneuver found'));
     return 'do_nothing';
   }

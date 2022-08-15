@@ -220,6 +220,11 @@ export default class AttackChooser extends BaseActorController {
   }
 
   activateListeners(html: JQuery): void {
+    html.on('change', '.onlyOne', (evt) => {
+      const lastValue = $(evt.target).prop('checked');
+      $('.onlyOne').prop('checked', false);
+      $(evt.target).prop('checked', lastValue);
+    });
     activateChooser(html, 'disarm_attacks', (index: number) => this.makeAttack('disarm_attack', index, undefined));
     activateChooser(html, 'counter_attacks', (index: number) => this.makeAttack('counter_attack', index, undefined));
     activateChooser(html, 'melee_attacks', (index: number) => this.makeAttack('melee', index, undefined));
@@ -254,7 +259,11 @@ export default class AttackChooser extends BaseActorController {
       if (rangedAttack) {
         const numberOfShots: string = rangedAttack.shots.split('(')[0];
         if (!isNaN(Number(numberOfShots)) && Number(numberOfShots) === 1) {
-          remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]) + 1;
+          if (rangedAttack.shots.includes('(')) {
+            remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]) + 1;
+          } else {
+            remainingRounds = Number(rangedAttack.shots);
+          }
         }
       }
     }

@@ -19,6 +19,7 @@ import { applyModifiers } from '../util/actions';
 import { getEquippedItems } from '../util/weaponMacrosCTA';
 import { getValidBlocks, getValidParries } from './actions/defense';
 import { useFatigue } from '../util/fatigue';
+import { calculateDefenseModifiersFromEquippedWeapons } from '../util/modifiers';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -54,6 +55,12 @@ export default class DefenseChooser extends BaseActorController {
     const maneuver = Maneuvers.getAll()[getManeuver(actor)]._data;
     let sumAllModifiers = 0;
 
+    const modifiersByEquippedWeapons: {
+      bonusDodge: number;
+      bonusParry: number;
+      bonusBlock: number;
+    } = await calculateDefenseModifiersFromEquippedWeapons(this.actor, this.token.document);
+
     this.data.modifiers.forEach((m) => (sumAllModifiers += m.mod));
 
     return {
@@ -61,9 +68,9 @@ export default class DefenseChooser extends BaseActorController {
       canDodge: maneuver?.defense !== DEFENSE_NONE,
       canParry: ![DEFENSE_DODGEBLOCK, DEFENSE_NONE].includes(maneuver?.defense),
       acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
-      dodge: getDodge(this.actor) + sumAllModifiers,
-      parry: await getValidParries(this.token, sumAllModifiers),
-      block: getValidBlocks(this.token, sumAllModifiers),
+      dodge: getDodge(this.actor) + sumAllModifiers + modifiersByEquippedWeapons.bonusDodge,
+      parry: await getValidParries(this.token, sumAllModifiers, modifiersByEquippedWeapons.bonusParry),
+      block: getValidBlocks(this.token, sumAllModifiers, modifiersByEquippedWeapons.bonusBlock),
     };
   }
   async close(): Promise<void> {
@@ -72,7 +79,7 @@ export default class DefenseChooser extends BaseActorController {
   }
 
   addRetreatMalus(): void {
-    const round = game.combat?.round ?? 0;
+    const round = game.combat?.round || 0;
     this.token.document.setFlag(MODULE_NAME, 'roundRetreatMalus', {
       round: round + 1,
       bonus: -2,
@@ -80,9 +87,14 @@ export default class DefenseChooser extends BaseActorController {
   }
 
   activateListeners(html: JQuery): void {
+    html.on('change', '.onlyOne', (evt) => {
+      const lastValue = $(evt.target).prop('checked');
+      $('.onlyOne').prop('checked', false);
+      $(evt.target).prop('checked', lastValue);
+    });
     html.on('click', '#dodge', () => {
-      const isRetreating = $('#retreat').is(':checked');
-      const isProne = $('#prone').is(':checked');
+      const isRetreating = $('#retreatDefense').is(':checked');
+      const isProne = $('#proneDefense').is(':checked');
       const isFeverishDefense = $('#feverishDefense').is(':checked');
 
       if (isRetreating) {
@@ -125,7 +137,7 @@ export default class DefenseChooser extends BaseActorController {
         spantext: '<b>Sk:</b>Acrobatics',
       };
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreat').is(':checked');
+      const isRetreating = $('#retreatDefense').is(':checked');
       if (isRetreating) {
         this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
@@ -141,7 +153,7 @@ export default class DefenseChooser extends BaseActorController {
     });
     html.on('click', '.parryRow', async (event) => {
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreat').val();
+      const isRetreating = $('#retreatDefense').val();
       if (isRetreating === 'on') {
         this.data.modifiers.push({ mod: +1, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();
@@ -185,7 +197,7 @@ export default class DefenseChooser extends BaseActorController {
 
     html.on('click', '.blockRow', (event) => {
       applyModifiers(this.data.modifiers);
-      const isRetreating = $('#retreat').val();
+      const isRetreating = $('#retreatDefense').val();
       if (isRetreating === 'on') {
         this.data.modifiers.push({ mod: +1, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
         this.addRetreatMalus();

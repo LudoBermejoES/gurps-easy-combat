@@ -1,22 +1,43 @@
+<style>
+  .nostyles {
+    all: initial;
+    font-family: "Roboto", sans-serif;
+    font-size: small;
+    font-weight: normal;
+  }
+
+  .nostyles input[type=checkbox] {
+    vertical-align: middle;
+    position: relative;
+    bottom: 1px;
+  }
+
+  .nostyles label {
+    display: block;
+
+  }
+</style>
 <div>
   <div>¡Te están atacando! Elige tu defensa!</div>
-
-  <table>
-    <tr>
-      <td><input type="checkbox" id="feverishDefense" />Defensa desesperada</td>
-      <td>Gastas un punto de fatiga para ganar un +2 en la defensa que escojas
-      </td>
-      <td><input type="checkbox" id="retreat" />Retroceder</td>
-      <td>Retrocedes un paso para ganar +3 a Esquivar (o un +1 a Parar y Bloquear). Tendrás un -2 al Ataque en el
-        próximo turno
-      </td>
-      <td><input type="checkbox" id="prone" />Tirarse al suelo</td>
-      <td>Te tiras al suelo y ganas un +3 a Esquivar (pero acabas tumbado). Útil en ataques a distancia
-      </td>
-    </tr>
-  </table>
+  <br>
+  <div class="nostyles">
+    <label>
+      <input type="checkbox" id="feverishDefense" class="onlyOne"/>Gastas un punto de fatiga para ganar un +2 en la defensa que escojas
+    </label>
+  </div>
+  <div class="nostyles">
+    <label>
+      <input type="checkbox" id="retreatDefense" class="onlyOne"/>Retrocedes un paso para ganar +3 a Esquivar (o un +1 a Parar y Bloquear). Tendrás un -2 al Ataque en el
+      próximo turno
+    </label>
+  </div>
+  <div class="nostyles">
+    <label>
+      <input type="checkbox" id="proneDefense" class="onlyOne"/>Te tiras al suelo y ganas un +3 a Esquivar (pero acabas tumbado). Útil en ataques a distancia
+    </label>
+  </div>
+  <br>
   {{#if canDodge}}
-
     <table>
       <tr class="clickable" id="dodge">
         <td>Esquivar</td>
@@ -40,32 +61,36 @@
   {{/if}}
 
   {{#if canParry}}
-    <table>
-      <tr class="header">
-        <td>Parar con</td>
-        <td>Nivel</td>
-      </tr>
-      {{#each parry as |parryValue|}}
-        <tr class="clickable parryRow" weapon="{{@key}}">
-          <td>{{@key}}</td>
-          <td>{{parryValue}}</td>
+    {{#if parry}}
+      <table>
+        <tr class="header">
+          <td>Parar con</td>
+          <td>Nivel</td>
         </tr>
-      {{/each}}
-    </table>
+        {{#each parry as |parryValue|}}
+          <tr class="clickable parryRow" weapon="{{@key}}">
+            <td>{{@key}}</td>
+            <td>{{parryValue}}</td>
+          </tr>
+        {{/each}}
+      </table>
+    {{/if}}
   {{/if}}
   {{#if canBlock}}
-    <table>
-      <tr class="header">
-        <td>Bloquear con</td>
-        <td>Nivel</td>
-      </tr>
-      {{#each block as |blockValue|}}
-        <tr class="clickable blockRow" weapon="{{@key}}">
-          <td>{{@key}}</td>
-          <td>{{blockValue}}</td>
+    {{#if block}}
+      <table>
+        <tr class="header">
+          <td>Bloquear con</td>
+          <td>Nivel</td>
         </tr>
-      {{/each}}
-    </table>
+        {{#each block as |blockValue|}}
+          <tr class="clickable blockRow" weapon="{{@key}}">
+            <td>{{@key}}</td>
+            <td>{{blockValue}}</td>
+          </tr>
+        {{/each}}
+      </table>
+    {{/if}}
   {{/if}}
 </div>
 

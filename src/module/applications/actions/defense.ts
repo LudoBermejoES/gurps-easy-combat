@@ -34,7 +34,11 @@ async function checkOffHandDefense(
   return undefined;
 }
 
-export async function getValidParries(token: Token, totalModifiers: number): Promise<Record<string, number>> {
+export async function getValidParries(
+  token: Token,
+  totalModifiers: number,
+  bonusParry: number,
+): Promise<Record<string, number>> {
   const actor = token?.actor;
   ensureDefined(actor, 'Ese token necesita un actor');
   const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(token.document);
@@ -48,13 +52,13 @@ export async function getValidParries(token: Token, totalModifiers: number): Pro
 
     if (!readyNeeded.remainingRounds) {
       const parry: number = parseInt(attack.parry);
-      if (parry) parries[getFullName(attack)] = parry + totalModifiers;
+      if (parry) parries[getFullName(attack)] = parry + totalModifiers + bonusParry;
     }
   }
   return parries;
 }
 
-export function getValidBlocks(token: Token, totalModifiers: number) {
+export function getValidBlocks(token: Token, totalModifiers: number, bonusBlock: number) {
   const actor = token?.actor;
   ensureDefined(actor, 'Ese token necesita un actor');
   const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(token.document);
@@ -67,7 +71,7 @@ export function getValidBlocks(token: Token, totalModifiers: number) {
     };
     if (!readyNeeded.remainingRounds) {
       const block: number = parseInt(attack.block);
-      if (block) blocks[getFullName(attack)] = block + totalModifiers;
+      if (block) blocks[getFullName(attack)] = block + totalModifiers + bonusBlock;
     }
   }
   return blocks;
