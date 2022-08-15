@@ -33,6 +33,7 @@ const functionsToRegister = {
   attemptDefense: DefenseChooser.attemptDefense,
   attemptFeintDefense: FeintDefense.attemptDefense,
   closeController: BaseActorController.closeById,
+  setFlag: BaseActorController.setFlag,
 } as const;
 
 interface SockerLib {

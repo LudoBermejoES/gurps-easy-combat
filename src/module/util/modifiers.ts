@@ -1,15 +1,13 @@
 import { Item, MeleeAttack, RangedAttack } from '../types';
-import { getAttacks, getEquipment } from '../dataExtractor';
+import { getAttacks } from '../dataExtractor';
 import {
   getNameFromAttack,
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from './attacksDataTransformation';
-import { ensureDefined, getFullName } from './miscellaneous';
-import { checkOffHand, getReadyActionsWeaponNeeded } from './readyWeapons';
+import { checkOffHand } from './readyWeapons';
 import AttackChooser from '../applications/attackChooser';
 import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
-import { ActorData } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs';
 
 export async function calculateModifiersFromAttack(
   mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
@@ -21,6 +19,7 @@ export async function calculateModifiersFromAttack(
   rangedData: rangedAttackWithRemainingRounds[],
   meleeData: meleeAttackWithRemainingRounds[],
   { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false },
+  removeFlags = false,
 ): Promise<{
   attack: MeleeAttack | RangedAttack;
   modifiers: any;
@@ -58,10 +57,16 @@ export async function calculateModifiersFromAttack(
     }
   }
 
-  const modifiers = AttackChooser.modifiersGetters[iMode](attack as RangedAttack & MeleeAttack, token, target, {
-    isUsingFatigueForMoveAndAttack,
-    isUsingFatigueForMightyBlows,
-  });
+  const modifiers = AttackChooser.modifiersGetters[iMode](
+    attack as RangedAttack & MeleeAttack,
+    token,
+    target,
+    removeFlags,
+    {
+      isUsingFatigueForMoveAndAttack,
+      isUsingFatigueForMightyBlows,
+    },
+  );
   if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
   const offHandModifier = await checkOffHand(token.document, element ? attack : attackData);
   if (offHandModifier) {

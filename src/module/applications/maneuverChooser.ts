@@ -6,7 +6,6 @@ import AllOutDefense from './maneuvers/AllOutDefense.js';
 import Feint from './maneuvers/Feint.js';
 import Aim from './maneuvers/Aim.js';
 import Evaluate from './maneuvers/Evaluate';
-import { checkSingleTarget, ensureDefined, getTargets } from '../util/miscellaneous';
 import PostureChooser from './postureChooser';
 
 export default class ManeuverChooser extends BaseManeuverChooser {

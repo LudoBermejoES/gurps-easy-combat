@@ -81,6 +81,7 @@ export default async function rollDefense(
   roll: GurpsRoll,
   isCounterAttack: boolean,
   attacker: Actor,
+  attackerToken: Token,
   attack: MeleeAttack | RangedAttack,
   modifiers: {
     attack: Modifier[];
@@ -94,7 +95,7 @@ export default async function rollDefense(
     return true;
   }
   addCounterAttackModifiersForDefense(isCounterAttack, attacker, attack, modifiers, target);
-  const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attacker);
+  const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attackerToken.id);
   doAnimationDefense(target.actor, defenseSucess);
   if (defenseSucess) {
     const successDefenses = <{ attackers: string[]; round: number } | undefined>(

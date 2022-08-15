@@ -79,6 +79,7 @@ async function rollDamage(
 
 export async function makeAttackInner(
   attacker: Actor,
+  token: Token,
   target: Token,
   attack: MeleeAttack | RangedAttack,
   weapon: Item | undefined,
@@ -106,7 +107,7 @@ export async function makeAttackInner(
   await doAnimationAttack(target.actor, weapon, roll.rofrcl);
   await playSound(target.actor, weapon, roll.rofrcl);
   if (!roll.isCritSuccess) {
-    const resultDefense = await rollDefense(roll, isCounterAttack, attacker, attack, modifiers, target);
+    const resultDefense = await rollDefense(roll, isCounterAttack, attacker, token, attack, modifiers, target);
     if (!resultDefense) return;
     if (roll.rofrcl) {
       //      roll.rofrcl = roll.rofrcl - (GURPS.lastTargetedRoll.margin + 1);

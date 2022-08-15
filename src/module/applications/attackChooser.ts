@@ -462,6 +462,7 @@ export default class AttackChooser extends BaseActorController {
         isUsingFatigueForMoveAndAttack,
         isUsingFatigueForMightyBlows,
       },
+      true,
     );
 
     const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
@@ -487,6 +488,7 @@ export default class AttackChooser extends BaseActorController {
 
     await makeAttackInner(
       this.actor,
+      this.token,
       target,
       attack,
       weapon,

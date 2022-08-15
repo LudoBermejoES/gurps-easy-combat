@@ -1,4 +1,7 @@
-import { ensureDefined } from '../../util/miscellaneous';
+import { ensureDefined, getManeuver, getToken } from '../../util/miscellaneous';
+import { Modifier } from '../../types';
+import { allOutAttackManeuvers, MODULE_NAME } from '../../util/constants';
+import { DEFENSE_NONE } from '../defenseChooser';
 
 export default class BaseActorController extends Application {
   static apps = new Map<string, BaseActorController>();
@@ -28,6 +31,21 @@ export default class BaseActorController extends Application {
     if (!instance) return false;
     instance.close();
     return true;
+  }
+
+  static async setFlag(sceneId: string, tokenId: string, key: string, object: any): Promise<boolean> {
+    const token = getToken(sceneId, tokenId);
+    const actor = token.actor;
+    ensureDefined(actor, 'token without actor');
+    if (allOutAttackManeuvers.includes(getManeuver(actor))) {
+      ChatMessage.create({ content: `${actor.name} no puede defenderse porque ha utilizado Ataque total (lo siento)` });
+      return false;
+    }
+    const promise = new Promise<boolean>((resolve) => {
+      token.document.setFlag(MODULE_NAME, key, object);
+      resolve(true);
+    });
+    return promise;
   }
 
   closeForEveryone(): void {

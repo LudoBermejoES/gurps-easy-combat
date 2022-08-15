@@ -25,6 +25,7 @@ interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
   reject(reason: string): void;
   modifiers: Modifier[];
+  attackerId: string;
 }
 
 export const DEFENSE_NONE = 'none';
@@ -39,8 +40,9 @@ export default class DefenseChooser extends BaseActorController {
       template: `${TEMPLATES_FOLDER}/defenseChooser.hbs`,
     });
     this.data = data;
-    this.data.modifiers = [...this.data.modifiers, ...getDefenseModifiers(token).defense];
+    this.data.modifiers = [...this.data.modifiers, ...getDefenseModifiers(token, this.data.attackerId).defense];
   }
+
   async getData(): Promise<{
     canBlock: boolean;
     canDodge: boolean;
@@ -219,7 +221,12 @@ export default class DefenseChooser extends BaseActorController {
       this.data.resolve(result);
     });
   }
-  static async attemptDefense(sceneId: string, tokenId: string, modifiers: Modifier[]): Promise<boolean> {
+  static async attemptDefense(
+    sceneId: string,
+    tokenId: string,
+    attackerId: string,
+    modifiers: Modifier[],
+  ): Promise<boolean> {
     const token = getToken(sceneId, tokenId);
     const actor = token.actor;
     ensureDefined(actor, 'token without actor');
@@ -233,12 +240,12 @@ export default class DefenseChooser extends BaseActorController {
         reject(false);
         return;
       }
-      const instance = new DefenseChooser(token, { resolve, reject, modifiers });
+      const instance = new DefenseChooser(token, { resolve, reject, modifiers, attackerId });
       instance.render(true);
     });
     return promise;
   }
-  static async requestDefense(token: Token, modifiers: Modifier[], attacker: Actor): Promise<boolean> {
+  static async requestDefense(token: Token, modifiers: Modifier[], attackerTokenId: string): Promise<boolean> {
     const actor = token.actor;
     ensureDefined(actor, 'token has no actor');
     const users = highestPriorityUsers(actor);
@@ -250,7 +257,14 @@ export default class DefenseChooser extends BaseActorController {
           ensureDefined(token.id, 'token without id');
           ensureDefined(token.scene.id, 'scene without id');
 
-          return EasyCombat.socket.executeAsUser('attemptDefense', user.id, token.scene.id, token.id, modifiers);
+          return EasyCombat.socket.executeAsUser(
+            'attemptDefense',
+            user.id,
+            token.scene.id,
+            token.id,
+            attackerTokenId,
+            modifiers,
+          );
         }),
       { allowRejects: false, default: false, filter: isDefined },
     );

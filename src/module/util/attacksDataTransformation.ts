@@ -9,8 +9,6 @@ import {
 } from './miscellaneous';
 import { MODULE_NAME } from './constants';
 import { calculateModifiersFromAttack } from './modifiers';
-import { getAttacks } from '../dataExtractor';
-import { getReadyActionsWeaponNeeded } from './readyWeapons';
 
 export interface counterAndDisarmAttackData {
   weapon: string;
