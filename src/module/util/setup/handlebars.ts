@@ -25,14 +25,45 @@ export function registerHelpers(): void {
         return 'Localización';
       case 'penalty':
         return 'Penalización';
+      case 'mode':
+        return 'Modo';
+      case 'rof':
+        return 'Ratio de fuego';
     }
     return header;
   });
-  Handlebars.registerHelper('get', (obj, prop) => obj[prop]);
+  Handlebars.registerHelper('get', (obj, prop) => {
+    if (prop.toLowerCase() === 'mode') {
+      const data = obj[prop].toLowerCase();
+      switch (data) {
+        case 'bite':
+          return 'Mordisco';
+        case 'kick':
+          return 'Patada';
+        case 'punch':
+          return 'Puñetazo';
+        case 'swung':
+          return 'Mandoble';
+        case 'thrust':
+          return 'Acometida';
+      }
+    }
+    if (prop.toLowerCase() === 'where') {
+      const result = game.i18n.localize(`GURPS.hitLocation${obj[prop]}`);
+      if (result) return result;
+    }
+    return obj[prop];
+  });
   Handlebars.registerHelper('ifEquals', function (arg1, arg2, options) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return arg1 == arg2 ? options.fn(this) : options.inverse(this);
+  });
+
+  Handlebars.registerHelper('i18nHitLocation', function (value, fallback) {
+    const result = game.i18n.localize(`GURPS.hitLocation${value}`);
+    if (result) return result;
+    return value;
   });
 }
 

@@ -71,7 +71,7 @@
   color: #800000;
 }
 
-.level {
+header_level, .level {
   display: none;
 }
 
@@ -79,6 +79,9 @@
   color: #800000
 }
 
+.choiceTable .header {
+  text-align: left;
+}
 
 .location_layer {
   margin-top: 5px;
