@@ -35,23 +35,26 @@ import {
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from '../util/attacksDataTransformation';
-import { getHitLocationsObject } from '../util/locationsDataTransformation';
+import { getHitLocationsObject, getLocationData } from '../util/locationsDataTransformation';
 import { calculateModifiersFromAttack } from '../util/modifiers';
 import { calculateAmmunitionForRangedAttacks } from '../util/ammo';
 import { useFatigue } from '../util/fatigue';
+import LocationChooser from './locationChooser';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 window.drawEquipment = drawEquipment;
 
-interface AttackData {
+export interface AttackData {
   meleeOnly?: boolean;
   rangedOnly?: boolean;
   keepOpen?: boolean;
   twoAttacks?: boolean;
+  attackCount?: number;
   onlyReadyActions?: boolean;
   beforeCombat?: boolean;
   maneuver?: string;
+  locationToAttack?: any;
 }
 
 export default class AttackChooser extends BaseActorController {
@@ -78,7 +81,6 @@ export default class AttackChooser extends BaseActorController {
 
   meleeData: meleeAttackWithRemainingRounds[];
 
-  attackCount = 1;
   twoWeaponAttacksCount = 1;
 
   data: AttackData;
@@ -97,6 +99,7 @@ export default class AttackChooser extends BaseActorController {
     this.meleeData = [];
     this.rangedData = [];
     this.data = data;
+    if (this.data.twoAttacks && !this.data.attackCount) this.data.attackCount = 1;
     this.attacks = getAttacks(this.actor);
     this.weaponsToBeReadyData = [];
     this.weaponsNotToBeReadyData = [];
@@ -110,7 +113,7 @@ export default class AttackChooser extends BaseActorController {
     counterAttack: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
     melee: ChooserData<['weapon', 'mode', 'level', 'levelWithModifiers', 'damage', 'reach']>;
     ranged: ChooserData<['weapon', 'rof', 'level', 'levelWithModifiers', 'damage', 'range', 'accuracy']>;
-    hitLocations: ChooserData<['roll', 'where', 'penalty']>;
+    hitLocations: ChooserData<['roll', 'where', 'penalty', 'dr']>;
     weaponsToBeReady: ChooserData<['weapon', 'remainingRounds']>;
     weaponsNotToBeReady: ChooserData<['weapon', 'remainingRounds']>;
     data: AttackData;
@@ -175,8 +178,10 @@ export default class AttackChooser extends BaseActorController {
       this.token,
     );
 
+    const location: any = this.token.document.getFlag(MODULE_NAME, 'location');
+    this.data.locationToAttack = getLocationData(game, location?.where || 'torso');
+
     return {
-      ...hitLocationsObject,
       onlyReadyActions: this.data.onlyReadyActions || false,
       beforeCombat: this.data.beforeCombat || false,
       disarmAttack: {
@@ -201,7 +206,7 @@ export default class AttackChooser extends BaseActorController {
       },
       hitLocations: {
         items: hitLocationsObject.hitLocations?.items || [],
-        headers: ['roll', 'where', 'penalty'],
+        headers: ['roll', 'where', 'penalty', 'dr'],
         id: 'hit_locations',
       },
       weaponsToBeReady: {
@@ -225,6 +230,12 @@ export default class AttackChooser extends BaseActorController {
       $('.onlyOne').prop('checked', false);
       $(evt.target).prop('checked', lastValue);
     });
+
+    html.on('click', '#chooseLocation', (evt) => {
+      new LocationChooser(this.token, { keepOpen: false, dataFromAttack: this.data }).render(true);
+      this.closeForEveryone();
+    });
+
     activateChooser(html, 'disarm_attacks', (index: number) => this.makeAttack('disarm_attack', index, undefined));
     activateChooser(html, 'counter_attacks', (index: number) => this.makeAttack('counter_attack', index, undefined));
     activateChooser(html, 'melee_attacks', (index: number) => this.makeAttack('melee', index, undefined));
@@ -473,16 +484,16 @@ export default class AttackChooser extends BaseActorController {
 
     if (
       !this.data.keepOpen &&
-      (!this.data.twoAttacks || (this.data.twoAttacks && this.attackCount === 2)) &&
+      (!this.data.twoAttacks || (this.data.twoAttacks && this.data.attackCount === 2)) &&
       (!twoWeaponsAttack || (twoWeaponsAttack && this.twoWeaponAttacksCount === 2))
     ) {
       this.close();
     } else {
       if (twoWeaponsAttack && this.twoWeaponAttacksCount === 1) {
         this.twoWeaponAttacksCount = 2;
-      } else if (this.data.twoAttacks && this.attackCount === 1) {
+      } else if (this.data.twoAttacks && this.data.attackCount === 1) {
         this.twoWeaponAttacksCount = 1;
-        this.attackCount = 2;
+        this.data.attackCount = 2;
       }
     }
 

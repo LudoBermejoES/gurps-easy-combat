@@ -1,7 +1,7 @@
 import { getHitLocations } from '../dataExtractor';
 import { checkSingleTarget, ensureDefined, getTargets } from './miscellaneous';
 
-interface hitLocationsData {
+export interface hitLocationsData {
   equipment: string;
   dr: string;
   roll: string;
@@ -35,8 +35,19 @@ export function getHitLocationsObject(game: Game): Partial<hitLocationsObject> {
   return {
     hitLocations: {
       items: hitLocationsResult,
-      headers: ['roll', 'where', 'penalty'],
+      headers: ['roll', 'where', 'penalty', 'dr'],
       id: 'hit_locations',
     },
   };
+}
+
+export function getLocationData(game: Game, location: string): any {
+  ensureDefined(game?.user, 'game doesnt have user');
+  if (!checkSingleTarget(game.user)) {
+    return {};
+  }
+  const target = getTargets(game.user)[0];
+  ensureDefined(target.actor, 'target has no actor');
+  const hitLocationsValues = getHitLocations(target.actor) || [];
+  return hitLocationsValues.find((l) => l.where.toUpperCase() === location.toUpperCase());
 }

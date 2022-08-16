@@ -67,7 +67,20 @@
   border-top: 1px solid var(--color-underline-header);
 }
 
+.location {
+  color: #800000;
+}
+
+.level {
+  display: none;
+}
 
 .levelWithModifiers {
   color: #800000
+}
+
+
+.location_layer {
+  margin-top: 5px;
+  font-size: 1.5em;
 }
