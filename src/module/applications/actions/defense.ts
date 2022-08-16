@@ -6,6 +6,7 @@ import { GurpsRoll, MeleeAttack, Modifier, RangedAttack } from '../../types';
 import { ensureDefined, getFullName } from '../../util/miscellaneous';
 import { getReadyActionsWeaponNeeded } from '../../util/readyWeapons';
 import { getEquippedItems } from '../../util/weaponMacrosCTA';
+import { addDeceptiveAttackModifierForDefense } from './deceptiveAttack';
 
 async function checkOffHandDefense(
   token: TokenDocument,
@@ -80,6 +81,7 @@ export function getValidBlocks(token: Token, totalModifiers: number, bonusBlock:
 export default async function rollDefense(
   roll: GurpsRoll,
   isCounterAttack: boolean,
+  isDeceptiveAttack: string,
   attacker: Actor,
   attackerToken: Token,
   attack: MeleeAttack | RangedAttack,
@@ -95,6 +97,7 @@ export default async function rollDefense(
     return true;
   }
   addCounterAttackModifiersForDefense(isCounterAttack, attacker, attack, modifiers, target);
+  addDeceptiveAttackModifierForDefense(isDeceptiveAttack, modifiers);
   const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attackerToken.id);
   doAnimationDefense(target.actor, defenseSucess);
   if (defenseSucess) {

@@ -283,7 +283,7 @@ export async function getAttacksWithModifiers(
       token,
       ranged,
       melee,
-      { isUsingFatigueForMoveAndAttack: false, isUsingFatigueForMightyBlows: false },
+      { isUsingFatigueForMoveAndAttack: false, isUsingFatigueForMightyBlows: false, isUsingDeceptiveAttack: '0' },
     );
 
     let level = m.level;
@@ -305,7 +305,7 @@ export async function getAttacksWithModifiers(
       token,
       ranged,
       melee,
-      { isUsingFatigueForMoveAndAttack: false, isUsingFatigueForMightyBlows: false },
+      { isUsingFatigueForMoveAndAttack: false, isUsingFatigueForMightyBlows: false, isUsingDeceptiveAttack: '0' },
     );
 
     let level = r.level;

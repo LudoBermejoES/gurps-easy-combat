@@ -7,7 +7,12 @@ export function getMeleeModifiers(
   token: Token,
   target: Token,
   removeFlags = false,
-  { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false },
+  {
+    isUsingFatigueForMoveAndAttack = false,
+    isUsingFatigueForMightyBlows = false,
+    isUsingDeceptiveAttack = '',
+    isRapidStrikeAttacks = false,
+  },
 ): {
   attack: Modifier[];
   defense: Modifier[];
@@ -31,6 +36,17 @@ export function getMeleeModifiers(
   }
   if (isUsingFatigueForMightyBlows) {
     modifiers.damage.push({ mod: 2, desc: 'Ataque poderoso' });
+  }
+
+  if (isRapidStrikeAttacks) {
+    modifiers.attack.push({ mod: -6, desc: 'Por dos ataques en el mismo turno' });
+  }
+
+  if (isUsingDeceptiveAttack) {
+    if (!isNaN(Number(isUsingDeceptiveAttack))) {
+      const deceptiveAttack = Number(isUsingDeceptiveAttack);
+      modifiers.attack.push({ mod: deceptiveAttack, desc: 'Por ataque engañoso' });
+    }
   }
 
   const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
@@ -72,7 +88,7 @@ export function getRangedModifiers(
   token: Token,
   target: Token,
   removeFlags = false,
-  { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false },
+  { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false, isRapidStrikeAttacks = false },
 ): {
   attack: Modifier[];
   defense: Modifier[];

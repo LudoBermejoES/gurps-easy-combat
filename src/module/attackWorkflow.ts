@@ -91,6 +91,7 @@ export async function makeAttackInner(
   },
   isCounterAttack: boolean,
   isDisarmingAttack: boolean,
+  isDeceptiveAttack: string,
 ): Promise<void> {
   if (!target.actor) {
     ui.notifications?.error('target has no actor');
@@ -107,7 +108,16 @@ export async function makeAttackInner(
   await doAnimationAttack(target.actor, weapon, roll.rofrcl);
   await playSound(target.actor, weapon, roll.rofrcl);
   if (!roll.isCritSuccess) {
-    const resultDefense = await rollDefense(roll, isCounterAttack, attacker, token, attack, modifiers, target);
+    const resultDefense = await rollDefense(
+      roll,
+      isCounterAttack,
+      isDeceptiveAttack,
+      attacker,
+      token,
+      attack,
+      modifiers,
+      target,
+    );
     if (!resultDefense) return;
     if (roll.rofrcl) {
       //      roll.rofrcl = roll.rofrcl - (GURPS.lastTargetedRoll.margin + 1);

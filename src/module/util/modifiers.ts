@@ -1,5 +1,5 @@
 import { Item, MeleeAttack, RangedAttack } from '../types';
-import { getAttacks } from '../dataExtractor';
+import { getAttacks, getEquipment } from '../dataExtractor';
 import {
   getNameFromAttack,
   meleeAttackWithRemainingRounds,
@@ -8,6 +8,8 @@ import {
 import { checkOffHand } from './readyWeapons';
 import AttackChooser from '../applications/attackChooser';
 import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
+import { FENCING_WEAPONS, MODULE_NAME } from './constants';
+import { getWeaponFromItemId } from './weapons';
 
 export async function calculateModifiersFromAttack(
   mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
@@ -18,7 +20,12 @@ export async function calculateModifiersFromAttack(
   token: Token,
   rangedData: rangedAttackWithRemainingRounds[],
   meleeData: meleeAttackWithRemainingRounds[],
-  { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false },
+  {
+    isUsingFatigueForMoveAndAttack = false,
+    isUsingFatigueForMightyBlows = false,
+    isUsingDeceptiveAttack = '',
+    isRapidStrikeAttacks = false,
+  },
   removeFlags = false,
 ): Promise<{
   attack: MeleeAttack | RangedAttack;
@@ -65,6 +72,8 @@ export async function calculateModifiersFromAttack(
     {
       isUsingFatigueForMoveAndAttack,
       isUsingFatigueForMightyBlows,
+      isUsingDeceptiveAttack,
+      isRapidStrikeAttacks,
     },
   );
   if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
@@ -113,6 +122,16 @@ export async function calculateDefenseModifiersFromEquippedWeapons(
             bonusBlock += Number(parts[1]);
           }
         }
+      }
+
+      const lastParry = <{ times: number; round: number } | undefined>actor?.token?.getFlag(MODULE_NAME, 'lastParry');
+
+      if (lastParry?.round === game.combat?.round ?? 0) {
+        const weaponItem: Item | undefined = getWeaponFromItemId(actor, weapon.itemId);
+        const isFencingWeapon = weaponItem && FENCING_WEAPONS.some((v) => weaponItem.name.toUpperCase().includes(v));
+        const times = lastParry?.times || 0;
+        const totalToSubstract = (isFencingWeapon ? -2 : -4) * times;
+        bonusParry += totalToSubstract;
       }
     }
   });

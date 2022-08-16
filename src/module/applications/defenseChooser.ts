@@ -94,7 +94,6 @@ export default class DefenseChooser extends BaseActorController {
     const isFeverishDefense = $('#feverishDefense').is(':checked');
 
     if (isRetreating) {
-      8;
       this.data.modifiers.push({ mod: +3, desc: 'Retrocediendo (tendrás un -2 al ataque en el próximo turno)' });
       this.addRetreatMalus();
     }
@@ -143,9 +142,8 @@ export default class DefenseChooser extends BaseActorController {
         },
         this.actor,
       );
-      this.data.resolve(result);
-
       this.closeForEveryone();
+      this.data.resolve(result);
     });
     html.on('click', '#acrobatic-dodge', async () => {
       const action = {
@@ -166,10 +164,9 @@ export default class DefenseChooser extends BaseActorController {
 
       $('#dodge')[0].click();
     });
-    html.on('click', '.parryRow', async (event) => {
+    html.on('click', '.parryRow', async (event, index) => {
       await this.setLastModifiers('PARRY');
-      applyModifiers(this.data.modifiers);
-      let lastParry = <{ times: number; round: number } | undefined>(
+      let lastParry = <{ times: number; round: number; itemId: string } | undefined>(
         this?.actor?.token?.getFlag(MODULE_NAME, 'lastParry')
       );
       const weapon = $(event.currentTarget).attr('weapon');
@@ -188,7 +185,8 @@ export default class DefenseChooser extends BaseActorController {
         lastParry = undefined;
       }
 
-      const result = GURPS.performAction(
+      applyModifiers(this.data.modifiers);
+      const result = await GURPS.performAction(
         {
           isMelee: true,
           name: weapon,
@@ -197,7 +195,7 @@ export default class DefenseChooser extends BaseActorController {
         this.actor,
       );
 
-      this.token.document.setFlag(MODULE_NAME, 'lastParry', {
+      await this.token.document.setFlag(MODULE_NAME, 'lastParry', {
         times: lastParry?.times ? lastParry.times + 1 : 1,
         round: game.combat?.round ?? 0,
       });

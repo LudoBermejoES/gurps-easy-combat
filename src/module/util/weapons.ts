@@ -22,6 +22,11 @@ export interface weaponNotToBeReady {
   remainingRounds: number;
 }
 
+export function getWeaponFromItemId(actor: Actor, itemId: string): Item | undefined {
+  const items: Item[] = getEquipment(actor);
+  return items.find((i) => i.itemid === itemId);
+}
+
 export function getWeaponsFromAttacks(actor: Actor): Item[] {
   const weaponData: Item[] = [];
   const { melee, ranged } = getAttacks(actor);

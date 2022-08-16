@@ -454,6 +454,11 @@ export default class AttackChooser extends BaseActorController {
     if (isUsingFatigueForMightyBlows) {
       useFatigue(this.actor);
     }
+
+    const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
+
+    const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
+
     const iMode = mode === 'counter_attack' || mode === 'disarm_attack' ? 'melee' : mode;
     ensureDefined(game.user, 'game not initialized');
     if (!checkSingleTarget(game.user)) return;
@@ -472,6 +477,8 @@ export default class AttackChooser extends BaseActorController {
       {
         isUsingFatigueForMoveAndAttack,
         isUsingFatigueForMightyBlows,
+        isUsingDeceptiveAttack,
+        isRapidStrikeAttacks,
       },
       true,
     );
@@ -507,9 +514,33 @@ export default class AttackChooser extends BaseActorController {
       modifiers,
       mode === 'counter_attack',
       mode === 'disarm_attack',
+      isUsingDeceptiveAttack,
     );
-    if (this.promiseFuncs) {
-      this.promiseFuncs.resolve();
+
+    if (isRapidStrikeAttacks) {
+      const actor = this.actor;
+      const token = this.token;
+      setTimeout(async () => {
+        await makeAttackInner(
+          actor,
+          token,
+          target,
+          attack,
+          weapon,
+          iMode,
+          modifiers,
+          mode === 'counter_attack',
+          mode === 'disarm_attack',
+          isUsingDeceptiveAttack,
+        );
+        if (this.promiseFuncs) {
+          this.promiseFuncs.resolve();
+        }
+      }, 100);
+    } else {
+      if (this.promiseFuncs) {
+        this.promiseFuncs.resolve();
+      }
     }
   }
 

@@ -92,7 +92,24 @@
       <h2>Cuerpo a cuerpo</h2>
       <div class="nostyles">
         <label>
+          <input type="checkbox" id="rapidStrikeAttacks" />Realizas dos ataques seguidos con un -6 cada uno
+        </label>
+      </div>
+      <div class="nostyles">
+        <label>
          <input type="checkbox" id="fatigueMightyBlows"  class="onlyOne" />Gastas uno de fatiga para hacer un +2 al daño
+        </label>
+      </div>
+      <div class="nostyles">
+        <label>
+          Ataque engañoso
+          <select id="deceptiveAttack">
+            <option value="0">No aplicar</option>
+            <option value="-2">-2 ataque, -1 a la defensa del contrario</option>
+            <option value="-4">-4 ataque, -2 a la defensa del contrario</option>
+            <option value="-6">-6 ataque, -3 a la defensa del contrario</option>
+            <option value="-8">-8 ataque, -8 a la defensa del contrario</option>
+          </select>
         </label>
       </div>
       {{> choiceTable melee}}
