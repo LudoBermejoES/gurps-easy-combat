@@ -50,7 +50,7 @@ export default class DefenseChooser extends BaseActorController {
     canParry: boolean;
     dodge: number;
     acrobaticDodge: Skill;
-    block: Record<string, number>;
+    block: Record<string, number> | undefined;
     parries: ChooserData<['weapon', 'value']>;
   }> {
     const actor = this.token?.actor;

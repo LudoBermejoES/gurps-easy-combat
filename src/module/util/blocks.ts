@@ -6,14 +6,18 @@ interface LastBlock {
   round: number;
 }
 
-export function getValidBlocks(token: Token, totalModifiers: number, bonusBlock: number): Record<string, number> {
+export function getValidBlocks(
+  token: Token,
+  totalModifiers: number,
+  bonusBlock: number,
+): Record<string, number> | undefined {
   const actor = token?.actor;
   ensureDefined(actor, 'Ese token necesita un actor');
   const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(token.document);
   const blocks: Record<string, number> = {};
 
   const lastBlock = getLastBlock(token.document);
-  if (lastBlock?.round === (game?.combat?.round || 0)) return blocks;
+  if (lastBlock?.round === (game?.combat?.round || 0)) return undefined;
 
   for (const attack of Object.values(actor.data.data.melee)) {
     const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === attack.itemid) || {
@@ -25,6 +29,7 @@ export function getValidBlocks(token: Token, totalModifiers: number, bonusBlock:
       if (block) blocks[getFullName(attack)] = block + totalModifiers + bonusBlock;
     }
   }
+  if (Object.keys(blocks).length === 0) return undefined;
   return blocks;
 }
 
