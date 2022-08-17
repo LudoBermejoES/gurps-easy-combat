@@ -44,7 +44,8 @@ export function registerHooks(): void {
         combatant?.token?.unsetFlag(MODULE_NAME, 'location');
         combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
         combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
-        combatant?.token?.unsetFlag(MODULE_NAME, 'lastParry');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastParries');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastBlocks');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');

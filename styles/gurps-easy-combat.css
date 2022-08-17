@@ -1,0 +1,162 @@
+.easy-combat-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.easy-combat-tooltip .easy-combat-tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.easy-combat-tooltip:hover .easy-combat-tooltiptext {
+  visibility: visible;
+}
+
+.clickable:hover {
+  background: #333;
+  color: #fff;
+}
+
+.card-container {
+  border: 1px solid #ccc;
+  background-color: #f4f4f4;
+  padding: 20px;
+  margin-bottom: 10px;
+  width: 33%;
+  float: left;
+  min-height: 300px;
+}
+
+.card-container .gurpslink {
+  visibility: hidden;
+  position: relative;
+}
+
+.card-container .gurpslink:after {
+  visibility: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 1em;
+  content: "Escoger";
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 5px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.card-title {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--color-underline-header);
+}
+
+.card-bottom {
+  border-top: 1px solid var(--color-underline-header);
+}
+
+.location {
+  color: #800000;
+}
+
+.easy-combat-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.easy-combat-tooltip .easy-combat-tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.easy-combat-tooltip:hover .easy-combat-tooltiptext {
+  visibility: visible;
+}
+
+.clickable:hover {
+  background: #333;
+  color: #fff;
+}
+
+.card-container {
+  border: 1px solid #ccc;
+  background-color: #f4f4f4;
+  padding: 20px;
+  margin-bottom: 10px;
+  width: 33%;
+  float: left;
+  min-height: 300px;
+}
+
+.card-container .gurpslink {
+  visibility: hidden;
+  position: relative;
+}
+
+.card-container .gurpslink:after {
+  visibility: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 1em;
+  content: "Escoger";
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 5px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.card-title {
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--color-underline-header);
+}
+
+.card-bottom {
+  border-top: 1px solid var(--color-underline-header);
+}
+
+.location {
+  color: #800000;
+}
+
+.header_level, .level {
+  display: none;
+}
+
+.levelWithModifiers {
+  color: #800000
+}
+
+.choiceTable .header {
+  text-align: left;
+}
+
+.location_layer {
+  margin-top: 5px;
+  font-size: 1.5em;
+}

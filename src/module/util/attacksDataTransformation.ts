@@ -20,8 +20,11 @@ export interface counterAndDisarmAttackData {
 
 export interface meleeAttackWithRemainingRounds {
   weapon: string;
+  originalName: string;
   mode: string;
   level: number;
+  parry: string;
+  block: string;
   damage: string;
   reach: string;
   notes: string;
@@ -52,15 +55,18 @@ export function getMeleeAttacksWithReadyWeapons(
   weapons: Item[],
 ): meleeAttackWithRemainingRounds[] {
   return melee
-    .map(({ name, alternateName, mode, level, damage, reach, notes, itemid }) => {
+    .map(({ name, alternateName, mode, level, parry, block, damage, reach, notes, itemid }) => {
       const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
         itemId: '',
         remainingRounds: 0,
       };
       return {
         weapon: alternateName || name,
+        originalName: name,
         mode,
         level,
+        parry,
+        block,
         levelWithModifiers: level,
         damage,
         reach,

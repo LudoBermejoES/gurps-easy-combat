@@ -3,80 +3,8 @@ import DefenseChooser from '../defenseChooser';
 import { doAnimationDefense } from '../../util/animations';
 import { MODULE_NAME } from '../../util/constants';
 import { GurpsRoll, MeleeAttack, Modifier, RangedAttack } from '../../types';
-import { ensureDefined, getFullName } from '../../util/miscellaneous';
-import { getReadyActionsWeaponNeeded } from '../../util/readyWeapons';
 import { getEquippedItems } from '../../util/weaponMacrosCTA';
 import { addDeceptiveAttackModifierForDefense } from './deceptiveAttack';
-
-async function checkOffHandDefense(
-  token: TokenDocument,
-  attack: MeleeAttack | RangedAttack,
-): Promise<
-  | {
-      mod: number;
-      desc: string;
-    }
-  | undefined
-> {
-  const equippedItems: {
-    itemId: string;
-    hand: string;
-  }[] = await getEquippedItems(token);
-
-  const weaponCarried = equippedItems.find((e) => e.itemId === attack.itemid);
-  if (weaponCarried) {
-    if (weaponCarried.hand === 'OFF') {
-      return {
-        mod: -2,
-        desc: 'Por parar con la mano torpe',
-      };
-    }
-  }
-  return undefined;
-}
-
-export async function getValidParries(
-  token: Token,
-  totalModifiers: number,
-  bonusParry: number,
-): Promise<Record<string, number>> {
-  const actor = token?.actor;
-  ensureDefined(actor, 'Ese token necesita un actor');
-  const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(token.document);
-  const parries: Record<string, number> = {};
-  for (const attack of Object.values(actor.data.data.melee)) {
-    const offHandModifiers = await checkOffHandDefense(token.document, attack);
-    const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === attack.itemid) || {
-      itemId: '',
-      remainingRounds: 0,
-    };
-
-    if (!readyNeeded.remainingRounds) {
-      const parry: number = parseInt(attack.parry);
-      if (parry) parries[getFullName(attack)] = parry + totalModifiers + bonusParry;
-    }
-  }
-  return parries;
-}
-
-export function getValidBlocks(token: Token, totalModifiers: number, bonusBlock: number) {
-  const actor = token?.actor;
-  ensureDefined(actor, 'Ese token necesita un actor');
-  const readyActionsWeaponNeeded = getReadyActionsWeaponNeeded(token.document);
-
-  const blocks: Record<string, number> = {};
-  for (const attack of Object.values(actor.data.data.melee)) {
-    const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === attack.itemid) || {
-      itemId: '',
-      remainingRounds: 0,
-    };
-    if (!readyNeeded.remainingRounds) {
-      const block: number = parseInt(attack.block);
-      if (block) blocks[getFullName(attack)] = block + totalModifiers + bonusBlock;
-    }
-  }
-  return blocks;
-}
 
 export default async function rollDefense(
   roll: GurpsRoll,

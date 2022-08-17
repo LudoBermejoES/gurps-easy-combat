@@ -6,6 +6,7 @@ import { ACROBATICS, allOutAttackManeuvers, FENCING_WEAPONS, MODULE_NAME, TEMPLA
 import { getBlocks, getDodge, getParries } from '../dataExtractor';
 import BaseActorController from './abstract/BaseActorController';
 import {
+  activateChooser,
   ensureDefined,
   findSkillSpell,
   getManeuver,
@@ -14,12 +15,12 @@ import {
   isDefined,
   smartRace,
 } from '../util/miscellaneous';
-import { MeleeAttack, Modifier, RangedAttack, Skill } from '../types';
+import { ChooserData, Modifier, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
-import { getEquippedItems } from '../util/weaponMacrosCTA';
-import { getValidBlocks, getValidParries } from './actions/defense';
 import { useFatigue } from '../util/fatigue';
 import { calculateDefenseModifiersFromEquippedWeapons } from '../util/modifiers';
+import { getValidParries, Parry, saveLastParry } from '../util/parries';
+import { getValidBlocks, saveLastBlock } from '../util/blocks';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -49,8 +50,8 @@ export default class DefenseChooser extends BaseActorController {
     canParry: boolean;
     dodge: number;
     acrobaticDodge: Skill;
-    parry: Record<string, number>;
     block: Record<string, number>;
+    parries: ChooserData<['weapon', 'value']>;
   }> {
     const actor = this.token?.actor;
     ensureDefined(actor, 'Ese token necesita un actor');
@@ -61,7 +62,7 @@ export default class DefenseChooser extends BaseActorController {
       bonusDodge: number;
       bonusParry: number;
       bonusBlock: number;
-    } = await calculateDefenseModifiersFromEquippedWeapons(this.actor, this.token.document);
+    } = await calculateDefenseModifiersFromEquippedWeapons(this.actor, this.token);
 
     this.data.modifiers.forEach((m) => (sumAllModifiers += m.mod));
 
@@ -71,8 +72,12 @@ export default class DefenseChooser extends BaseActorController {
       canParry: ![DEFENSE_DODGEBLOCK, DEFENSE_NONE].includes(maneuver?.defense),
       acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
       dodge: getDodge(this.actor) + sumAllModifiers + modifiersByEquippedWeapons.bonusDodge,
-      parry: await getValidParries(this.token, sumAllModifiers, modifiersByEquippedWeapons.bonusParry),
       block: getValidBlocks(this.token, sumAllModifiers, modifiersByEquippedWeapons.bonusBlock),
+      parries: {
+        items: await getValidParries(this.token, sumAllModifiers, modifiersByEquippedWeapons.bonusParry),
+        headers: ['weapon', 'value'],
+        id: 'parries',
+      },
     };
   }
   async close(): Promise<void> {
@@ -112,7 +117,7 @@ export default class DefenseChooser extends BaseActorController {
 
     const { bonusDodge, bonusParry, bonusBlock } = await calculateDefenseModifiersFromEquippedWeapons(
       this.actor,
-      this.token.document,
+      this.token,
     );
     if (mode === 'DODGE' && bonusDodge) {
       this.data.modifiers.push({ mod: bonusDodge, desc: 'Bonus por escudo, capa u otro objeto' });
@@ -164,41 +169,23 @@ export default class DefenseChooser extends BaseActorController {
 
       $('#dodge')[0].click();
     });
-    html.on('click', '.parryRow', async (event, index) => {
-      await this.setLastModifiers('PARRY');
-      let lastParry = <{ times: number; round: number; itemId: string } | undefined>(
-        this?.actor?.token?.getFlag(MODULE_NAME, 'lastParry')
-      );
-      const weapon = $(event.currentTarget).attr('weapon');
-      if (!weapon) {
-        ui.notifications?.error('no weapon attribute on clicked element');
-        return;
-      }
-      if (lastParry?.round === game.combat?.round ?? 0) {
-        const isFencingWeapon = FENCING_WEAPONS.some((v) => weapon.toUpperCase().includes(v));
-        const times = lastParry?.times || 0;
-        this.data.modifiers.push({
-          mod: (isFencingWeapon ? -2 : -4) * times,
-          desc: `Malus por haber parado previamente ${times} vez(ces)`,
-        });
-      } else {
-        lastParry = undefined;
-      }
 
-      applyModifiers(this.data.modifiers);
+    activateChooser(html, 'parries', async (index: number) => {
+      await this.setLastModifiers('PARRY');
+      const parries: Parry[] = await getValidParries(this.token);
+      const parry = parries[index];
+
+      applyModifiers([...this.data.modifiers, ...parry.modifiers]);
       const result = await GURPS.performAction(
         {
           isMelee: true,
-          name: weapon,
+          name: parry.originalName,
           type: 'weapon-parry',
         },
         this.actor,
       );
 
-      await this.token.document.setFlag(MODULE_NAME, 'lastParry', {
-        times: lastParry?.times ? lastParry.times + 1 : 1,
-        round: game.combat?.round ?? 0,
-      });
+      await saveLastParry(parry.parryToStore, this.token.document);
 
       this.closeForEveryone();
       this.data.resolve(result);
@@ -221,6 +208,8 @@ export default class DefenseChooser extends BaseActorController {
         },
         this.actor,
       );
+      await saveLastBlock({ round: game?.combat?.round || 0 }, this.token.document);
+
       this.closeForEveryone();
       this.data.resolve(result);
     });

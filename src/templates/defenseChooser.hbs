@@ -38,6 +38,7 @@
   </div>
   <br>
   {{#if canDodge}}
+    <h2>Esquiva</h2>
     <table>
       <tr class="clickable" id="dodge">
         <td>Esquivar</td>
@@ -61,23 +62,14 @@
   {{/if}}
 
   {{#if canParry}}
-    {{#if parry}}
-      <table>
-        <tr class="header">
-          <td>Parar con</td>
-          <td>Nivel</td>
-        </tr>
-        {{#each parry as |parryValue|}}
-          <tr class="clickable parryRow" weapon="{{@key}}">
-            <td>{{@key}}</td>
-            <td>{{parryValue}}</td>
-          </tr>
-        {{/each}}
-      </table>
+    {{#if parries}}
+      <h2>Parada</h2>
+      {{> choiceTable parries}}
     {{/if}}
   {{/if}}
   {{#if canBlock}}
-    {{#if block}}
+    {{#if block.length}}
+      <h2>Bloqueo</h2>
       <table>
         <tr class="header">
           <td>Bloquear con</td>

@@ -3,6 +3,7 @@ import { getAmmunnitionFromInventory } from '../../util/weapons';
 
 export interface meleeAttackWithRemainingRounds {
   weapon: string;
+  originalName: string;
   mode: string;
   level: number;
   damage: string;
@@ -40,6 +41,7 @@ export function getMeleeAttacksWithReadyWeapons(
       };
       return {
         weapon: alternateName || name,
+        originalName: name,
         mode,
         level,
         damage,
