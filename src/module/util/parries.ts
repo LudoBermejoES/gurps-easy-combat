@@ -2,7 +2,11 @@ import { ensureDefined, getFullName } from './miscellaneous';
 import { checkOffHand, getReadyActionsWeaponNeeded } from './readyWeapons';
 import { MODULE_NAME } from './constants';
 import { Item, Modifier, ReadyManeouverNeeded } from '../types';
-import { getMeleeAttacksWithReadyWeapons } from './attacksDataTransformation';
+import {
+  getMeleeAttacksWithNotReamingRounds,
+  getMeleeAttacksWithReadyWeapons,
+  meleeAttackWithRemainingRounds,
+} from './attacksDataTransformation';
 import { getAttacks } from '../dataExtractor';
 import { getWeaponsFromAttacks } from './weapons';
 
@@ -32,8 +36,9 @@ export async function getValidParries(token: Token, totalModifiers = 0, bonusPar
   const readyActionsWeaponNeeded: { items: ReadyManeouverNeeded[] } = getReadyActionsWeaponNeeded(token.document);
 
   const meleeDataOriginal = getMeleeAttacksWithReadyWeapons(melee, readyActionsWeaponNeeded, weapons);
+  const meleeData: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithNotReamingRounds(meleeDataOriginal);
 
-  for (const attack of Object.values(meleeDataOriginal)) {
+  for (const attack of Object.values(meleeData)) {
     const modifiers: Modifier[] = [];
     const { itemid, weapon, parry: originalParry, originalName } = attack;
     let isFencingWeapon = false;
