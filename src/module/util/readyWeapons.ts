@@ -5,6 +5,7 @@ import { getAttacks } from '../dataExtractor';
 import { getWeaponsFromAttacks } from './weapons';
 import AttackChooser from '../applications/attackChooser';
 import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from './attacksDataTransformation';
+import { findSkillSpell } from './miscellaneous';
 
 export function getReadyActionsWeaponNeeded(document: TokenDocument): { items: ReadyManeouverNeeded[] } {
   return <{ items: ReadyManeouverNeeded[] }>document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
@@ -69,7 +70,7 @@ export async function checkIfRemoveWeaponFromHandNeeded(chooser: AttackChooser, 
 
 export async function checkOffHand(
   token: TokenDocument,
-  attack: MeleeAttack | RangedAttack | meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds,
+  attack: meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds,
 ): Promise<
   | {
       mod: number;
@@ -82,11 +83,21 @@ export async function checkOffHand(
     hand: string;
   }[] = await getEquippedItems(token);
 
+  let isTrained: any = false;
+  if (token?.actor) {
+    let alternateName = attack.originalName;
+    if (attack.originalName.toLowerCase().includes('knife')) {
+      alternateName = 'Knife';
+    }
+
+    isTrained = findSkillSpell(token?.actor, `Off-Hand Weapon Training (${alternateName})`, true, false);
+  }
+
   const weaponCarried = equippedItems.find((e) => e.itemId === attack.itemid);
   if (weaponCarried) {
     if (weaponCarried.hand === 'OFF') {
       return {
-        mod: -4,
+        mod: isTrained ? isTrained.level - attack.level : -4,
         desc: 'Por atacar con la mano mala',
       };
     }

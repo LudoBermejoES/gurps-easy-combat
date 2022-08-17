@@ -52,6 +52,13 @@ export async function calculateModifiersFromAttack(
           attack.rof = element.find('.rof').text().trim();
         }
       }
+    } else {
+      if (originalAttack) {
+        if (originalAttack.rof !== undefined) {
+          originalAttack.rof = originalAttack.rof.trim();
+        }
+        attack = { ...originalAttack };
+      }
     }
   } else {
     attackData = meleeData[index];
@@ -75,7 +82,7 @@ export async function calculateModifiersFromAttack(
     },
   );
   if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
-  const offHandModifier = await checkOffHand(token.document, element ? attack : attackData);
+  const offHandModifier = await checkOffHand(token.document, attackData);
   if (offHandModifier) {
     modifiers.attack = [...modifiers.attack, offHandModifier];
   }

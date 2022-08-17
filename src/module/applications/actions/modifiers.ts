@@ -43,7 +43,7 @@ export function getMeleeModifiers(
   }
 
   if (isUsingDeceptiveAttack) {
-    if (!isNaN(Number(isUsingDeceptiveAttack))) {
+    if (!isNaN(Number(isUsingDeceptiveAttack)) && Number(isUsingDeceptiveAttack) !== 0) {
       const deceptiveAttack = Number(isUsingDeceptiveAttack);
       modifiers.attack.push({ mod: deceptiveAttack, desc: 'Por ataque engañoso' });
     }
@@ -111,8 +111,7 @@ export function getRangedModifiers(
   ensureDefined(token.actor, 'token without actor');
   switch (getManeuver(token.actor)) {
     case 'move_and_attack':
-      if (!isUsingFatigueForMoveAndAttack)
-        modifiers.attack.push({ mod: -getBulk(attack), desc: 'Por moverse y atacar' });
+      modifiers.attack.push({ mod: -getBulk(attack), desc: 'Por moverse y atacar' });
       break;
     case 'aoa_determined':
       modifiers.attack.push({ mod: 1, desc: 'determined' });

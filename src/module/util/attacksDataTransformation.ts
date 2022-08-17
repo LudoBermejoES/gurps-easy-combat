@@ -35,6 +35,7 @@ export interface meleeAttackWithRemainingRounds {
 
 export interface rangedAttackWithRemainingRounds {
   weapon: string;
+  originalName: string;
   mode: string;
   level: number;
   damage: string;
@@ -103,6 +104,7 @@ export function getRangedAttacksWithReadyWeapons(
       };
       return {
         weapon: alternateName || name,
+        originalName: name,
         mode,
         level,
         levelWithModifiers: level,
