@@ -1,4 +1,4 @@
-import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded } from '../types';
+import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded, Skill } from '../types';
 import { MODULE_NAME } from './constants';
 import { getEquippedItems, removeItemById } from './weaponMacrosCTA';
 import { getAttacks } from '../dataExtractor';
@@ -6,6 +6,8 @@ import { getWeaponsFromAttacks } from './weapons';
 import AttackChooser from '../applications/attackChooser';
 import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from './attacksDataTransformation';
 import { findSkillSpell } from './miscellaneous';
+import { isOffHandTrained } from './skillsDataExtractor';
+import { hasAmbidexterity } from './advantagesDataExtractor';
 
 export function getReadyActionsWeaponNeeded(document: TokenDocument): { items: ReadyManeouverNeeded[] } {
   return <{ items: ReadyManeouverNeeded[] }>document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
@@ -66,41 +68,4 @@ export async function checkIfRemoveWeaponFromHandNeeded(chooser: AttackChooser, 
     removeFromHandItems.forEach((weapon) => promises.push(removeWeapon(chooser, token, weapon)));
   }
   await Promise.allSettled(promises);
-}
-
-export async function checkOffHand(
-  token: TokenDocument,
-  attack: meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds,
-): Promise<
-  | {
-      mod: number;
-      desc: string;
-    }
-  | undefined
-> {
-  const equippedItems: {
-    itemId: string;
-    hand: string;
-  }[] = await getEquippedItems(token);
-
-  let isTrained: any = false;
-  if (token?.actor) {
-    let alternateName = attack.originalName;
-    if (attack.originalName.toLowerCase().includes('knife')) {
-      alternateName = 'Knife';
-    }
-
-    isTrained = findSkillSpell(token?.actor, `Off-Hand Weapon Training (${alternateName})`, true, false);
-  }
-
-  const weaponCarried = equippedItems.find((e) => e.itemId === attack.itemid);
-  if (weaponCarried) {
-    if (weaponCarried.hand === 'OFF') {
-      return {
-        mod: isTrained ? isTrained.level - attack.level : -4,
-        desc: 'Por atacar con la mano mala',
-      };
-    }
-  }
-  return undefined;
 }

@@ -1,5 +1,5 @@
 import { ensureDefined, getFullName } from './miscellaneous';
-import { checkOffHand, getReadyActionsWeaponNeeded } from './readyWeapons';
+import { getReadyActionsWeaponNeeded } from './readyWeapons';
 import { MODULE_NAME } from './constants';
 import { Item, Modifier, ReadyManeouverNeeded } from '../types';
 import {
@@ -9,6 +9,7 @@ import {
 } from './attacksDataTransformation';
 import { getAttacks } from '../dataExtractor';
 import { getWeaponsFromAttacks } from './weapons';
+import { checkOffHand } from './offHand';
 
 interface LastParry {
   times: number;

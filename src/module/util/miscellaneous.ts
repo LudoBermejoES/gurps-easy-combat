@@ -1,4 +1,4 @@
-import { Attack, RangedAttack, Skill } from '../types';
+import { Advantage, Attack, RangedAttack, Skill } from '../types';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
@@ -201,4 +201,10 @@ export function getDisarmAttackLevel(actor: Actor, name: string, level: number):
     levelCounter = isFencingWeapon ? levelOfSkill : levelOfSkill - 2;
   }
   return levelCounter;
+}
+
+export function findAdvantage(actor: Actor, name: string): Advantage {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return GURPS.findAdDisad(actor, name);
 }

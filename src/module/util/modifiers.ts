@@ -5,9 +5,9 @@ import {
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from './attacksDataTransformation';
-import { checkOffHand } from './readyWeapons';
 import AttackChooser from '../applications/attackChooser';
 import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
+import { checkOffHand } from './offHand';
 
 export async function calculateModifiersFromAttack(
   mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
