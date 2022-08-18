@@ -16,6 +16,7 @@ export interface counterAndDisarmAttackData {
   level: number;
   damage: string;
   reach: string;
+  levelWithModifiers: number;
 }
 
 export interface meleeAttackWithRemainingRounds {
@@ -214,26 +215,9 @@ export function getAttacksNotToBeReady(
 
 export function getCounterAttackData(
   melee: meleeAttackWithRemainingRounds[],
-  actor: Actor,
-): counterAndDisarmAttackData[] {
-  return melee.map((item: meleeAttackWithRemainingRounds) => {
-    const { weapon, mode, level, damage, reach } = item;
-    return {
-      weapon,
-      mode,
-      level: getCounterAttackLevel(actor, weapon, level),
-      damage,
-      reach,
-    };
-  });
-}
-
-export function getDisarmAttackData(
-  game: Game,
   token: Token,
-  melee: meleeAttackWithRemainingRounds[],
   actor: Actor,
-): counterAndDisarmAttackData[] {
+): meleeAttackWithRemainingRounds[] {
   ensureDefined(game.user, 'game not initialized');
   if (checkSingleTarget(game.user)) {
     const target = getTargets(game.user)[0];
@@ -253,15 +237,30 @@ export function getDisarmAttackData(
     }
   }
   return melee.map((item: meleeAttackWithRemainingRounds) => {
-    const { weapon, mode, level, damage, reach } = item;
+    const { originalName, levelWithModifiers } = item;
     return {
-      weapon,
-      mode,
-      level: getDisarmAttackLevel(actor, weapon, level),
-      damage,
-      reach,
+      ...item,
+      levelWithModifiers: getCounterAttackLevel(actor, originalName, levelWithModifiers),
     };
   });
+  return melee;
+}
+
+export function getDisarmAttackData(
+  game: Game,
+  token: Token,
+  melee: meleeAttackWithRemainingRounds[],
+  actor: Actor,
+): meleeAttackWithRemainingRounds[] {
+  return melee
+    .filter((item: meleeAttackWithRemainingRounds) => item.parry.toLowerCase() !== 'no')
+    .map((item: meleeAttackWithRemainingRounds) => {
+      const { levelWithModifiers, originalName } = item;
+      return {
+        ...item,
+        levelWithModifiers: getDisarmAttackLevel(actor, originalName, levelWithModifiers),
+      };
+    });
 }
 
 export async function getAttacksWithModifiers(

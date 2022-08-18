@@ -87,6 +87,7 @@
     {{/unless}}
 
 
+  <div id="basicAttacks">
     {{#if melee.items.length}}
       <br>
       <h2>Cuerpo a cuerpo</h2>
@@ -126,13 +127,25 @@
       {{> choiceTable weaponsToBeReady}}
     {{/if}}
     <br>
+    <input id="showAdvancedCombat" type="button" value="Ver maniobras de combate avanzadas" />
+  </div>
 
+  <div id="advancedAttacks" style="display: none">
+    <input id="showBasicCombat" type="button" value="Volver a las maniobras básicas" />
+    <br>
     <h2>Maniobras de combate avanzadas</h2>
     {{#if disarmAttack.items.length}}
       <br>
       <details>
-        <summary><strong>Desarmar</strong></summary>
+        <summary>
+          <strong>Desarmar</strong>
+        </summary>
+        <ul>
+          <li> Si tienes la habilidad de desarmar para el arma, tiras por habilidad.</li>
+          <li> Si no la tienes, tienes un -4 con todas las armas o -2 con un arma de esgrima</li>
+        </ul>
         <div>
+
           {{> choiceTable disarmAttack}}
         </div>
       </details>
@@ -150,5 +163,6 @@
 
     <h2></h2>
   {{/if}}
+</div>
 </div>
 

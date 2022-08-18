@@ -193,11 +193,11 @@ export function getCounterAttackLevel(actor: Actor, name: string, level: number)
 
 export function getDisarmAttackLevel(actor: Actor, name: string, level: number): number {
   const counterAttack = findSkillSpell(actor, 'Disarming ', true, false);
-  let levelCounter = level - 5;
+  const isFencingWeapon = FENCING_WEAPONS.some((v) => name.toUpperCase().includes(v));
+  let levelCounter = isFencingWeapon ? level - 2 : level - 4;
   if (counterAttack) {
     const weapon = counterAttack.name.split('Disarming ').join('');
     const levelOfSkill = name.indexOf(weapon) > -1 ? counterAttack.level - 4 : level - 4;
-    const isFencingWeapon = FENCING_WEAPONS.some((v) => weapon.toUpperCase().includes(v));
     levelCounter = isFencingWeapon ? levelOfSkill : levelOfSkill - 2;
   }
   return levelCounter;

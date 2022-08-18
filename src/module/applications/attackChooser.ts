@@ -23,6 +23,7 @@ import {
 } from '../util/weapons';
 import { getMeleeModifiers, getRangedModifiers } from './actions/modifiers';
 import {
+  counterAndDisarmAttackData,
   getAttacksWithModifiers,
   getCounterAttackData,
   getDisarmAttackData,
@@ -77,6 +78,9 @@ export default class AttackChooser extends BaseActorController {
     weapon: string;
   }[];
 
+  counterAttackData: meleeAttackWithRemainingRounds[] = [];
+  disarmAttackData: meleeAttackWithRemainingRounds[] = [];
+
   rangedData: rangedAttackWithRemainingRounds[];
 
   meleeData: meleeAttackWithRemainingRounds[];
@@ -109,7 +113,7 @@ export default class AttackChooser extends BaseActorController {
   async getData(): Promise<{
     onlyReadyActions: boolean;
     beforeCombat: boolean;
-    disarmAttack: ChooserData<['weapon', 'mode', 'level', 'reach']>;
+    disarmAttack: ChooserData<['weapon', 'mode', 'level', 'levelWithModifiers', 'reach']>;
     counterAttack: ChooserData<['weapon', 'mode', 'level', 'damage', 'reach']>;
     melee: ChooserData<['weapon', 'mode', 'level', 'levelWithModifiers', 'damage', 'reach']>;
     ranged: ChooserData<['weapon', 'rof', 'level', 'levelWithModifiers', 'damage', 'range', 'accuracy']>;
@@ -164,8 +168,6 @@ export default class AttackChooser extends BaseActorController {
       this.actor,
     );
 
-    const counterAttackData = getCounterAttackData(meleeData, this.actor);
-    const disarmAttackData = getDisarmAttackData(game, this.token, meleeData, this.actor);
     const hitLocationsObject = getHitLocationsObject(game);
 
     this.weaponsToBeReadyData = weaponsToBeReadyData;
@@ -178,6 +180,11 @@ export default class AttackChooser extends BaseActorController {
       this.token,
     );
 
+    const counterAttackData = getCounterAttackData(meleeAttacksWithModifier, this.token, this.actor);
+    const disarmAttackData = getDisarmAttackData(game, this.token, meleeAttacksWithModifier, this.actor);
+    this.counterAttackData = counterAttackData;
+    this.disarmAttackData = disarmAttackData;
+
     const location: any = this.token.document.getFlag(MODULE_NAME, 'location');
     this.data.locationToAttack = getLocationData(game, location?.where || 'torso');
 
@@ -186,7 +193,7 @@ export default class AttackChooser extends BaseActorController {
       beforeCombat: this.data.beforeCombat || false,
       disarmAttack: {
         items: disarmAttackData,
-        headers: ['weapon', 'mode', 'level', 'reach'],
+        headers: ['weapon', 'mode', 'level', 'levelWithModifiers', 'reach'],
         id: 'disarm_attacks',
       },
       counterAttack: {
@@ -229,6 +236,16 @@ export default class AttackChooser extends BaseActorController {
       const lastValue = $(evt.target).prop('checked');
       $('.onlyOne').prop('checked', false);
       $(evt.target).prop('checked', lastValue);
+    });
+
+    html.on('click', '#showAdvancedCombat', () => {
+      $('#advancedAttacks').show();
+      $('#basicAttacks').hide();
+    });
+
+    html.on('click', '#showBasicCombat', () => {
+      $('#advancedAttacks').hide();
+      $('#basicAttacks').show();
     });
 
     html.on('click', '#chooseLocation', (evt) => {
@@ -456,14 +473,25 @@ export default class AttackChooser extends BaseActorController {
     }
 
     const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
-
     const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
-
     const iMode = mode === 'counter_attack' || mode === 'disarm_attack' ? 'melee' : mode;
+    const isCounterAttack = mode === 'counter_attack';
+    const isDisarmAttack = mode === 'disarm_attack';
+
     ensureDefined(game.user, 'game not initialized');
     if (!checkSingleTarget(game.user)) return;
     const target = getTargets(game.user)[0];
     ensureDefined(target.actor, 'target has no actor');
+
+    let meleeDataFinal = this.meleeData;
+
+    if (isDisarmAttack) {
+      meleeDataFinal = this.disarmAttackData;
+    }
+
+    if (isCounterAttack) {
+      meleeDataFinal = this.counterAttackData;
+    }
 
     const { attack, modifiers } = await calculateModifiersFromAttack(
       mode,
@@ -473,12 +501,14 @@ export default class AttackChooser extends BaseActorController {
       this.actor,
       this.token,
       this.rangedData,
-      this.meleeData,
+      meleeDataFinal,
       {
         isUsingFatigueForMoveAndAttack,
         isUsingFatigueForMightyBlows,
         isUsingDeceptiveAttack,
         isRapidStrikeAttacks,
+        isCounterAttack,
+        isDisarmAttack,
       },
       true,
     );
@@ -503,6 +533,8 @@ export default class AttackChooser extends BaseActorController {
         this.data.attackCount = 2;
       }
     }
+
+    debugger;
 
     await makeAttackInner(
       this.actor,

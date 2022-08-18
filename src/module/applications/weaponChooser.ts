@@ -1,16 +1,33 @@
 import { TEMPLATES_FOLDER } from '../util/constants.js';
 import { getAttacks, getEquipment } from '../dataExtractor.js';
-import { Attack, ChooserData, Item, PromiseFunctions } from '../types.js';
+import { Attack, ChooserData, Item, PromiseFunctions, ReadyManeouverNeeded } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
 import { activateChooser, ensureDefined } from '../util/miscellaneous.js';
 import ManeuverChooser from './maneuverChooser';
-import { getWeaponsFromAttacks } from '../util/weapons';
+import {
+  getWeaponsFromAttacks,
+  getWeaponsNotToBeReady,
+  getWeaponsToBeReady,
+  weaponNotToBeReady,
+  weaponToBeReady,
+} from '../util/weapons';
+import { getReadyActionsWeaponNeeded } from '../util/readyWeapons';
+import {
+  getExtraRangedAttacksPerROF,
+  getMeleeAttacksWithNotReamingRounds,
+  getMeleeAttacksWithReadyWeapons,
+  getRangedAttacksWithNotReamingRounds,
+  getRangedAttacksWithReadyWeapons,
+  getRangedDataWithROFMoreThan1,
+  meleeAttackWithRemainingRounds,
+  rangedAttackWithRemainingRounds,
+} from '../util/attacksDataTransformation';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 
 export default class WeaponChooser extends BaseActorController {
   promiseFuncs: PromiseFunctions<string> | undefined;
-  weaponData: Item[];
+  weaponData: weaponNotToBeReady[];
 
   constructor(token: Token, promiseFuncs?: PromiseFunctions<string>) {
     super('WeaponChooser', token, {
@@ -23,7 +40,22 @@ export default class WeaponChooser extends BaseActorController {
   getData(): {
     weapons: ChooserData<['name']>;
   } {
-    this.weaponData = getWeaponsFromAttacks(this.actor);
+    const { melee } = getAttacks(this.actor);
+    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
+
+    const readyActionsWeaponNeeded: { items: ReadyManeouverNeeded[] } = getReadyActionsWeaponNeeded(
+      this.token.document,
+    );
+
+    const meleeDataOriginal: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithReadyWeapons(
+      melee,
+      readyActionsWeaponNeeded,
+      weapons,
+    );
+
+    this.weaponData = getWeaponsNotToBeReady(meleeDataOriginal, [], this.actor).filter(
+      (w) => !w.name.toUpperCase().includes('SHIELD'),
+    );
 
     return {
       weapons: {

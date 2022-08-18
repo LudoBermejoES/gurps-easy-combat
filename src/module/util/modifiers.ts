@@ -23,6 +23,8 @@ export async function calculateModifiersFromAttack(
     isUsingFatigueForMightyBlows = false,
     isUsingDeceptiveAttack = '',
     isRapidStrikeAttacks = false,
+    isCounterAttack = false,
+    isDisarmAttack = false,
   },
   removeFlags = false,
 ): Promise<{
@@ -79,6 +81,8 @@ export async function calculateModifiersFromAttack(
       isUsingFatigueForMightyBlows,
       isUsingDeceptiveAttack,
       isRapidStrikeAttacks,
+      isCounterAttack,
+      isDisarmAttack,
     },
   );
   if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
@@ -95,6 +99,7 @@ export async function calculateModifiersFromAttack(
 export async function calculateDefenseModifiersFromEquippedWeapons(
   actor: Actor,
   token: Token,
+  canUseModShield: boolean,
 ): Promise<{
   bonusDodge: number;
   bonusParry: number;
@@ -107,7 +112,7 @@ export async function calculateDefenseModifiersFromEquippedWeapons(
   equippedWeapons.forEach((weapon: equippedItem) => {
     const item: any = actor.data.items.contents.find((item: any) => item.data._id === weapon.itemId);
     if (!item) return;
-    const found = ['SHIELD', 'CLOAK'].find((m) => item.data.name.toUpperCase().includes(m));
+    const found = canUseModShield && ['SHIELD', 'CLOAK'].find((m) => item.data.name.toUpperCase().includes(m));
     if (found) {
       const bonuses = item.data.data.bonuses.split('\n');
       for (const bonus of bonuses) {

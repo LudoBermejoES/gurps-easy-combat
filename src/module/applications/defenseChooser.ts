@@ -27,6 +27,7 @@ interface DefenseData {
   reject(reason: string): void;
   modifiers: Modifier[];
   attackerId: string;
+  canUseModShield: boolean;
 }
 
 export const DEFENSE_NONE = 'none';
@@ -34,7 +35,7 @@ export const DEFENSE_DODGEBLOCK = 'dodge-block';
 
 export default class DefenseChooser extends BaseActorController {
   data: DefenseData;
-
+  canUseModShield: boolean;
   constructor(token: Token, data: DefenseData) {
     super('DefenseChooser', token, {
       title: `Defense Chooser - ${token.name}`,
@@ -42,6 +43,7 @@ export default class DefenseChooser extends BaseActorController {
     });
     this.data = data;
     this.data.modifiers = [...this.data.modifiers, ...getDefenseModifiers(token, this.data.attackerId).defense];
+    this.canUseModShield = this.data.canUseModShield;
   }
 
   async getData(): Promise<{
@@ -62,12 +64,12 @@ export default class DefenseChooser extends BaseActorController {
       bonusDodge: number;
       bonusParry: number;
       bonusBlock: number;
-    } = await calculateDefenseModifiersFromEquippedWeapons(this.actor, this.token);
+    } = await calculateDefenseModifiersFromEquippedWeapons(this.actor, this.token, this.canUseModShield);
 
     this.data.modifiers.forEach((m) => (sumAllModifiers += m.mod));
 
     return {
-      canBlock: maneuver?.defense !== DEFENSE_NONE,
+      canBlock: this.canUseModShield && maneuver?.defense !== DEFENSE_NONE,
       canDodge: maneuver?.defense !== DEFENSE_NONE,
       canParry: ![DEFENSE_DODGEBLOCK, DEFENSE_NONE].includes(maneuver?.defense),
       acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
@@ -118,6 +120,7 @@ export default class DefenseChooser extends BaseActorController {
     const { bonusDodge, bonusParry, bonusBlock } = await calculateDefenseModifiersFromEquippedWeapons(
       this.actor,
       this.token,
+      this.canUseModShield,
     );
     if (mode === 'DODGE' && bonusDodge) {
       this.data.modifiers.push({ mod: bonusDodge, desc: 'Bonus por escudo, capa u otro objeto' });
@@ -219,6 +222,7 @@ export default class DefenseChooser extends BaseActorController {
     tokenId: string,
     attackerId: string,
     modifiers: Modifier[],
+    canUseModShield: boolean,
   ): Promise<boolean> {
     const token = getToken(sceneId, tokenId);
     const actor = token.actor;
@@ -233,12 +237,17 @@ export default class DefenseChooser extends BaseActorController {
         reject(false);
         return;
       }
-      const instance = new DefenseChooser(token, { resolve, reject, modifiers, attackerId });
+      const instance = new DefenseChooser(token, { resolve, reject, modifiers, attackerId, canUseModShield });
       instance.render(true);
     });
     return promise;
   }
-  static async requestDefense(token: Token, modifiers: Modifier[], attackerTokenId: string): Promise<boolean> {
+  static async requestDefense(
+    token: Token,
+    modifiers: Modifier[],
+    attackerTokenId: string,
+    canUseModShield: boolean,
+  ): Promise<boolean> {
     const actor = token.actor;
     ensureDefined(actor, 'token has no actor');
     const users = highestPriorityUsers(actor);
@@ -257,6 +266,7 @@ export default class DefenseChooser extends BaseActorController {
             token.id,
             attackerTokenId,
             modifiers,
+            canUseModShield,
           );
         }),
       { allowRejects: false, default: false, filter: isDefined },

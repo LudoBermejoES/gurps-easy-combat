@@ -108,16 +108,11 @@ export async function makeAttackInner(
   await doAnimationAttack(target.actor, weapon, roll.rofrcl);
   await playSound(target.actor, weapon, roll.rofrcl);
   if (!roll.isCritSuccess) {
-    const resultDefense = await rollDefense(
-      roll,
+    const resultDefense = await rollDefense(roll, attacker, token, attack, modifiers, target, {
       isCounterAttack,
       isDeceptiveAttack,
-      attacker,
-      token,
-      attack,
-      modifiers,
-      target,
-    );
+      isDisarmingAttack,
+    });
     if (!resultDefense) return;
     if (roll.rofrcl) {
       //      roll.rofrcl = roll.rofrcl - (GURPS.lastTargetedRoll.margin + 1);

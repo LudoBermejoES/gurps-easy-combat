@@ -8,8 +8,6 @@ import { addDeceptiveAttackModifierForDefense } from './deceptiveAttack';
 
 export default async function rollDefense(
   roll: GurpsRoll,
-  isCounterAttack: boolean,
-  isDeceptiveAttack: string,
   attacker: Actor,
   attackerToken: Token,
   attack: MeleeAttack | RangedAttack,
@@ -19,6 +17,7 @@ export default async function rollDefense(
     damage: Modifier[];
   },
   target: Token,
+  { isCounterAttack = false, isDeceptiveAttack = '', isDisarmingAttack = false },
 ): Promise<boolean> {
   if (!target.actor) {
     ui.notifications?.error('target has no actor');
@@ -26,7 +25,12 @@ export default async function rollDefense(
   }
   addCounterAttackModifiersForDefense(isCounterAttack, attacker, attack, modifiers, target);
   addDeceptiveAttackModifierForDefense(isDeceptiveAttack, modifiers);
-  const defenseSucess = await DefenseChooser.requestDefense(target, modifiers.defense, attackerToken.id);
+  const defenseSucess = await DefenseChooser.requestDefense(
+    target,
+    modifiers.defense,
+    attackerToken.id,
+    !isDisarmingAttack,
+  );
   doAnimationDefense(target.actor, defenseSucess);
   if (defenseSucess) {
     const successDefenses = <{ attackers: string[]; round: number } | undefined>(

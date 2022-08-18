@@ -1,6 +1,28 @@
 import { MeleeAttack, Modifier, RangedAttack } from '../../types';
-import { ensureDefined, getBulk, getManeuver } from '../../util/miscellaneous';
-import { MODULE_NAME } from '../../util/constants';
+import { ensureDefined, findSkillSpell, getBulk, getManeuver } from '../../util/miscellaneous';
+import { FENCING_WEAPONS, MODULE_NAME } from '../../util/constants';
+
+function getDisarmAttackModifiers(actor: Actor, attack: MeleeAttack): Modifier | undefined {
+  const { name, level } = attack;
+  const levelModifier = 0;
+  const skill = findSkillSpell(actor, 'Disarming ', true, false);
+  const isFencingWeapon = FENCING_WEAPONS.some((v) => name.toUpperCase().includes(v));
+  let levelCounter = isFencingWeapon ? levelModifier - 2 : levelModifier - 4;
+  if (skill) {
+    const weapon = skill.name.split('Disarming ').join('');
+    if (name.indexOf(weapon) > -1) {
+      levelCounter = level - skill.level;
+    }
+  }
+
+  if (levelCounter) {
+    return {
+      mod: levelCounter,
+      desc: 'Por desarme',
+    };
+  }
+  return undefined;
+}
 
 export function getMeleeModifiers(
   attack: MeleeAttack,
@@ -12,6 +34,8 @@ export function getMeleeModifiers(
     isUsingFatigueForMightyBlows = false,
     isUsingDeceptiveAttack = '',
     isRapidStrikeAttacks = false,
+    isCounterAttack = false,
+    isDisarmAttack = false,
   },
 ): {
   attack: Modifier[];
@@ -46,6 +70,13 @@ export function getMeleeModifiers(
     if (!isNaN(Number(isUsingDeceptiveAttack)) && Number(isUsingDeceptiveAttack) !== 0) {
       const deceptiveAttack = Number(isUsingDeceptiveAttack);
       modifiers.attack.push({ mod: deceptiveAttack, desc: 'Por ataque engañoso' });
+    }
+  }
+
+  if (isDisarmAttack) {
+    const disarmModifier = getDisarmAttackModifiers(token.actor, attack);
+    if (disarmModifier) {
+      modifiers.attack.push(disarmModifier);
     }
   }
 
@@ -88,7 +119,13 @@ export function getRangedModifiers(
   token: Token,
   target: Token,
   removeFlags = false,
-  { isUsingFatigueForMoveAndAttack = false, isUsingFatigueForMightyBlows = false, isRapidStrikeAttacks = false },
+  {
+    isUsingFatigueForMoveAndAttack = false,
+    isUsingFatigueForMightyBlows = false,
+    isRapidStrikeAttacks = false,
+    isCounterAttack = false,
+    isDisarmAttack = false,
+  },
 ): {
   attack: Modifier[];
   defense: Modifier[];

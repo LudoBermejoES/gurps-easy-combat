@@ -86,6 +86,7 @@ export interface MeleeAttack extends Attack {
   parry: string;
   block: string;
   notes: string;
+  otf: string;
 }
 export interface RangedAttack extends Attack {
   acc: string;
@@ -96,6 +97,7 @@ export interface RangedAttack extends Attack {
   rcl: string;
   rof: string;
   shots: string;
+  otf: string;
 }
 interface Advantage {
   name: string;
