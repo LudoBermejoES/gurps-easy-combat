@@ -14,6 +14,8 @@ export const ACROBATICS = 'Acrobatics';
 
 export const FENCING_WEAPONS = ['MAIN-GAUCHE', 'RAPIER', 'SABER', 'Smallsword'];
 
+export const DISARM_WEAPONS = ['SAI', 'JITTE', 'WHIP', 'RAPIER'];
+
 export const FAST_DRAW_ARROW_WEAPONS = ['CROSSBOW', ' BOW'];
 export const FAST_DRAW_SWORD_WEAPONS = ['RAPIER', ' SHORTSWORD', 'BASTARD SWORD', 'BROADSWORD', 'LONGSWORD'];
 export const FAST_DRAW_TWO_HANDED_SWORD_WEAPONS = ['GREATSWORD'];

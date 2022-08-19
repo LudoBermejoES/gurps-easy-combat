@@ -22,18 +22,21 @@ import {
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from '../util/attacksDataTransformation';
+import { equippedItem, getEquippedItems } from '../util/weaponMacrosCTA';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 
 export default class WeaponChooser extends BaseActorController {
-  promiseFuncs: PromiseFunctions<string> | undefined;
+  promiseFuncs: PromiseFunctions<{ otf: string; hand: string }> | undefined;
   weaponData: weaponNotToBeReady[];
+  token: Token;
 
-  constructor(token: Token, promiseFuncs?: PromiseFunctions<string>) {
+  constructor(token: Token, promiseFuncs?: PromiseFunctions<{ otf: string; hand: string }>) {
     super('WeaponChooser', token, {
       title: `Weapon Chooser - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/weaponChooser.hbs`,
     });
+    this.token = token;
     this.weaponData = [];
     this.promiseFuncs = promiseFuncs;
   }
@@ -76,19 +79,21 @@ export default class WeaponChooser extends BaseActorController {
     });
   }
 
-  weaponSelect(index: number): string {
+  async weaponSelect(index: number) {
+    const weapons: equippedItem[] = await getEquippedItems(this.token.document);
+
     const { melee, ranged } = getAttacks(this.actor);
     const attackSelect = [...melee, ...ranged].find((attack) => attack.itemid === this.weaponData[index].itemid);
+    const weaponSelect = weapons.find((w) => w.itemId === this.weaponData[index].itemid);
     const otf = attackSelect?.otf || '';
     if (this.promiseFuncs) {
-      this.promiseFuncs.resolve(otf);
+      this.promiseFuncs.resolve({ otf, hand: weaponSelect?.hand || '' });
     }
     this.closeForEveryone();
-    return otf;
   }
 
-  static request(token: Token): Promise<string> {
-    const promise = new Promise<string>((resolve, reject) => {
+  static request(token: Token): Promise<{ otf: string; hand: string }> {
+    const promise = new Promise<{ otf: string; hand: string }>((resolve, reject) => {
       new WeaponChooser(token, { resolve, reject }).render(true);
     });
     return promise;

@@ -253,7 +253,7 @@ export function getDisarmAttackData(
   actor: Actor,
 ): meleeAttackWithRemainingRounds[] {
   return melee
-    .filter((item: meleeAttackWithRemainingRounds) => item.parry.toLowerCase() !== 'no')
+    .filter((item: meleeAttackWithRemainingRounds) => String(item.parry).toLowerCase() !== 'no')
     .map((item: meleeAttackWithRemainingRounds) => {
       const { levelWithModifiers, originalName } = item;
       return {

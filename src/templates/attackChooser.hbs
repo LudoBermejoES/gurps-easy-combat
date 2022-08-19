@@ -89,7 +89,7 @@
 
   <div id="basicAttacks">
     {{#if melee.items.length}}
-      <br>
+      <div style="text-align: right; margin-bottom: 5px"><input id="showAdvancedCombat" type="button" value="Maniobras de combate avanzadas" /></div>
       <h2>Cuerpo a cuerpo</h2>
       <div class="nostyles">
         <label>
@@ -127,12 +127,10 @@
       {{> choiceTable weaponsToBeReady}}
     {{/if}}
     <br>
-    <input id="showAdvancedCombat" type="button" value="Ver maniobras de combate avanzadas" />
   </div>
 
   <div id="advancedAttacks" style="display: none">
-    <input id="showBasicCombat" type="button" value="Volver a las maniobras básicas" />
-    <br>
+    <div style="text-align: right; margin-bottom: 5px"><input id="showBasicCombat"  type="button" value="Volver a las maniobras básicas" /></div>
     <h2>Maniobras de combate avanzadas</h2>
     {{#if disarmAttack.items.length}}
       <br>
