@@ -112,14 +112,14 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
       },
       (index, element, type) => {
         const content = element.closest('.window-content');
-        $('#maneuver_details').remove();
+        $('#extra_details').remove();
         const selected = type || 'basic';
         const maneuver =
           selected === 'basic' ? this.getManeuversData().basic[index] : this.getManeuversData().advanced[index];
 
         const html = $(`#${maneuver.key}`).clone().html();
         content.append(
-          `<div class="app window-app" id='maneuver_details' style="z-index: 101; width: 300px; left: 100%; height: '${content.height()}'">${html}</div>`,
+          `<div class="app window-app" id='extra_details' style="z-index: 101; width: 300px; left: 100%; height: '${content.height()}'">${html}</div>`,
         );
       },
     );

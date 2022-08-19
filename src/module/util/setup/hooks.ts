@@ -49,6 +49,7 @@ export function registerHooks(): void {
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastAodDouble');
         combatant?.token?.unsetFlag(MODULE_NAME, 'choosingManeuver');
         combatant?.token?.unsetFlag(MODULE_NAME, 'successDefenses');
       });

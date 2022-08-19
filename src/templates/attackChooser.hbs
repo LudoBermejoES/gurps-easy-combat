@@ -66,13 +66,6 @@
     {{/if}}
   {{else}}
 
-    {{#ifEquals maneuver "move_and_attack"}}
-      <div class="nostyles">
-        <label>
-          <input type="checkbox" id="fatigueMoveAndAttack" class="onlyOne" />Gastas uno de fatiga para poder mover y atacar sin el penalizador
-        </label>
-      </div>
-    {{/ifEquals}}
 
     {{#unless beforeCombat}}
       <div class="location_layer">
@@ -91,14 +84,22 @@
     {{#if melee.items.length}}
       <div style="text-align: right; margin-bottom: 5px"><input id="showAdvancedCombat" type="button" value="Maniobras de combate avanzadas" /></div>
       <h2>Cuerpo a cuerpo</h2>
+      {{#ifEquals maneuver "move_and_attack"}}
+        <div class="nostyles">
+          <label>
+            <input type="checkbox" id="fatigueMoveAndAttack" class="onlyOne" {{ checked data.isUsingFatigueForMoveAndAttack }}/>Gastas uno de fatiga para poder mover y atacar sin el penalizador
+          </label>
+        </div>
+      {{/ifEquals}}
+
       <div class="nostyles">
         <label>
-          <input type="checkbox" id="rapidStrikeAttacks" />Realizas dos ataques seguidos con un -6 cada uno
+          <input type="checkbox" id="rapidStrikeAttacks" {{ checked data.isRapidStrikeAttacks }} />Realizas dos ataques seguidos con un -6 cada uno
         </label>
       </div>
       <div class="nostyles">
         <label>
-         <input type="checkbox" id="fatigueMightyBlows"  class="onlyOne" />Gastas uno de fatiga para hacer un +2 al daño
+         <input type="checkbox" id="fatigueMightyBlows"  class="onlyOne" {{ checked data.isUsingFatigueForMightyBlows }} />Gastas uno de fatiga para hacer un +2 al daño
         </label>
       </div>
       <div class="nostyles">

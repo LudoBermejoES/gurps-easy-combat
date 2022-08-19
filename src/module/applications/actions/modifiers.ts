@@ -82,7 +82,6 @@ export function getMeleeModifiers(
 
   const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
   if (location && location.bonus) {
-    token.document.unsetFlag(MODULE_NAME, 'location');
     modifiers.attack.push({ mod: location.bonus, desc: location.where });
   }
 

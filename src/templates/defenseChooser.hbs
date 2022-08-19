@@ -18,35 +18,35 @@
   }
 </style>
 <div>
-  <div>¡Te están atacando! Elige tu defensa!</div>
+  <div>¡Te están atacando! Escoge tu defensa!</div>
   <br>
   <div class="nostyles">
-    <label>
-      <input type="checkbox" id="feverishDefense"/>Gastas un punto de fatiga para ganar un +2 en la defensa que escojas
+    <label>2
+      <input type="checkbox" id="feverishDefense" {{ checked data.feverishDefense}}/>Gastas un punto de fatiga para ganar un +2 en la defensa que escojas
     </label>
   </div>
   <div class="nostyles">
     <label>
-      <input type="checkbox" id="retreatDefense" class="onlyOne"/>Retrocedes un paso para ganar +3 a Esquivar (o un +1 a Parar y Bloquear). Tendrás un -2 al Ataque en el
+      <input type="checkbox" id="retreatDefense" {{ checked data.retreatDefense}} class="onlyOne"/>Retrocedes un paso para ganar +3 a Esquivar (o un +1 a Parar y Bloquear). Tendrás un -2 al Ataque en el
       próximo turno
     </label>
   </div>
   <div class="nostyles">
     <label>
-      <input type="checkbox" id="proneDefense" class="onlyOne"/>Te tiras al suelo y ganas un +3 a Esquivar (pero acabas tumbado). Útil en ataques a distancia
+      <input type="checkbox" id="proneDefense" {{ checked data.proneDefense}} class="onlyOne"/>Te tiras al suelo y ganas un +3 a Esquivar (pero acabas tumbado). Útil en ataques a distancia
     </label>
   </div>
   <br>
   {{#if canDodge}}
     <h2>Esquiva</h2>
-    <table>
-      <tr class="clickable" id="dodge">
+    <table id="dodges">
+      <tr class="clickable" id="dodge" index="0">
         <td>Esquivar</td>
         <td>{{dodge}}</td>
         <td>¡Intenta esquivar el golpe!</td>
       </tr>
       {{#if acrobaticDodge}}
-        <tr class="clickable" id="acrobatic-dodge">
+        <tr class="clickable" id="acrobatic-dodge" index="1">
           <td>
             Esquiva acrobática
           </td>
@@ -63,26 +63,16 @@
 
   {{#if canParry}}
     {{#if parries.items.length}}
-      <h2>Parada</h2>
+      <h2>Paradas</h2>
       {{> choiceTable parries}}
     {{/if}}
   {{/if}}
   {{#if canBlock}}
-    {{#if block}}
-      <h2>Bloqueo</h2>
-      <table>
-        <tr class="header">
-          <td>Bloquear con</td>
-          <td>Nivel</td>
-        </tr>
-        {{#each block as |blockValue|}}
-          <tr class="clickable blockRow" weapon="{{@key}}">
-            <td>{{@key}}</td>
-            <td>{{blockValue}}</td>
-          </tr>
-        {{/each}}
-      </table>
+    {{#if blocks.items.length}}
+      <h2>Bloqueos</h2>
+      {{> choiceTable blocks}}
     {{/if}}
   {{/if}}
+
 </div>
 

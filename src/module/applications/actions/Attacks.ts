@@ -1,32 +1,6 @@
-import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded } from '../../types';
+import { Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverNeeded } from '../../types';
 import { getAmmunnitionFromInventory } from '../../util/weapons';
-
-export interface meleeAttackWithRemainingRounds {
-  weapon: string;
-  originalName: string;
-  mode: string;
-  level: number;
-  damage: string;
-  reach: string;
-  notes: string;
-  itemid: string;
-  remainingRounds: number;
-}
-
-export interface rangedAttackWithRemainingRounds {
-  weapon: string;
-  mode: string;
-  level: number;
-  damage: string;
-  range: string;
-  accuracy: string;
-  bulk: string;
-  notes: string;
-  itemid: string;
-  rof: string;
-  rcl: string;
-  remainingRounds: number;
-}
+import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from '../../util/attacksDataTransformation';
 
 export function getMeleeAttacksWithReadyWeapons(
   melee: MeleeAttack[],
@@ -34,7 +8,7 @@ export function getMeleeAttacksWithReadyWeapons(
   weapons: Item[],
 ): meleeAttackWithRemainingRounds[] {
   return melee
-    .map(({ name, alternateName, mode, level, damage, reach, notes, itemid }) => {
+    .map(({ name, alternateName, mode, level, damage, reach, notes, itemid, parry, block }) => {
       const readyNeeded = readyActionsWeaponNeeded?.items.find((item) => item.itemId === itemid) || {
         itemId: '',
         remainingRounds: 0,
@@ -44,11 +18,15 @@ export function getMeleeAttacksWithReadyWeapons(
         originalName: name,
         mode,
         level,
+        parry,
+        block,
         damage,
         reach,
         notes,
         itemid,
+        levelWithModifiers: level,
         remainingRounds: readyNeeded?.remainingRounds || 0,
+        modifiers: [],
       };
     })
     .filter((item: meleeAttackWithRemainingRounds) => {
@@ -79,6 +57,7 @@ export function getRangedAttacksWithReadyWeapons(
       };
       return {
         weapon: alternateName || name,
+        originalName: name,
         mode,
         level,
         damage,
@@ -89,6 +68,8 @@ export function getRangedAttacksWithReadyWeapons(
         itemid,
         rof,
         rcl,
+        levelWithModifiers: level,
+        modifiers: [],
         remainingRounds: readyNeeded?.remainingRounds || 0,
       };
     })

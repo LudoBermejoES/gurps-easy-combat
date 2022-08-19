@@ -1,7 +1,15 @@
 import { makeAttackInner } from '../attackWorkflow.js';
 import { FAST_DRAW_SKILLS, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants.js';
 import { getAttacks, getHitLocations } from '../dataExtractor.js';
-import { ChooserData, Item, MeleeAttack, PromiseFunctions, RangedAttack, ReadyManeouverNeeded } from '../types.js';
+import {
+  ChooserData,
+  Item,
+  MeleeAttack,
+  Modifier,
+  PromiseFunctions,
+  RangedAttack,
+  ReadyManeouverNeeded,
+} from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
 import {
   activateChooser,
@@ -56,6 +64,10 @@ export interface AttackData {
   beforeCombat?: boolean;
   maneuver?: string;
   locationToAttack?: any;
+  isUsingFatigueForMoveAndAttack?: boolean;
+  isUsingFatigueForMightyBlows?: boolean;
+  isUsingDeceptiveAttack?: string;
+  isRapidStrikeAttacks?: boolean;
 }
 
 export default class AttackChooser extends BaseActorController {
@@ -178,12 +190,14 @@ export default class AttackChooser extends BaseActorController {
       rangedData,
       this.actor,
       this.token,
+      this.data,
     );
 
     const counterAttackData = getCounterAttackData(meleeAttacksWithModifier, this.token, this.actor);
     const disarmAttackData = getDisarmAttackData(game, this.token, meleeAttacksWithModifier, this.actor);
     this.counterAttackData = counterAttackData;
     this.disarmAttackData = disarmAttackData;
+    2;
 
     const location: any = this.token.document.getFlag(MODULE_NAME, 'location');
     this.data.locationToAttack = getLocationData(game, location?.where || 'torso');
@@ -231,11 +245,135 @@ export default class AttackChooser extends BaseActorController {
     };
   }
 
+  async calculateAttack(
+    mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
+    index: number,
+    element: any | undefined,
+  ): Promise<
+    | {
+        attack: MeleeAttack | RangedAttack;
+        modifiers: any;
+        target: Token;
+        isRapidStrikeAttacks: boolean;
+        isUsingDeceptiveAttack: string;
+        iMode: 'ranged' | 'melee';
+      }
+    | undefined
+  > {
+    const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
+    if (isUsingFatigueForMoveAndAttack && element) {
+      useFatigue(this.actor);
+    }
+    const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
+    if (isUsingFatigueForMightyBlows && element) {
+      useFatigue(this.actor);
+    }
+
+    const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
+    const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
+    const iMode = mode === 'counter_attack' || mode === 'disarm_attack' ? 'melee' : mode;
+    const isCounterAttack = mode === 'counter_attack';
+    const isDisarmAttack = mode === 'disarm_attack';
+
+    ensureDefined(game.user, 'game not initialized');
+    if (!checkSingleTarget(game.user)) return;
+    const target = getTargets(game.user)[0];
+    ensureDefined(target.actor, 'target has no actor');
+    let meleeDataFinal = this.meleeData;
+
+    if (isDisarmAttack) {
+      meleeDataFinal = this.disarmAttackData;
+    }
+
+    if (isCounterAttack) {
+      meleeDataFinal = this.counterAttackData;
+    }
+
+    const { attack, modifiers } = await calculateModifiersFromAttack(
+      mode,
+      index,
+      element,
+      target,
+      this.actor,
+      this.token,
+      this.rangedData,
+      meleeDataFinal,
+      {
+        isUsingFatigueForMoveAndAttack,
+        isUsingFatigueForMightyBlows,
+        isUsingDeceptiveAttack,
+        isRapidStrikeAttacks,
+        isCounterAttack,
+        isDisarmAttack,
+      },
+      true,
+    );
+    return {
+      attack,
+      modifiers,
+      target,
+      isRapidStrikeAttacks,
+      isUsingDeceptiveAttack,
+      iMode,
+    };
+  }
+
+  async showModifiers(
+    mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
+    index: number,
+    element: any | undefined,
+  ): Promise<void> {
+    setTimeout(async () => {
+      const attackCalculated = await this.calculateAttack(mode, index, undefined);
+      if (!attackCalculated) return;
+      const { modifiers } = attackCalculated;
+
+      if (modifiers.attack.length) {
+        const content = element.closest('.window-content');
+        $('#extra_details').remove();
+
+        let html = '<div><div class="card-title">Ataque</div></div><ul class="modifier-list">';
+
+        modifiers.attack.forEach((m: Modifier) => {
+          if (m.mod > 0) {
+            html += `<li class="glinkmodplus">+${m.mod} ${m.desc}</li>`;
+          } else if (m.mod < 0) {
+            html += `<li class="glinkmodminus">${m.mod} ${m.desc}</li>`;
+          } else {
+            html += `<li>+${m.mod} ${m.desc}</li>`;
+          }
+        });
+
+        html += '</ul></div>';
+        content.append(
+          `<div class="app window-app" id='extra_details' style="z-index: 101; width: 300px; left: 100%; height: '${content.height()}'">${html}</div>`,
+        );
+      }
+    }, 10);
+    $(element).on('mouseout', () => {
+      $('#extra_details').remove();
+    });
+  }
+
   activateListeners(html: JQuery): void {
     html.on('change', '.onlyOne', (evt) => {
       const lastValue = $(evt.target).prop('checked');
       $('.onlyOne').prop('checked', false);
       $(evt.target).prop('checked', lastValue);
+    });
+
+    html.on('change', '#fatigueMoveAndAttack, #rapidStrikeAttacks, #fatigueMightyBlows, #deceptiveAttack', (evt) => {
+      setTimeout(() => {
+        const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
+        const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
+        const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
+        const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
+        this.data.isUsingFatigueForMoveAndAttack = isUsingFatigueForMoveAndAttack;
+        this.data.isUsingDeceptiveAttack = isUsingDeceptiveAttack;
+        this.data.isUsingFatigueForMightyBlows = isUsingFatigueForMightyBlows;
+        this.data.isRapidStrikeAttacks = isRapidStrikeAttacks;
+        this.render(false);
+      }, 50);
     });
 
     html.on('click', '#showAdvancedCombat', () => {
@@ -253,11 +391,29 @@ export default class AttackChooser extends BaseActorController {
       this.closeForEveryone();
     });
 
-    activateChooser(html, 'disarm_attacks', (index: number) => this.makeAttack('disarm_attack', index, undefined));
-    activateChooser(html, 'counter_attacks', (index: number) => this.makeAttack('counter_attack', index, undefined));
-    activateChooser(html, 'melee_attacks', (index: number) => this.makeAttack('melee', index, undefined));
-    activateChooser(html, 'ranged_attacks', (index: number, element: JQuery<any>) =>
-      this.makeAttack('ranged', index, element),
+    activateChooser(
+      html,
+      'disarm_attacks',
+      (index: number) => this.makeAttack('disarm_attack', index, undefined),
+      (index: number, element: JQuery<any>) => this.showModifiers('disarm_attack', index, element),
+    );
+    activateChooser(
+      html,
+      'counter_attacks',
+      (index: number) => this.makeAttack('counter_attack', index, undefined),
+      (index: number, element: JQuery<any>) => this.showModifiers('counter_attack', index, element),
+    );
+    activateChooser(
+      html,
+      'melee_attacks',
+      (index: number) => this.makeAttack('melee', index, undefined),
+      (index: number, element: JQuery<any>) => this.showModifiers('melee', index, element),
+    );
+    activateChooser(
+      html,
+      'ranged_attacks',
+      (index: number, element: JQuery<any>) => this.makeAttack('ranged', index, element),
+      (index: number, element: JQuery<any>) => this.showModifiers('ranged', index, element),
     );
     activateChooser(html, 'weapons_to_be_ready', (index: number) => this.readyWeapon(index));
     activateChooser(html, 'weapons_not_to_be_ready', (index: number) => this.unReadyWeaponChooser(index));
@@ -463,55 +619,9 @@ export default class AttackChooser extends BaseActorController {
     index: number,
     element: any | undefined,
   ): Promise<void> {
-    const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
-    if (isUsingFatigueForMoveAndAttack) {
-      useFatigue(this.actor);
-    }
-    const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
-    if (isUsingFatigueForMightyBlows) {
-      useFatigue(this.actor);
-    }
-
-    const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
-    const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
-    const iMode = mode === 'counter_attack' || mode === 'disarm_attack' ? 'melee' : mode;
-    const isCounterAttack = mode === 'counter_attack';
-    const isDisarmAttack = mode === 'disarm_attack';
-
-    ensureDefined(game.user, 'game not initialized');
-    if (!checkSingleTarget(game.user)) return;
-    const target = getTargets(game.user)[0];
-    ensureDefined(target.actor, 'target has no actor');
-
-    let meleeDataFinal = this.meleeData;
-
-    if (isDisarmAttack) {
-      meleeDataFinal = this.disarmAttackData;
-    }
-
-    if (isCounterAttack) {
-      meleeDataFinal = this.counterAttackData;
-    }
-
-    const { attack, modifiers } = await calculateModifiersFromAttack(
-      mode,
-      index,
-      element,
-      target,
-      this.actor,
-      this.token,
-      this.rangedData,
-      meleeDataFinal,
-      {
-        isUsingFatigueForMoveAndAttack,
-        isUsingFatigueForMightyBlows,
-        isUsingDeceptiveAttack,
-        isRapidStrikeAttacks,
-        isCounterAttack,
-        isDisarmAttack,
-      },
-      true,
-    );
+    const attackCalculated = await this.calculateAttack(mode, index, element);
+    if (!attackCalculated) return;
+    const { attack, modifiers, target, isRapidStrikeAttacks, isUsingDeceptiveAttack, iMode } = attackCalculated;
 
     const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
     const weapon: Item | undefined = getWeaponFromAttack(this.actor, attack);
@@ -533,8 +643,6 @@ export default class AttackChooser extends BaseActorController {
         this.data.attackCount = 2;
       }
     }
-
-    debugger;
 
     await makeAttackInner(
       this.actor,

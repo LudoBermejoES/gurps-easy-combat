@@ -1,5 +1,5 @@
 import { Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverNeeded } from '../types';
-import { getAmmunnitionFromInventory, getWeaponsFromAttacks } from '../util/weapons';
+import { getAmmunnitionFromInventory } from '../util/weapons';
 import {
   checkSingleTarget,
   ensureDefined,
@@ -9,6 +9,7 @@ import {
 } from './miscellaneous';
 import { MODULE_NAME } from './constants';
 import { calculateModifiersFromAttack } from './modifiers';
+import { AttackData } from '../applications/attackChooser';
 
 export interface counterAndDisarmAttackData {
   weapon: string;
@@ -32,6 +33,7 @@ export interface meleeAttackWithRemainingRounds {
   itemid: string;
   levelWithModifiers: number;
   remainingRounds: number;
+  modifiers: Modifier[];
 }
 
 export interface rangedAttackWithRemainingRounds {
@@ -49,6 +51,7 @@ export interface rangedAttackWithRemainingRounds {
   rcl: string;
   levelWithModifiers: number;
   remainingRounds: number;
+  modifiers: Modifier[];
 }
 
 export function getMeleeAttacksWithReadyWeapons(
@@ -75,6 +78,7 @@ export function getMeleeAttacksWithReadyWeapons(
         notes,
         itemid,
         remainingRounds: readyNeeded?.remainingRounds || 0,
+        modifiers: [],
       };
     })
     .filter((item: meleeAttackWithRemainingRounds) => {
@@ -118,6 +122,7 @@ export function getRangedAttacksWithReadyWeapons(
         rof,
         rcl,
         remainingRounds: readyNeeded?.remainingRounds || 0,
+        modifiers: [],
       };
     })
     .filter((item: rangedAttackWithRemainingRounds) => {
@@ -268,10 +273,22 @@ export async function getAttacksWithModifiers(
   ranged: rangedAttackWithRemainingRounds[],
   actor: Actor,
   token: Token,
+  data: AttackData | undefined,
 ): Promise<{
   meleeAttacksWithModifier: meleeAttackWithRemainingRounds[];
   rangedAttacksWithModifier: rangedAttackWithRemainingRounds[];
 }> {
+  const isUsing: {
+    isUsingFatigueForMoveAndAttack: boolean;
+    isUsingFatigueForMightyBlows: boolean;
+    isUsingDeceptiveAttack: string;
+    isRapidStrikeAttacks: boolean;
+  } = {
+    isUsingFatigueForMoveAndAttack: data?.isUsingFatigueForMoveAndAttack || false,
+    isUsingFatigueForMightyBlows: data?.isUsingFatigueForMightyBlows || false,
+    isUsingDeceptiveAttack: data?.isUsingDeceptiveAttack || '0',
+    isRapidStrikeAttacks: data?.isRapidStrikeAttacks || false,
+  };
   ensureDefined(game.user, 'game not initialized');
   const target = getTargets(game.user)[0];
   if (!target)
@@ -290,7 +307,7 @@ export async function getAttacksWithModifiers(
       token,
       ranged,
       melee,
-      { isUsingFatigueForMoveAndAttack: false, isUsingFatigueForMightyBlows: false, isUsingDeceptiveAttack: '0' },
+      isUsing,
     );
 
     let level = m.level;
@@ -300,6 +317,7 @@ export async function getAttacksWithModifiers(
     return {
       ...m,
       levelWithModifiers: level,
+      modifiers,
     } as meleeAttackWithRemainingRounds;
   });
   const rangedAttacksWithModifierPromises = ranged.map(async (r: rangedAttackWithRemainingRounds, i: number) => {
@@ -312,7 +330,7 @@ export async function getAttacksWithModifiers(
       token,
       ranged,
       melee,
-      { isUsingFatigueForMoveAndAttack: false, isUsingFatigueForMightyBlows: false, isUsingDeceptiveAttack: '0' },
+      isUsing,
     );
 
     let level = r.level;
@@ -322,6 +340,7 @@ export async function getAttacksWithModifiers(
     return {
       ...r,
       levelWithModifiers: level,
+      modifiers,
     } as rangedAttackWithRemainingRounds;
   });
   const meleeAttacksWithModifier = await Promise.all(meleeAttacksWithModifierPromises);

@@ -46,7 +46,13 @@ export default class Feint extends BaseActorController {
       weapons,
     );
     const meleeData: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithNotReamingRounds(meleeDataOriginal);
-    const { meleeAttacksWithModifier } = await getAttacksWithModifiers(meleeData, [], this.actor, this.token);
+    const { meleeAttacksWithModifier } = await getAttacksWithModifiers(
+      meleeData,
+      [],
+      this.actor,
+      this.token,
+      undefined,
+    );
     return {
       items: meleeAttacksWithModifier,
       headers: ['weapon', 'mode', 'levelWithModifiers', 'level', 'damage', 'reach'],
