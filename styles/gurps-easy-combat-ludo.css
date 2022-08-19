@@ -81,3 +81,7 @@ table .selected {
 .levelWithModifiers {
   color: #800000
 }
+
+.header-button.close {
+  display: none
+}
