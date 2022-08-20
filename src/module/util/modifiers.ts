@@ -8,7 +8,7 @@ import {
 import AttackChooser from '../applications/attackChooser';
 import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
 import { checkOffHand } from './offHand';
-import { MODULE_NAME } from './constants';
+import { MODULE_NAME, POSTURE_MODIFIERS } from './constants';
 import { ShockPenalty } from './damage';
 
 export async function calculateModifiersFromAttack(
@@ -155,6 +155,31 @@ export function getModifierByShock(token: TokenDocument): Modifier[] {
         desc: 'Por shock',
       },
     ];
+  }
+  return [];
+}
+
+export function getModifierByPosture(actor: Actor, mode: 'ATTACK' | 'DEFENSE'): Modifier[] {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const posture = actor.data.data.conditions.posture;
+  if (posture) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const postureModifiers = POSTURE_MODIFIERS[posture.toUpperCase()];
+    if (postureModifiers) {
+      const defenseOrAttack = postureModifiers[mode];
+      if (defenseOrAttack) {
+        return [
+          {
+            mod: defenseOrAttack,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            desc: `Por postura: ${actor.data.data.conditions.posture}`,
+          },
+        ];
+      }
+    }
   }
   return [];
 }

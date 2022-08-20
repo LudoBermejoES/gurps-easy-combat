@@ -17,7 +17,11 @@ import {
 import { ChooserData, Modifier, Skill } from '../types';
 import { applyModifiers } from '../util/actions';
 import { useFatigue } from '../util/fatigue';
-import { calculateDefenseModifiersFromEquippedWeapons, getModifierByShock } from '../util/modifiers';
+import {
+  calculateDefenseModifiersFromEquippedWeapons,
+  getModifierByPosture,
+  getModifierByShock,
+} from '../util/modifiers';
 import {
   Block,
   getDefenseModifiersByManeuver,
@@ -72,6 +76,7 @@ export default class DefenseChooser extends BaseActorController {
     const maneuver = Maneuvers.getAll()[getManeuver(actor)]._data;
 
     const modifiersByShock = getModifierByShock(this.token.document);
+    const modifiersByPosture = getModifierByPosture(this.actor, 'DEFENSE');
     const { modifiers: modifiersBySelectionParry } = getDefenseModifiersBySelection('PARRY');
     const { modifiers: modifiersBySelectionBlock } = getDefenseModifiersBySelection('BLOCK');
     const { modifiers: modifiersBySelectionDodge } = getDefenseModifiersBySelection('DODGE');
@@ -85,17 +90,29 @@ export default class DefenseChooser extends BaseActorController {
       bonusBlock: number;
     } = await calculateDefenseModifiersFromEquippedWeapons(this.actor, this.token, this.canUseModShield);
     let sumAllModifiersParry = 0;
-    [...this.data.modifiers, ...modifiersBySelectionParry, ...modifiersByManeuverParry, ...modifiersByShock].forEach(
-      (m) => (sumAllModifiersParry += m.mod),
-    );
+    [
+      ...this.data.modifiers,
+      ...modifiersBySelectionParry,
+      ...modifiersByManeuverParry,
+      ...modifiersByShock,
+      ...modifiersByPosture,
+    ].forEach((m) => (sumAllModifiersParry += m.mod));
     let sumAllModifiersDodge = 0;
-    [...this.data.modifiers, ...modifiersBySelectionDodge, ...modifiersByManeuverDodge, ...modifiersByShock].forEach(
-      (m) => (sumAllModifiersDodge += m.mod),
-    );
+    [
+      ...this.data.modifiers,
+      ...modifiersBySelectionDodge,
+      ...modifiersByManeuverDodge,
+      ...modifiersByShock,
+      ...modifiersByPosture,
+    ].forEach((m) => (sumAllModifiersDodge += m.mod));
     let sumAllModifiersBlock = 0;
-    [...this.data.modifiers, ...modifiersBySelectionBlock, ...modifiersByManeuverBlock, ...modifiersByShock].forEach(
-      (m) => (sumAllModifiersBlock += m.mod),
-    );
+    [
+      ...this.data.modifiers,
+      ...modifiersBySelectionBlock,
+      ...modifiersByManeuverBlock,
+      ...modifiersByShock,
+      ...modifiersByPosture,
+    ].forEach((m) => (sumAllModifiersBlock += m.mod));
     const lastAodDouble = <{ mode: string; round: number } | undefined>(
       this.token.document.getFlag(MODULE_NAME, 'lastAodDouble')
     );
@@ -185,6 +202,7 @@ export default class DefenseChooser extends BaseActorController {
           ...getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'PARRY'),
           ...(await getDefenseModifiersByMode(mode, this.actor, this.token, this.canUseModShield)).modifiers,
           ...getModifierByShock(this.token.document),
+          ...getModifierByPosture(this.actor, 'DEFENSE'),
         ];
       } else if (mode === 'BLOCK') {
         modifiers = [
@@ -193,6 +211,7 @@ export default class DefenseChooser extends BaseActorController {
           ...getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'BLOCK'),
           ...(await getDefenseModifiersByMode(mode, this.actor, this.token, this.canUseModShield)).modifiers,
           ...getModifierByShock(this.token.document),
+          ...getModifierByPosture(this.actor, 'DEFENSE'),
         ];
       } else if (mode === 'DODGE') {
         modifiers = [
@@ -201,6 +220,7 @@ export default class DefenseChooser extends BaseActorController {
           ...getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'DODGE'),
           ...(await getDefenseModifiersByMode(mode, this.actor, this.token, this.canUseModShield)).modifiers,
           ...getModifierByShock(this.token.document),
+          ...getModifierByPosture(this.actor, 'DEFENSE'),
         ];
       }
 

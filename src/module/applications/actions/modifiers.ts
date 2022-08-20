@@ -2,7 +2,7 @@ import { MeleeAttack, Modifier, RangedAttack } from '../../types';
 import { ensureDefined, findSkillSpell, getBulk, getManeuver } from '../../util/miscellaneous';
 import { FENCING_WEAPONS, MODULE_NAME } from '../../util/constants';
 import { LocationToAttack } from '../../util/locationsDataTransformation';
-import { getModifierByShock } from '../../util/modifiers';
+import { getModifierByPosture, getModifierByShock } from '../../util/modifiers';
 
 function getDisarmAttackModifiers(actor: Actor, attack: MeleeAttack): Modifier | undefined {
   const { name, level } = attack;
@@ -117,6 +117,11 @@ export function getMeleeModifiers(
   const modifierByShock = getModifierByShock(token.document);
   if (modifierByShock.length) {
     modifiers.attack.push(modifierByShock[0]);
+  }
+
+  const modifierByPosture = getModifierByPosture(token.actor, 'ATTACK');
+  if (modifierByPosture.length) {
+    modifiers.attack.push(modifierByPosture[0]);
   }
 
   return modifiers;

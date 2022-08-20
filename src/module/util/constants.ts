@@ -40,3 +40,22 @@ export type StatusEffectsThanAffectManeuvers = keyof typeof STATUS_EFFECTS_THAN_
 export const STATUS_EFFECTS_THAN_AFFECT_MANEUVERS = {
   stun: 'recoverFromStun',
 };
+
+export const POSTURE_MODIFIERS = {
+  KNEEL: {
+    DEFENSE: -2,
+    ATTACK: -2,
+  },
+  CRAWL: {
+    DEFENSE: -3,
+    ATTACK: -4,
+  },
+  PRONE: {
+    DEFENSE: -3,
+    ATTACK: -4,
+  },
+  CROUCH: {
+    DEFENSE: -2,
+    ATTACK: -2,
+  },
+};
