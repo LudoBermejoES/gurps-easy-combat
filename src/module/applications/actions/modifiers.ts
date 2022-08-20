@@ -1,6 +1,7 @@
 import { MeleeAttack, Modifier, RangedAttack } from '../../types';
 import { ensureDefined, findSkillSpell, getBulk, getManeuver } from '../../util/miscellaneous';
 import { FENCING_WEAPONS, MODULE_NAME } from '../../util/constants';
+import { LocationToAttack } from '../../util/locationsDataTransformation';
 
 function getDisarmAttackModifiers(actor: Actor, attack: MeleeAttack): Modifier | undefined {
   const { name, level } = attack;
@@ -80,7 +81,9 @@ export function getMeleeModifiers(
     }
   }
 
-  const location = <{ bonus: number; where: string } | undefined>token.document.getFlag(MODULE_NAME, 'location');
+  const location: LocationToAttack | undefined = <LocationToAttack | undefined>(
+    token.document.getFlag(MODULE_NAME, 'location')
+  );
   if (location && location.bonus) {
     modifiers.attack.push({ mod: location.bonus, desc: location.where });
   }

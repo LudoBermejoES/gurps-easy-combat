@@ -44,7 +44,7 @@ import {
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from '../util/attacksDataTransformation';
-import { getHitLocationsObject, getLocationData } from '../util/locationsDataTransformation';
+import { getHitLocationsObject, getLocationData, LocationToAttack } from '../util/locationsDataTransformation';
 import { calculateModifiersFromAttack } from '../util/modifiers';
 import { calculateAmmunitionForRangedAttacks } from '../util/ammo';
 import { useFatigue } from '../util/fatigue';
@@ -63,7 +63,7 @@ export interface AttackData {
   onlyReadyActions?: boolean;
   beforeCombat?: boolean;
   maneuver?: string;
-  locationToAttack?: any;
+  locationToAttack?: LocationToAttack | undefined;
   isUsingFatigueForMoveAndAttack?: boolean;
   isUsingFatigueForMightyBlows?: boolean;
   isUsingDeceptiveAttack?: string;
@@ -89,6 +89,8 @@ export default class AttackChooser extends BaseActorController {
     name: string;
     weapon: string;
   }[];
+
+  locationToAttack: LocationToAttack | undefined;
 
   counterAttackData: meleeAttackWithRemainingRounds[] = [];
   disarmAttackData: meleeAttackWithRemainingRounds[] = [];
@@ -199,8 +201,8 @@ export default class AttackChooser extends BaseActorController {
     this.disarmAttackData = disarmAttackData;
     2;
 
-    const location: any = this.token.document.getFlag(MODULE_NAME, 'location');
-    this.data.locationToAttack = getLocationData(game, location?.where || 'torso');
+    this.locationToAttack = <LocationToAttack | undefined>this.token.document.getFlag(MODULE_NAME, 'location');
+    this.data.locationToAttack = getLocationData(game, this.locationToAttack?.where || 'torso');
 
     return {
       onlyReadyActions: this.data.onlyReadyActions || false,
@@ -655,6 +657,7 @@ export default class AttackChooser extends BaseActorController {
       mode === 'counter_attack',
       mode === 'disarm_attack',
       isUsingDeceptiveAttack,
+      this.locationToAttack,
     );
 
     if (isRapidStrikeAttacks) {
@@ -672,6 +675,7 @@ export default class AttackChooser extends BaseActorController {
           mode === 'counter_attack',
           mode === 'disarm_attack',
           isUsingDeceptiveAttack,
+          this.locationToAttack,
         );
         if (this.promiseFuncs) {
           this.promiseFuncs.resolve();

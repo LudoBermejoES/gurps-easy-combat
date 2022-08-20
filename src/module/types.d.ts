@@ -350,6 +350,8 @@ declare global {
         formula: string;
         damagetype: string;
         extdamagetype: string;
+        hitlocation?: string;
+        accumulate?: boolean;
       },
       actor: Actor,
     ): Promise<boolean>;

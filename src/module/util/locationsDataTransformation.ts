@@ -1,6 +1,11 @@
 import { getHitLocations } from '../dataExtractor';
 import { checkSingleTarget, ensureDefined, getTargets } from './miscellaneous';
 
+export interface LocationToAttack {
+  where: string;
+  bonus: number;
+}
+
 export interface hitLocationsData {
   equipment: string;
   dr: string;

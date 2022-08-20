@@ -6,6 +6,7 @@ import { playSound } from './util/sounds';
 import { addCounterAttackModifiersForAttack } from './applications/actions/counterAttack';
 import rollDefense from './applications/actions/defense';
 import rollDisarmingAttack from './applications/actions/disarmingAttack';
+import { LocationToAttack } from './util/locationsDataTransformation';
 
 export async function rollAttack(actor: Actor, attack: Attack, type: 'melee' | 'ranged'): Promise<GurpsRoll> {
   await GURPS.performAction(
@@ -39,6 +40,7 @@ async function rollDamage(
   damage: { formula: string; type: string; extra: string },
   target: Token,
   modifiers: Modifier[] = [],
+  locationToAttack: LocationToAttack,
 ) {
   ensureDefined(game.user, 'game not initialized');
   applyModifiers(modifiers);
@@ -72,6 +74,7 @@ async function rollDamage(
       formula: damage.formula,
       damagetype: damage.type,
       extdamagetype: damage.extra,
+      hitlocation: locationToAttack?.where,
     },
     actor,
   );
@@ -92,6 +95,7 @@ export async function makeAttackInner(
   isCounterAttack: boolean,
   isDisarmingAttack: boolean,
   isDeceptiveAttack: string,
+  locationToAttack: any,
 ): Promise<void> {
   if (!target.actor) {
     ui.notifications?.error('target has no actor');
@@ -137,10 +141,15 @@ export async function makeAttackInner(
 
   await playSound(target.actor, weapon, 0);
   const damageParts = attack.damage.split(' ');
-  const damage = { formula: damageParts[0], type: damageParts[1], extra: damageParts[2] };
+
+  const damage = {
+    formula: damageParts[0],
+    type: damageParts[1],
+    extra: damageParts[2],
+  };
   if (roll.rofrcl) {
     for (let i = 1; i <= roll.rofrcl; i++) {
-      rollDamage(attacker, damage, target, modifiers.damage);
+      rollDamage(attacker, damage, target, modifiers.damage, locationToAttack);
     }
-  } else rollDamage(attacker, damage, target, modifiers.damage);
+  } else rollDamage(attacker, damage, target, modifiers.damage, locationToAttack);
 }
