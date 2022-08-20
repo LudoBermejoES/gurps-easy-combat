@@ -1,13 +1,33 @@
 import { registerSettings } from './settings.js';
 import { registerHelpers, registerPartials } from './handlebars.js';
-import { MODULE_NAME } from '../constants.js';
+import { MODULE_NAME, STATUS_EFFECTS_THAN_AFFECT_MANEUVERS, StatusEffectsThanAffectManeuvers } from '../constants.js';
 import ManeuverChooser from '../../applications/maneuverChooser.js';
-import { ensureDefined, highestPriorityUsers } from '../miscellaneous.js';
+import { ensureDefined, hasEffect, highestPriorityUsers } from '../miscellaneous.js';
 import AttackChooser from '../../applications/attackChooser.js';
 import { registerFunctions } from './socketkib.js';
 import { getUserFromCombatant } from '../combatants';
 import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs';
 import { prepareReadyWeapons } from '../readyWeapons';
+import { applyModifiersByDamage } from '../damage';
+import DefenseChooser from '../../applications/defenseChooser';
+import { beforeManeuvers, BeforeManeuversKey } from '../../applications/actions/beforeManeuvers';
+
+async function setActionByActiveEffect(actor: Actor, tokenSelected: Token) {
+  for (const effectName in STATUS_EFFECTS_THAN_AFFECT_MANEUVERS) {
+    const effectFunction = STATUS_EFFECTS_THAN_AFFECT_MANEUVERS[effectName as StatusEffectsThanAffectManeuvers];
+    if (hasEffect(actor, effectName)) {
+      const f: any = beforeManeuvers[effectFunction as BeforeManeuversKey];
+      if (f) {
+        const result = await f(actor);
+        if (!result) return;
+      }
+    }
+  }
+  ensureDefined(game.user, 'No user selected');
+  if (highestPriorityUsers(actor).includes(game.user) && game.settings.get(MODULE_NAME, 'maneuver-chooser-on-turn')) {
+    new ManeuverChooser(tokenSelected).render(true);
+  }
+}
 
 export function registerHooks(): void {
   Hooks.once('socketlib.ready', registerFunctions);
@@ -52,6 +72,7 @@ export function registerHooks(): void {
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastAodDouble');
         combatant?.token?.unsetFlag(MODULE_NAME, 'choosingManeuver');
         combatant?.token?.unsetFlag(MODULE_NAME, 'successDefenses');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'shockPenalties');
       });
     }
   };
@@ -110,6 +131,10 @@ export function registerHooks(): void {
       ui.notifications?.error('No puedes mover tanto: tu movimiento restante es ' + restOfMovement + ' casillas');
       return false;
     }
+  });
+
+  Hooks.on('updateToken', (token: TokenDocument, changes: any) => {
+    applyModifiersByDamage(token, changes);
   });
 
   // on create combatant, set the maneuver
@@ -193,14 +218,12 @@ export function registerHooks(): void {
       const tokenSelected = tokenDocument.object as Token;
       ensureDefined(game.user, 'game not initialized');
       ensureDefined(actor, 'token without actor');
+
       await ManeuverChooser.closeAll();
       await AttackChooser.closeAll();
-      if (
-        highestPriorityUsers(actor).includes(game.user) &&
-        game.settings.get(MODULE_NAME, 'maneuver-chooser-on-turn')
-      ) {
-        new ManeuverChooser(tokenSelected).render(true);
-      }
+      await DefenseChooser.closeAll();
+
+      setActionByActiveEffect(actor, tokenSelected);
     });
   });
 
@@ -230,9 +253,7 @@ export function registerHooks(): void {
     ensureDefined(actor, 'token without actor');
     await ManeuverChooser.closeAll();
     await AttackChooser.closeAll();
-    if (highestPriorityUsers(actor).includes(game.user) && game.settings.get(MODULE_NAME, 'maneuver-chooser-on-turn')) {
-      new ManeuverChooser(token).render(true);
-    }
+    setActionByActiveEffect(actor, token);
   });
 
   Hooks.on('getCombatTrackerEntryContext', function (html: any, menu: any) {

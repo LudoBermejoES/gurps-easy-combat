@@ -390,6 +390,7 @@ declare global {
     ): Promise<boolean>;
     lastTargetedRoll: GurpsRoll;
     ModifierBucket: ModifierBucket;
+    calculatorDamage: any;
   };
 }
 //#endregion

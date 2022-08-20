@@ -31,7 +31,6 @@ export default async function rollDefense(
     attackerToken.id,
     !isDisarmingAttack,
   );
-  debugger;
   doAnimationDefense(target.actor, defenseSucess);
   if (defenseSucess) {
     const successDefenses = <{ attackers: string[]; round: number } | undefined>(

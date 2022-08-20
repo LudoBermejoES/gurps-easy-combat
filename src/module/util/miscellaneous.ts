@@ -208,3 +208,7 @@ export function findAdvantage(actor: Actor, name: string): Advantage {
   // @ts-ignore
   return GURPS.findAdDisad(actor, name);
 }
+
+export function hasEffect(actor: Actor, effect: string): boolean {
+  return actor.effects.contents.find((it: any) => it.data.flags?.core?.statusId === effect) !== undefined;
+}

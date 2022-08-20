@@ -1,3 +1,5 @@
+import { beforeManeuvers } from '../applications/actions/beforeManeuvers';
+
 export const MODULE_NAME = 'gurps-easy-combat' as const;
 export const TEMPLATES_FOLDER = `modules/${MODULE_NAME}/templates` as const;
 export const allOutAttackManeuvers = [
@@ -32,3 +34,9 @@ export const FAST_DRAW_SKILLS: any = {
 export const FAST_DRAW_ARROW_SEARCH = 'Fast-Draw/TL* (Arrows)';
 
 export const FAST_DRAW_SKILLS_SEARCH = 'Fast-Draw/TL* (*)';
+
+export type StatusEffectsThanAffectManeuvers = keyof typeof STATUS_EFFECTS_THAN_AFFECT_MANEUVERS;
+
+export const STATUS_EFFECTS_THAN_AFFECT_MANEUVERS = {
+  stun: 'recoverFromStun',
+};

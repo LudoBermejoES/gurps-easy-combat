@@ -1,4 +1,4 @@
-import { MeleeAttack, RangedAttack } from '../types';
+import { MeleeAttack, Modifier, RangedAttack } from '../types';
 import { getAttacks } from '../dataExtractor';
 import {
   getNameFromAttack,
@@ -8,6 +8,8 @@ import {
 import AttackChooser from '../applications/attackChooser';
 import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
 import { checkOffHand } from './offHand';
+import { MODULE_NAME } from './constants';
+import { ShockPenalty } from './damage';
 
 export async function calculateModifiersFromAttack(
   mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
@@ -140,4 +142,19 @@ export async function calculateDefenseModifiersFromEquippedWeapons(
     bonusParry,
     bonusBlock,
   };
+}
+
+export function getModifierByShock(token: TokenDocument): Modifier[] {
+  const shockPenalties = <ShockPenalty[] | undefined>token.getFlag(MODULE_NAME, 'shockPenalties');
+  const roundToAffect: number = game?.combat?.round || 0;
+  const alreadyExist: ShockPenalty[] = (shockPenalties || []).filter((s) => s.round === roundToAffect);
+  if (alreadyExist.length) {
+    return [
+      {
+        mod: alreadyExist[0].modifier,
+        desc: 'Por shock',
+      },
+    ];
+  }
+  return [];
 }
