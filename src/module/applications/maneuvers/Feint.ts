@@ -1,7 +1,7 @@
 import { rollAttack } from '../../attackWorkflow';
 import { getAttacks } from '../../dataExtractor';
 import { ChooserData, Item, PromiseFunctions, ReadyManeouverNeeded } from '../../types';
-import { MODULE_NAME, TEMPLATES_FOLDER } from '../../util/constants';
+import { MODULE_NAME, TEMPLATES_FOLDER } from '../libs/constants';
 import {
   activateChooser,
   ensureDefined,
@@ -10,18 +10,18 @@ import {
   highestPriorityUsers,
   smartRace,
   isDefined,
-} from '../../util/miscellaneous';
+} from '../libs/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import FeintDefense from '../feintDefense';
 import ManeuverChooser from '../maneuverChooser';
-import { getWeaponsFromAttacks } from '../../util/weapons';
-import { getReadyActionsWeaponNeeded } from '../../util/readyWeapons';
+import { getWeaponsFromAttacks } from '../libs/weapons';
+import { getReadyActionsWeaponNeeded } from '../libs/readyWeapons';
 import {
   getAttacksWithModifiers,
   getMeleeAttacksWithNotReamingRounds,
   getMeleeAttacksWithReadyWeapons,
   meleeAttackWithRemainingRounds,
-} from '../../util/attacksDataTransformation';
+} from '../libs/attacksDataTransformation';
 
 export default class Feint extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;

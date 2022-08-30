@@ -1,7 +1,7 @@
 import { rollAttack } from '../attackWorkflow';
 import { getAttacks } from '../dataExtractor';
 import { ChooserData, GurpsRoll, Item, PromiseFunctions, ReadyManeouverNeeded } from '../types';
-import { TEMPLATES_FOLDER } from '../util/constants';
+import { TEMPLATES_FOLDER } from './libs/constants';
 import {
   activateChooser,
   ensureDefined,
@@ -10,17 +10,17 @@ import {
   smartRace,
   isDefined,
   getToken,
-} from '../util/miscellaneous';
+} from './libs/miscellaneous';
 import BaseActorController from './abstract/BaseActorController';
 import ManeuverChooser from './maneuverChooser';
-import { getWeaponsFromAttacks } from '../util/weapons';
-import { getReadyActionsWeaponNeeded } from '../util/readyWeapons';
+import { getWeaponsFromAttacks } from './libs/weapons';
+import { getReadyActionsWeaponNeeded } from './libs/readyWeapons';
 import {
   getAttacksWithModifiers,
   getMeleeAttacksWithNotReamingRounds,
   getMeleeAttacksWithReadyWeapons,
   meleeAttackWithRemainingRounds,
-} from '../util/attacksDataTransformation';
+} from './libs/attacksDataTransformation';
 
 export default class FeintDefense extends BaseActorController {
   resolve: (value: GurpsRoll | PromiseLike<GurpsRoll>) => void;

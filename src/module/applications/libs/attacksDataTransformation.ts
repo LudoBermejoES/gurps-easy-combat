@@ -1,5 +1,5 @@
-import { Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverNeeded } from '../types';
-import { getAmmunnitionFromInventory } from '../util/weapons';
+import { Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverNeeded } from '../../types';
+import { getAmmunnitionFromInventory } from './weapons';
 import {
   checkSingleTarget,
   ensureDefined,
@@ -9,7 +9,7 @@ import {
 } from './miscellaneous';
 import { MODULE_NAME } from './constants';
 import { calculateModifiersFromAttack } from './modifiers';
-import { AttackData } from '../applications/attackChooser';
+import { AttackData } from '../attackChooser';
 
 export interface counterAndDisarmAttackData {
   weapon: string;

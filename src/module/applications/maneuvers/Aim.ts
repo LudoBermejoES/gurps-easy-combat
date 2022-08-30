@@ -1,7 +1,7 @@
 import { getAttacks } from '../../dataExtractor';
 import { ChooserData, PromiseFunctions } from '../../types';
-import { MODULE_NAME, TEMPLATES_FOLDER } from '../../util/constants';
-import { activateChooser, ensureDefined, checkSingleTarget, getTargets, getManeuver } from '../../util/miscellaneous';
+import { MODULE_NAME, TEMPLATES_FOLDER } from '../libs/constants';
+import { activateChooser, ensureDefined, checkSingleTarget, getTargets, getManeuver } from '../libs/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import ManeuverChooser from '../maneuverChooser';
 

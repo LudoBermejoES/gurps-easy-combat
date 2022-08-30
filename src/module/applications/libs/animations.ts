@@ -1,4 +1,4 @@
-import { Item } from '../types';
+import { Item } from '../../types';
 import { getWeapon } from './weaponMacrosCTA';
 
 export async function doAnimationAttack(

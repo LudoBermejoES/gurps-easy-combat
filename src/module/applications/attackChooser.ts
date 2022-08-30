@@ -1,5 +1,5 @@
 import { makeAttackInner } from '../attackWorkflow.js';
-import { FAST_DRAW_SKILLS, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants.js';
+import { FAST_DRAW_SKILLS, MODULE_NAME, TEMPLATES_FOLDER } from './libs/constants';
 import { getAttacks, getHitLocations } from '../dataExtractor.js';
 import {
   ChooserData,
@@ -11,16 +11,10 @@ import {
   ReadyManeouverNeeded,
 } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
-import {
-  activateChooser,
-  checkSingleTarget,
-  ensureDefined,
-  findSkillSpell,
-  getTargets,
-} from '../util/miscellaneous.js';
+import { activateChooser, checkSingleTarget, ensureDefined, findSkillSpell, getTargets } from './libs/miscellaneous';
 import ManeuverChooser from './maneuverChooser';
-import { checkIfRemoveWeaponFromHandNeeded, getReadyActionsWeaponNeeded } from '../util/readyWeapons';
-import { addAmmunition, drawEquipment, getEquippedItems, removeItemById, equippedItem } from '../util/weaponMacrosCTA';
+import { checkIfRemoveWeaponFromHandNeeded, getReadyActionsWeaponNeeded } from './libs/readyWeapons';
+import { addAmmunition, drawEquipment, getEquippedItems, removeItemById, equippedItem } from './libs/weaponMacrosCTA';
 import {
   getWeaponsFromAttacks,
   weaponToBeReady,
@@ -28,7 +22,7 @@ import {
   weaponNotToBeReady,
   getWeaponsNotToBeReady,
   getWeaponFromAttack,
-} from '../util/weapons';
+} from './libs/weapons';
 import { getMeleeModifiers, getRangedModifiers } from './actions/modifiers';
 import {
   counterAndDisarmAttackData,
@@ -43,11 +37,11 @@ import {
   getRangedDataWithROFMoreThan1,
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
-} from '../util/attacksDataTransformation';
-import { getHitLocationsObject, getLocationData, LocationToAttack } from '../util/locationsDataTransformation';
-import { calculateModifiersFromAttack } from '../util/modifiers';
-import { calculateAmmunitionForRangedAttacks } from '../util/ammo';
-import { useFatigue } from '../util/fatigue';
+} from './libs/attacksDataTransformation';
+import { getHitLocationsObject, getLocationData, LocationToAttack } from './libs/locationsDataTransformation';
+import { calculateModifiersFromAttack } from './libs/modifiers';
+import { calculateAmmunitionForRangedAttacks } from './libs/ammo';
+import { useFatigue } from './libs/fatigue';
 import LocationChooser from './locationChooser';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

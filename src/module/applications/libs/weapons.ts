@@ -1,5 +1,5 @@
-import { getAttacks, getEquipment } from '../dataExtractor';
-import { Item, MeleeAttack, RangedAttack } from '../types';
+import { getAttacks, getEquipment } from '../../dataExtractor';
+import { Item, MeleeAttack, RangedAttack } from '../../types';
 import { ensureDefined } from './miscellaneous';
 import {
   getAttacksNotToBeReady,
@@ -7,6 +7,7 @@ import {
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from './attacksDataTransformation';
+import { getActorData } from './data';
 
 export interface weaponToBeReady {
   itemid: string;
@@ -81,24 +82,22 @@ export function getAmmunnitionFromInventory(
       st: string;
     }
   | undefined {
+  const data = getActorData(actor);
   let weapon = '';
-  Object.keys(actor.data.data.equipment.carried).forEach((key) => {
-    const item: Item = actor.data.data.equipment.carried[key];
+  Object.keys(data.equipment.carried).forEach((key) => {
+    const item: Item = data.equipment.carried[key];
     if (item.itemid === itemid) {
       weapon = key;
     }
   });
 
   if (weapon) {
-    const found: { ammo: Item; st: string } = getFinalItem(
-      actor.data.data.equipment.carried[weapon],
-      st + '.' + weapon,
-    );
+    const found: { ammo: Item; st: string } = getFinalItem(data.equipment.carried[weapon], st + '.' + weapon);
     if (found.ammo.itemid !== itemid) {
       return found;
     } else {
       return {
-        ammo: actor.data.data.equipment.carried[weapon],
+        ammo: data.equipment.carried[weapon],
         st: st + '.' + weapon,
       };
     }

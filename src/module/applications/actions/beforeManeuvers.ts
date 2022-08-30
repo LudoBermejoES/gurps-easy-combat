@@ -1,5 +1,5 @@
-import { getModifiersByPainThresHold } from '../../util/damage';
-import { applyModifiers } from '../../util/actions';
+import { getModifiersByPainThresHold } from '../libs/damage';
+import { applyModifiers } from '../libs/actions';
 
 export type BeforeManeuversKey = keyof typeof beforeManeuvers;
 

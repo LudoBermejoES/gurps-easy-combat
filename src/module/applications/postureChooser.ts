@@ -1,8 +1,8 @@
-import { MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants.js';
+import { MODULE_NAME, TEMPLATES_FOLDER } from './libs/constants';
 import { getPostures } from '../dataExtractor.js';
 import { ChooserData, Posture, PromiseFunctions } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
-import { activateChooser, ensureDefined } from '../util/miscellaneous.js';
+import { activateChooser, ensureDefined } from './libs/miscellaneous';
 import ManeuverChooser from './maneuverChooser';
 import AttackChooser from './attackChooser';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

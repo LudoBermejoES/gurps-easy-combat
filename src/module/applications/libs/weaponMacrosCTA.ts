@@ -1,5 +1,5 @@
 import weaponIcons from './weaponIcons';
-import { Item } from '../types';
+import { Item } from '../../types';
 import { getAmmunnitionFromInventory } from './weapons';
 
 const COUNTER_AMMO = 'moulinette/images/custom/Ludo/Counters/Ammo/counter_ammo_XX.png';

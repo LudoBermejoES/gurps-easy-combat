@@ -1,4 +1,4 @@
-import { MODULE_NAME } from '../../util/constants.js';
+import { MODULE_NAME } from '../libs/constants';
 import BaseManeuverChooser from '../abstract/BaseManeuverChooser.js';
 import AttackChooser from '../attackChooser.js';
 import Feint from './Feint.js';

@@ -1,5 +1,5 @@
-import { MODULE_NAME, TEMPLATES_FOLDER } from '../../util/constants';
-import { checkSingleTarget, ensureDefined, getManeuver, getTargets } from '../../util/miscellaneous';
+import { MODULE_NAME, TEMPLATES_FOLDER } from '../libs/constants';
+import { checkSingleTarget, ensureDefined, getManeuver, getTargets } from '../libs/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import ManeuverChooser from '../maneuverChooser';
 

@@ -1,4 +1,4 @@
-import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded } from '../types';
+import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded } from '../../types';
 import { getAmmunnitionFromInventory, getWeaponsFromAttacks } from './weapons';
 import { clearAmmunition, refreshAmmo } from './weaponMacrosCTA';
 import { MODULE_NAME } from './constants';

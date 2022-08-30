@@ -1,6 +1,6 @@
-import { ensureDefined, getManeuver, getToken } from '../../util/miscellaneous';
+import { ensureDefined, getManeuver, getToken } from '../libs/miscellaneous';
 import { Modifier } from '../../types';
-import { allOutAttackManeuvers, MODULE_NAME } from '../../util/constants';
+import { allOutAttackManeuvers, MODULE_NAME } from '../libs/constants';
 import { DEFENSE_NONE } from '../defenseChooser';
 
 export default class BaseActorController extends Application {

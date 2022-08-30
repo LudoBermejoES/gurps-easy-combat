@@ -1,8 +1,8 @@
-import { TEMPLATES_FOLDER } from '../util/constants.js';
+import { TEMPLATES_FOLDER } from './libs/constants';
 import { getAttacks, getEquipment } from '../dataExtractor.js';
 import { Attack, ChooserData, Item, PromiseFunctions, ReadyManeouverNeeded } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
-import { activateChooser, ensureDefined } from '../util/miscellaneous.js';
+import { activateChooser, ensureDefined } from './libs/miscellaneous';
 import ManeuverChooser from './maneuverChooser';
 import {
   getWeaponsFromAttacks,
@@ -10,8 +10,8 @@ import {
   getWeaponsToBeReady,
   weaponNotToBeReady,
   weaponToBeReady,
-} from '../util/weapons';
-import { getReadyActionsWeaponNeeded } from '../util/readyWeapons';
+} from './libs/weapons';
+import { getReadyActionsWeaponNeeded } from './libs/readyWeapons';
 import {
   getExtraRangedAttacksPerROF,
   getMeleeAttacksWithNotReamingRounds,
@@ -21,8 +21,8 @@ import {
   getRangedDataWithROFMoreThan1,
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
-} from '../util/attacksDataTransformation';
-import { equippedItem, getEquippedItems } from '../util/weaponMacrosCTA';
+} from './libs/attacksDataTransformation';
+import { equippedItem, getEquippedItems } from './libs/weaponMacrosCTA';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 

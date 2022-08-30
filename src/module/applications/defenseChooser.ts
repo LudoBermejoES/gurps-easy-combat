@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
-import { ACROBATICS, allOutAttackManeuvers, MODULE_NAME, TEMPLATES_FOLDER } from '../util/constants';
+import { ACROBATICS, allOutAttackManeuvers, MODULE_NAME, TEMPLATES_FOLDER } from './libs/constants';
 import { getDodge } from '../dataExtractor';
 import BaseActorController from './abstract/BaseActorController';
 import {
@@ -13,15 +13,15 @@ import {
   highestPriorityUsers,
   isDefined,
   smartRace,
-} from '../util/miscellaneous';
+} from './libs/miscellaneous';
 import { ChooserData, Modifier, Skill } from '../types';
-import { applyModifiers } from '../util/actions';
-import { useFatigue } from '../util/fatigue';
+import { applyModifiers } from './libs/actions';
+import { useFatigue } from './libs/fatigue';
 import {
   calculateDefenseModifiersFromEquippedWeapons,
   getModifierByPosture,
   getModifierByShock,
-} from '../util/modifiers';
+} from './libs/modifiers';
 import {
   Block,
   getDefenseModifiersByManeuver,

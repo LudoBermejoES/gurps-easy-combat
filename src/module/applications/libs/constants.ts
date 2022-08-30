@@ -1,4 +1,4 @@
-import { beforeManeuvers } from '../applications/actions/beforeManeuvers';
+import { beforeManeuvers } from '../actions/beforeManeuvers';
 
 export const MODULE_NAME = 'gurps-easy-combat' as const;
 export const TEMPLATES_FOLDER = `modules/${MODULE_NAME}/templates` as const;

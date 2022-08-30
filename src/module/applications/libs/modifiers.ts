@@ -1,11 +1,11 @@
-import { MeleeAttack, Modifier, RangedAttack } from '../types';
-import { getAttacks } from '../dataExtractor';
+import { MeleeAttack, Modifier, RangedAttack } from '../../types';
+import { getAttacks } from '../../dataExtractor';
 import {
   getNameFromAttack,
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from './attacksDataTransformation';
-import AttackChooser from '../applications/attackChooser';
+import AttackChooser from '../attackChooser';
 import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
 import { checkOffHand } from './offHand';
 import { MODULE_NAME, POSTURE_MODIFIERS } from './constants';
@@ -162,7 +162,7 @@ export function getModifierByShock(token: TokenDocument): Modifier[] {
 export function getModifierByPosture(actor: Actor, mode: 'ATTACK' | 'DEFENSE'): Modifier[] {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  const posture = actor.data.data.conditions.posture;
+  const posture = getActorData(actor).conditions.posture;
   if (posture) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -175,7 +175,7 @@ export function getModifierByPosture(actor: Actor, mode: 'ATTACK' | 'DEFENSE'): 
             mod: defenseOrAttack,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            desc: `Por postura: ${actor.data.data.conditions.posture}`,
+            desc: `Por postura: ${getActorData(actor).conditions.posture}`,
           },
         ];
       }

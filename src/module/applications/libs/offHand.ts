@@ -1,6 +1,6 @@
 import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from './attacksDataTransformation';
 import { getEquippedItems } from './weaponMacrosCTA';
-import { Skill } from '../types';
+import { Skill } from '../../types';
 import { isOffHandTrained } from './skillsDataExtractor';
 import { hasAmbidexterity } from './advantagesDataExtractor';
 

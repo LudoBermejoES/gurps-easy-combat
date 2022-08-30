@@ -1,4 +1,4 @@
-import { getHitLocations } from '../dataExtractor';
+import { getHitLocations } from '../../dataExtractor';
 import { checkSingleTarget, ensureDefined, getTargets } from './miscellaneous';
 
 export interface LocationToAttack {

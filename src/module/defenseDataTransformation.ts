@@ -1,13 +1,13 @@
 import { getAttacks } from './dataExtractor';
-import { getWeaponsFromAttacks } from './util/weapons';
+import { getWeaponsFromAttacks } from './applications/libs/weapons';
 import { Item, Modifier, ReadyManeouverNeeded } from './types';
-import { getReadyActionsWeaponNeeded } from './util/readyWeapons';
+import { getReadyActionsWeaponNeeded } from './applications/libs/readyWeapons';
 import { getMeleeAttacksWithNotReamingRounds, getMeleeAttacksWithReadyWeapons } from './applications/actions/Attacks';
-import { ensureDefined, getFullName, getManeuver } from './util/miscellaneous';
-import { checkOffHand } from './util/offHand';
-import { MODULE_NAME } from './util/constants';
-import { meleeAttackWithRemainingRounds } from './util/attacksDataTransformation';
-import { calculateDefenseModifiersFromEquippedWeapons } from './util/modifiers';
+import { ensureDefined, getFullName, getManeuver } from './applications/libs/miscellaneous';
+import { checkOffHand } from './applications/libs/offHand';
+import { MODULE_NAME } from './applications/libs/constants';
+import { meleeAttackWithRemainingRounds } from './applications/libs/attacksDataTransformation';
+import { calculateDefenseModifiersFromEquippedWeapons } from './applications/libs/modifiers';
 
 interface LastBlock {
   round: number;

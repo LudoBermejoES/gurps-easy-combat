@@ -1,4 +1,4 @@
-import { Item } from '../types';
+import { Item } from '../../types';
 import { getWeapon } from './weaponMacrosCTA';
 
 function randomIntFromInterval(min: number, max: number): number {

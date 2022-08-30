@@ -1,9 +1,9 @@
 import BaseActorController from '../../applications/abstract/BaseActorController.js';
 import DefenseChooser from '../../applications/defenseChooser.js';
 import FeintDefense from '../../applications/feintDefense.js';
-import { MODULE_NAME } from '../constants.js';
+import { MODULE_NAME } from '../../applications/libs/constants';
 import ManeuverChooser from '../../applications/maneuverChooser';
-import { ensureDefined } from '../miscellaneous';
+import { ensureDefined } from '../../applications/libs/miscellaneous';
 import AttackChooser from '../../applications/attackChooser';
 
 function getToken(token: string): Token {

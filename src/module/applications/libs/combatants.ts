@@ -8,7 +8,6 @@ function getPriority(user: User, actor: Actor) {
   return priority;
 }
 export function getUserFromCombatant(combatant: Combatant): User {
-  combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const priorities = new Map(game.users.map((user) => [user, getPriority(user, combatant.token._actor)]));

@@ -1,8 +1,9 @@
 import WeaponChooser from '../weaponChooser';
 import { Attack } from '../../types';
-import { applyModifiers } from '../../util/actions';
+import { applyModifiers } from '../libs/actions';
 import { getEquipment } from '../../dataExtractor';
-import { DISARM_WEAPONS } from '../../util/constants';
+import { DISARM_WEAPONS } from '../libs/constants';
+import { getActorData } from '../libs/data';
 
 function isDisarmingWeapon(attack: Attack, actor: Actor) {
   const weapons = getEquipment(actor);
@@ -25,9 +26,9 @@ export default async function rollDisarmingAttack(
     return false;
   }
   if (isDisarmingAttack) {
-    const { ST: attackerST, DX: attackerDX } = attacker.data.data.attributes;
+    const { ST: attackerST, DX: attackerDX } = getActorData(attacker).attributes;
     const attackerAttribute = attackerDX >= attackerST ? 'DX' : 'ST';
-    const { ST: defenderST, DX: defenderDX } = target.actor.data.data.attributes;
+    const { ST: defenderST, DX: defenderDX } = getActorData(target.actor).attributes;
     const defenderAttribute = defenderDX >= defenderST ? 'DX' : 'ST';
 
     const rollAttacker = `SK:${attack.otf} (Based:${attackerAttribute})`;

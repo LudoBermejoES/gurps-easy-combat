@@ -1,4 +1,4 @@
-import { MODULE_NAME } from '../constants.js';
+import { MODULE_NAME } from '../../applications/libs/constants';
 
 export function registerSettings(): void {
   game.settings.register(MODULE_NAME, 'maneuver-chooser-on-turn', {

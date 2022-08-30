@@ -1,14 +1,18 @@
 import { registerSettings } from './settings.js';
 import { registerHelpers, registerPartials } from './handlebars.js';
-import { MODULE_NAME, STATUS_EFFECTS_THAN_AFFECT_MANEUVERS, StatusEffectsThanAffectManeuvers } from '../constants.js';
+import {
+  MODULE_NAME,
+  STATUS_EFFECTS_THAN_AFFECT_MANEUVERS,
+  StatusEffectsThanAffectManeuvers,
+} from '../../applications/libs/constants';
 import ManeuverChooser from '../../applications/maneuverChooser.js';
-import { ensureDefined, hasEffect, highestPriorityUsers } from '../miscellaneous.js';
+import { ensureDefined, hasEffect, highestPriorityUsers } from '../../applications/libs/miscellaneous';
 import AttackChooser from '../../applications/attackChooser.js';
 import { registerFunctions } from './socketkib.js';
-import { getUserFromCombatant } from '../combatants';
+import { getUserFromCombatant } from '../../applications/libs/combatants';
 import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs';
-import { prepareReadyWeapons } from '../readyWeapons';
-import { applyModifiersByDamage } from '../damage';
+import { prepareReadyWeapons } from '../../applications/libs/readyWeapons';
+import { applyModifiersByDamage } from '../../applications/libs/damage';
 import DefenseChooser from '../../applications/defenseChooser';
 import { beforeManeuvers, BeforeManeuversKey } from '../../applications/actions/beforeManeuvers';
 
@@ -151,6 +155,7 @@ export function registerHooks(): void {
     combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
     deleteFlags(game.combat);
     //clearEquipment(combatant.token.id);
+    combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
     const user: User = getUserFromCombatant(combatant);
     prepareReadyWeapons(actor, combatant.token, user);
   });

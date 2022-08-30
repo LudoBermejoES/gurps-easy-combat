@@ -1,6 +1,6 @@
-import { getCounterAttackLevel } from '../../util/miscellaneous';
+import { getCounterAttackLevel } from '../libs/miscellaneous';
 import { MeleeAttack, Modifier, RangedAttack } from '../../types';
-import { MODULE_NAME } from '../../util/constants';
+import { MODULE_NAME } from '../libs/constants';
 
 export function addDeceptiveAttackModifierForDefense(
   isDeceptiveAttack: string,

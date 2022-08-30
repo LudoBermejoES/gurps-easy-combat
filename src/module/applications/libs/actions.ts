@@ -1,4 +1,4 @@
-import { Modifier } from '../types';
+import { Modifier } from '../../types';
 
 export function applyModifiers(modifiers: Modifier[]): void {
   for (const modifier of modifiers) {

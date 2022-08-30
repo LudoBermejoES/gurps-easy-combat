@@ -1,6 +1,6 @@
 import { hasHighPainThreshold, hasLowPainThreshold } from './advantagesDataExtractor';
 import { MODULE_NAME } from './constants';
-import { Modifier } from '../types';
+import { Modifier } from '../../types';
 import { applyModifiers } from './actions';
 
 interface Effect {

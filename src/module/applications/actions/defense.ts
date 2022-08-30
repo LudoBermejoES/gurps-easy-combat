@@ -1,9 +1,9 @@
 import { addCounterAttackModifiersForDefense } from './counterAttack';
 import DefenseChooser from '../defenseChooser';
-import { doAnimationDefense } from '../../util/animations';
-import { MODULE_NAME } from '../../util/constants';
+import { doAnimationDefense } from '../libs/animations';
+import { MODULE_NAME } from '../libs/constants';
 import { GurpsRoll, MeleeAttack, Modifier, RangedAttack } from '../../types';
-import { getEquippedItems } from '../../util/weaponMacrosCTA';
+import { getEquippedItems } from '../libs/weaponMacrosCTA';
 import { addDeceptiveAttackModifierForDefense } from './deceptiveAttack';
 
 export default async function rollDefense(

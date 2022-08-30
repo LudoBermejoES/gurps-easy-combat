@@ -1,8 +1,8 @@
 import { MeleeAttack, Modifier, RangedAttack } from '../../types';
-import { ensureDefined, findSkillSpell, getBulk, getManeuver } from '../../util/miscellaneous';
-import { FENCING_WEAPONS, MODULE_NAME } from '../../util/constants';
-import { LocationToAttack } from '../../util/locationsDataTransformation';
-import { getModifierByPosture, getModifierByShock } from '../../util/modifiers';
+import { ensureDefined, findSkillSpell, getBulk, getManeuver } from '../libs/miscellaneous';
+import { FENCING_WEAPONS, MODULE_NAME } from '../libs/constants';
+import { LocationToAttack } from '../libs/locationsDataTransformation';
+import { getModifierByPosture, getModifierByShock } from '../libs/modifiers';
 
 function getDisarmAttackModifiers(actor: Actor, attack: MeleeAttack): Modifier | undefined {
   const { name, level } = attack;

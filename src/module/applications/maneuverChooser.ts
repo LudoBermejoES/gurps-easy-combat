@@ -1,4 +1,4 @@
-import { MODULE_NAME } from '../util/constants.js';
+import { MODULE_NAME } from './libs/constants';
 import BaseManeuverChooser, { ManeuverInfo } from './abstract/BaseManeuverChooser.js';
 import AttackChooser from './attackChooser.js';
 import AllOutAttack from './maneuvers/AllOutAttack.js';

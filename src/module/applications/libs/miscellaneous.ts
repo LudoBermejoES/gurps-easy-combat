@@ -1,4 +1,4 @@
-import { Advantage, Attack, RangedAttack, Skill } from '../types';
+import { Advantage, Attack, RangedAttack, Skill } from '../../types';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';

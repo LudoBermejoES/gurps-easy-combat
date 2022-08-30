@@ -1,15 +1,16 @@
 import { HitLocation, MeleeAttack, Posture, RangedAttack, Item } from './types';
-import { getFullName } from './util/miscellaneous';
+import { getFullName } from './applications/libs/miscellaneous';
+import { getActorData } from './applications/libs/data';
 
 export function getAttacks(actor: Actor): { melee: MeleeAttack[]; ranged: RangedAttack[] } {
-  const melee = Object.values(actor.data.data.melee);
-  const ranged = Object.values(actor.data.data.ranged);
+  const melee = Object.values(getActorData(actor).melee);
+  const ranged = Object.values(getActorData(actor).ranged);
   return { melee: melee.filter((w) => w.damage), ranged };
 }
 
 export function getParries(actor: Actor): Record<string, number> {
   const parries: Record<string, number> = {};
-  for (const attack of Object.values(actor.data.data.melee)) {
+  for (const attack of Object.values(getActorData(actor).melee)) {
     const parry: number = parseInt(attack.parry);
     if (parry) parries[getFullName(attack)] = parry;
   }
@@ -18,7 +19,7 @@ export function getParries(actor: Actor): Record<string, number> {
 
 export function getBlocks(actor: Actor): Record<string, number> {
   const blocks: Record<string, number> = {};
-  for (const attack of Object.values(actor.data.data.melee)) {
+  for (const attack of Object.values(getActorData(actor).melee)) {
     const block: number = parseInt(attack.block);
     if (block) blocks[getFullName(attack)] = block;
   }
@@ -26,15 +27,15 @@ export function getBlocks(actor: Actor): Record<string, number> {
 }
 
 export function getDodge(actor: Actor): number {
-  return actor.data.data.currentdodge;
+  return getActorData(actor).currentdodge;
 }
 
 export function getHitLocations(actor: Actor): HitLocation[] {
-  return Object.values(actor.data.data.hitlocations);
+  return Object.values(getActorData(actor).hitlocations);
 }
 
 export function getEquipment(actor: Actor): Item[] {
-  return Object.values(actor.data.data.equipment.carried);
+  return Object.values(getActorData(actor).equipment.carried);
 }
 
 export function getPostures(): Posture[] {

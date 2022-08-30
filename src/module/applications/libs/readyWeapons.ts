@@ -1,9 +1,9 @@
-import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded, Skill } from '../types';
+import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded, Skill } from '../../types';
 import { MODULE_NAME } from './constants';
 import { getEquippedItems, removeItemById } from './weaponMacrosCTA';
-import { getAttacks } from '../dataExtractor';
+import { getAttacks } from '../../dataExtractor';
 import { getWeaponsFromAttacks } from './weapons';
-import AttackChooser from '../applications/attackChooser';
+import AttackChooser from '../attackChooser';
 import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from './attacksDataTransformation';
 import { findSkillSpell } from './miscellaneous';
 import { isOffHandTrained } from './skillsDataExtractor';

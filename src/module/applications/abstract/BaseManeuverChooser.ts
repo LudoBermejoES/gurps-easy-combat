@@ -1,6 +1,6 @@
 import { ChooserData } from '../../types.js';
-import { MODULE_NAME } from '../../util/constants.js';
-import { activateChooser, checkSingleTarget, ensureDefined, getTargets } from '../../util/miscellaneous.js';
+import { MODULE_NAME } from '../libs/constants';
+import { activateChooser, checkSingleTarget, ensureDefined, getTargets } from '../libs/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController.js';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

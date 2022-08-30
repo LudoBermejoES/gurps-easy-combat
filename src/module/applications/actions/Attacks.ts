@@ -1,6 +1,6 @@
 import { Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverNeeded } from '../../types';
-import { getAmmunnitionFromInventory } from '../../util/weapons';
-import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from '../../util/attacksDataTransformation';
+import { getAmmunnitionFromInventory } from '../libs/weapons';
+import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from '../libs/attacksDataTransformation';
 
 export function getMeleeAttacksWithReadyWeapons(
   melee: MeleeAttack[],

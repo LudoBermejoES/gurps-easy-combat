@@ -1,12 +1,17 @@
 import { Attack, GurpsRoll, Item, MeleeAttack, Modifier, RangedAttack } from './types';
-import { applyModifiers } from './util/actions';
-import { ensureDefined, getFullName, getTargets, setTargets } from './util/miscellaneous';
-import { doAnimationAttack, doAnimationCriticalSuccess, doAnimationDamage, doAnimationMiss } from './util/animations';
-import { playSound } from './util/sounds';
+import { applyModifiers } from './applications/libs/actions';
+import { ensureDefined, getFullName, getTargets, setTargets } from './applications/libs/miscellaneous';
+import {
+  doAnimationAttack,
+  doAnimationCriticalSuccess,
+  doAnimationDamage,
+  doAnimationMiss,
+} from './applications/libs/animations';
+import { playSound } from './applications/libs/sounds';
 import { addCounterAttackModifiersForAttack } from './applications/actions/counterAttack';
 import rollDefense from './applications/actions/defense';
 import rollDisarmingAttack from './applications/actions/disarmingAttack';
-import { LocationToAttack } from './util/locationsDataTransformation';
+import { LocationToAttack } from './applications/libs/locationsDataTransformation';
 
 export async function rollAttack(actor: Actor, attack: Attack, type: 'melee' | 'ranged'): Promise<GurpsRoll> {
   await GURPS.performAction(
