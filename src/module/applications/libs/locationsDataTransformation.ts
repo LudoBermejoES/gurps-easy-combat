@@ -1,5 +1,5 @@
-import { getHitLocations } from '../../dataExtractor';
 import { checkSingleTarget, ensureDefined, getTargets } from './miscellaneous';
+import EasyCombatActor from '../abstract/EasyCombatActor';
 
 export interface LocationToAttack {
   where: string;
@@ -29,7 +29,7 @@ export function getHitLocationsObject(game: Game): Partial<hitLocationsObject> {
   }
   const target = getTargets(game.user)[0];
   ensureDefined(target.actor, 'target has no actor');
-  const hitLocationsValues = getHitLocations(target.actor) || [];
+  const hitLocationsValues = (target.actor as EasyCombatActor).getHitLocations() || [];
   const hitLocationsResult = hitLocationsValues.map(({ equipment, dr, roll, where, penalty }) => ({
     equipment,
     dr,
@@ -53,6 +53,6 @@ export function getLocationData(game: Game, location: string): any {
   }
   const target = getTargets(game.user)[0];
   ensureDefined(target.actor, 'target has no actor');
-  const hitLocationsValues = getHitLocations(target.actor) || [];
+  const hitLocationsValues = (target.actor as EasyCombatActor).getHitLocations() || [];
   return hitLocationsValues.find((l) => l.where.toUpperCase() === location.toUpperCase());
 }

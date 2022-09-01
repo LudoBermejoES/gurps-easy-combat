@@ -1,9 +1,9 @@
-import { getAttacks } from '../../dataExtractor';
 import { ChooserData, PromiseFunctions } from '../../types';
 import { MODULE_NAME, TEMPLATES_FOLDER } from '../libs/constants';
-import { activateChooser, ensureDefined, checkSingleTarget, getTargets, getManeuver } from '../libs/miscellaneous';
+import { activateChooser, ensureDefined, getManeuver } from '../libs/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import ManeuverChooser from '../maneuverChooser';
+import EasyCombatActor from '../abstract/EasyCombatActor';
 
 export default class Aim extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;
@@ -22,7 +22,7 @@ export default class Aim extends BaseActorController {
   }
 
   getData(): ChooserData<['weapon', 'acc', 'level', 'damage', 'range']> {
-    const data = getAttacks(this.actor).ranged.map(({ name, acc, level, damage, range }) => ({
+    const data = (this.actor as EasyCombatActor).getAttacks().ranged.map(({ name, acc, level, damage, range }) => ({
       weapon: name,
       acc,
       level,
@@ -34,7 +34,7 @@ export default class Aim extends BaseActorController {
 
   activateListeners(html: JQuery): void {
     activateChooser(html, 'range_attacks', async (index) => {
-      const attack = getAttacks(this.actor).ranged[index];
+      const attack = (this.actor as EasyCombatActor).getAttacks().ranged[index];
       const lastAim = <{ bonus: number } | undefined>this.token.document.getFlag(MODULE_NAME, 'lastAim');
       this.token.document.setFlag(MODULE_NAME, 'lastAim', {
         bonus: lastAim?.bonus ? Number(lastAim?.bonus) + 1 : Number(attack.acc),

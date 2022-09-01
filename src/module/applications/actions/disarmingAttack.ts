@@ -1,12 +1,12 @@
 import WeaponChooser from '../weaponChooser';
 import { Attack } from '../../types';
 import { applyModifiers } from '../libs/actions';
-import { getEquipment } from '../../dataExtractor';
 import { DISARM_WEAPONS } from '../libs/constants';
 import { getActorData } from '../libs/data';
+import EasyCombatActor from '../abstract/EasyCombatActor';
 
 function isDisarmingWeapon(attack: Attack, actor: Actor) {
-  const weapons = getEquipment(actor);
+  const weapons = (actor as EasyCombatActor).getEquipment();
 
   const weaponSelect = weapons.find((w) => w.itemid === attack.itemid);
   if (weaponSelect) {

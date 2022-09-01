@@ -11,10 +11,10 @@ import AttackChooser from '../../applications/attackChooser.js';
 import { registerFunctions } from './socketkib.js';
 import { getUserFromCombatant } from '../../applications/libs/combatants';
 import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/data/data.mjs';
-import { prepareReadyWeapons } from '../../applications/libs/readyWeapons';
 import { applyModifiersByDamage } from '../../applications/libs/damage';
 import DefenseChooser from '../../applications/defenseChooser';
 import { beforeManeuvers, BeforeManeuversKey } from '../../applications/actions/beforeManeuvers';
+import EasyCombatActor from '../../applications/abstract/EasyCombatActor';
 
 async function setActionByActiveEffect(actor: Actor, tokenSelected: Token) {
   for (const effectName in STATUS_EFFECTS_THAN_AFFECT_MANEUVERS) {
@@ -156,8 +156,7 @@ export function registerHooks(): void {
     deleteFlags(game.combat);
     //clearEquipment(combatant.token.id);
     combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
-    const user: User = getUserFromCombatant(combatant);
-    prepareReadyWeapons(actor, combatant.token, user);
+    (actor as EasyCombatActor).prepareReadyWeapons();
   });
 
   Hooks.on('renderTokenHUD', async (app: any, html: any, token: TokenData) => {
@@ -193,7 +192,7 @@ export function registerHooks(): void {
       if (actor) {
         const user: User = highestPriorityUsers(actor)[0];
         if (user) {
-          await prepareReadyWeapons(actor, tokenIn.document, user);
+          await (actor as EasyCombatActor).prepareReadyWeapons();
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, tokenIn.document.id);

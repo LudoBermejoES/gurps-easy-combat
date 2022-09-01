@@ -1,5 +1,4 @@
 import { rollAttack } from '../attackWorkflow';
-import { getAttacks } from '../dataExtractor';
 import { ChooserData, GurpsRoll, Item, PromiseFunctions, ReadyManeouverNeeded } from '../types';
 import { TEMPLATES_FOLDER } from './libs/constants';
 import {
@@ -13,14 +12,7 @@ import {
 } from './libs/miscellaneous';
 import BaseActorController from './abstract/BaseActorController';
 import ManeuverChooser from './maneuverChooser';
-import { getWeaponsFromAttacks } from './libs/weapons';
-import { getReadyActionsWeaponNeeded } from './libs/readyWeapons';
-import {
-  getAttacksWithModifiers,
-  getMeleeAttacksWithNotReamingRounds,
-  getMeleeAttacksWithReadyWeapons,
-  meleeAttackWithRemainingRounds,
-} from './libs/attacksDataTransformation';
+import { meleeAttackWithRemainingRounds } from './abstract/mixins/EasyCombatCommonAttackDefenseExtractor';
 
 export default class FeintDefense extends BaseActorController {
   resolve: (value: GurpsRoll | PromiseLike<GurpsRoll>) => void;
@@ -36,24 +28,7 @@ export default class FeintDefense extends BaseActorController {
   }
 
   async getData(): Promise<ChooserData<['weapon', 'mode', 'levelWithModifiers', 'level', 'damage', 'reach']>> {
-    const { melee } = getAttacks(this.actor);
-    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
-    const readyActionsWeaponNeeded: { items: ReadyManeouverNeeded[] } = getReadyActionsWeaponNeeded(
-      this.token.document,
-    );
-    const meleeDataOriginal: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithReadyWeapons(
-      melee.filter((m) => m.itemid !== undefined),
-      readyActionsWeaponNeeded,
-      weapons,
-    );
-    const meleeData: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithNotReamingRounds(meleeDataOriginal);
-    const { meleeAttacksWithModifier } = await getAttacksWithModifiers(
-      meleeData,
-      [],
-      this.actor,
-      this.token,
-      undefined,
-    );
+    const { meleeAttacksWithModifier } = await this.actor.getAttacksWithModifiers(this.token, undefined);
     return {
       items: meleeAttacksWithModifier,
       headers: ['weapon', 'mode', 'levelWithModifiers', 'level', 'damage', 'reach'],
@@ -70,7 +45,7 @@ export default class FeintDefense extends BaseActorController {
     activateChooser(html, 'melee_attacks', async (index) => {
       ensureDefined(game.user, 'game not initialized');
       if (!checkSingleTarget(game.user)) return;
-      const attack = getAttacks(this.actor).melee[index];
+      const attack = this.actor.getAttacks().melee[index];
       const attackResult = rollAttack(this.actor, attack, 'melee');
       this.resolve(attackResult);
       this.closeForEveryone();

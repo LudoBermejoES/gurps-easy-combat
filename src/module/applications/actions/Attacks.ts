@@ -1,6 +1,9 @@
-import { Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverNeeded } from '../../types';
-import { getAmmunnitionFromInventory } from '../libs/weapons';
-import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from '../libs/attacksDataTransformation';
+import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded } from '../../types';
+import {
+  meleeAttackWithRemainingRounds,
+  rangedAttackWithRemainingRounds,
+} from '../abstract/mixins/EasyCombatCommonAttackDefenseExtractor';
+import EasyCombatActor from '../abstract/EasyCombatActor';
 
 export function getMeleeAttacksWithReadyWeapons(
   melee: MeleeAttack[],
@@ -77,7 +80,7 @@ export function getRangedAttacksWithReadyWeapons(
       const rAttack = ranged.find((r) => r.itemid === item.itemid);
       if (rAttack) {
         if (item?.mode?.toUpperCase().includes('INNATE ATTACK')) return true;
-        const weapon = getAmmunnitionFromInventory(actor, rAttack.itemid, 'data.equipment.carried');
+        const weapon = (actor as EasyCombatActor).getAmmunnitionFromInventory(rAttack.itemid, 'data.equipment.carried');
         if (!weapon?.ammo) {
           return false;
         }
@@ -123,7 +126,7 @@ export function getExtraRangedAttacksPerROF(
       let maxROF = 1000;
       const rAttack = ranged.find((r) => r.itemid === attack.itemid);
       if (rAttack) {
-        const weapon = getAmmunnitionFromInventory(actor, rAttack.itemid, 'data.equipment.carried');
+        const weapon = (actor as EasyCombatActor).getAmmunnitionFromInventory(rAttack.itemid, 'data.equipment.carried');
         if (weapon?.ammo) {
           maxROF = weapon.ammo.count;
         }

@@ -2,12 +2,13 @@ import { ensureDefined, getManeuver, getToken } from '../libs/miscellaneous';
 import { Modifier } from '../../types';
 import { allOutAttackManeuvers, MODULE_NAME } from '../libs/constants';
 import { DEFENSE_NONE } from '../defenseChooser';
+import EasyCombatActor from './EasyCombatActor';
 
 export default class BaseActorController extends Application {
   static apps = new Map<string, BaseActorController>();
 
   token: Token;
-  actor: Actor;
+  actor: EasyCombatActor;
 
   constructor(appName: string, token: Token, options: Partial<Application.Options>) {
     const id = `${appName}-${token.id}`;
@@ -15,7 +16,8 @@ export default class BaseActorController extends Application {
     this.token = token;
     BaseActorController.apps.set(id, this);
     ensureDefined(token.actor, 'token has no actor');
-    this.actor = token.actor;
+    debugger;
+    this.actor = <EasyCombatActor>token.actor;
     window.EasyCombat.appId = id;
 
     $(`#${id} .close`).hide();

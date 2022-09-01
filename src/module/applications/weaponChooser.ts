@@ -1,30 +1,11 @@
 import { TEMPLATES_FOLDER } from './libs/constants';
-import { getAttacks, getEquipment } from '../dataExtractor.js';
-import { Attack, ChooserData, Item, PromiseFunctions, ReadyManeouverNeeded } from '../types.js';
+import { ChooserData, Item, PromiseFunctions, ReadyManeouverNeeded } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
 import { activateChooser, ensureDefined } from './libs/miscellaneous';
 import ManeuverChooser from './maneuverChooser';
-import {
-  getWeaponsFromAttacks,
-  getWeaponsNotToBeReady,
-  getWeaponsToBeReady,
-  weaponNotToBeReady,
-  weaponToBeReady,
-} from './libs/weapons';
-import { getReadyActionsWeaponNeeded } from './libs/readyWeapons';
-import {
-  getExtraRangedAttacksPerROF,
-  getMeleeAttacksWithNotReamingRounds,
-  getMeleeAttacksWithReadyWeapons,
-  getRangedAttacksWithNotReamingRounds,
-  getRangedAttacksWithReadyWeapons,
-  getRangedDataWithROFMoreThan1,
-  meleeAttackWithRemainingRounds,
-  rangedAttackWithRemainingRounds,
-} from './libs/attacksDataTransformation';
+
 import { equippedItem, getEquippedItems } from './libs/weaponMacrosCTA';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+import { weaponNotToBeReady } from './abstract/mixins/EasyCombatAttacksExtractor';
 
 export default class WeaponChooser extends BaseActorController {
   promiseFuncs: PromiseFunctions<{ otf: string; hand: string }> | undefined;
@@ -43,22 +24,7 @@ export default class WeaponChooser extends BaseActorController {
   getData(): {
     weapons: ChooserData<['name']>;
   } {
-    const { melee } = getAttacks(this.actor);
-    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
-
-    const readyActionsWeaponNeeded: { items: ReadyManeouverNeeded[] } = getReadyActionsWeaponNeeded(
-      this.token.document,
-    );
-
-    const meleeDataOriginal: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithReadyWeapons(
-      melee,
-      readyActionsWeaponNeeded,
-      weapons,
-    );
-
-    this.weaponData = getWeaponsNotToBeReady(meleeDataOriginal, [], this.actor).filter(
-      (w) => !w.name.toUpperCase().includes('SHIELD'),
-    );
+    this.weaponData = this.actor.getWeaponsNotToBeReady().filter((w) => !w.name.toUpperCase().includes('SHIELD'));
 
     return {
       weapons: {
@@ -82,7 +48,7 @@ export default class WeaponChooser extends BaseActorController {
   async weaponSelect(index: number) {
     const weapons: equippedItem[] = await getEquippedItems(this.token.document);
 
-    const { melee, ranged } = getAttacks(this.actor);
+    const { melee, ranged } = this.actor.getAttacks();
     const attackSelect = [...melee, ...ranged].find((attack) => attack.itemid === this.weaponData[index].itemid);
     const weaponSelect = weapons.find((w) => w.itemId === this.weaponData[index].itemid);
     const otf = attackSelect?.otf || '';

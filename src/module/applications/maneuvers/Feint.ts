@@ -1,7 +1,6 @@
 import { rollAttack } from '../../attackWorkflow';
-import { getAttacks } from '../../dataExtractor';
-import { ChooserData, Item, PromiseFunctions, ReadyManeouverNeeded } from '../../types';
-import { MODULE_NAME, TEMPLATES_FOLDER } from '../libs/constants';
+import { ChooserData, PromiseFunctions } from '../../types';
+import { TEMPLATES_FOLDER } from '../libs/constants';
 import {
   activateChooser,
   ensureDefined,
@@ -14,14 +13,6 @@ import {
 import BaseActorController from '../abstract/BaseActorController';
 import FeintDefense from '../feintDefense';
 import ManeuverChooser from '../maneuverChooser';
-import { getWeaponsFromAttacks } from '../libs/weapons';
-import { getReadyActionsWeaponNeeded } from '../libs/readyWeapons';
-import {
-  getAttacksWithModifiers,
-  getMeleeAttacksWithNotReamingRounds,
-  getMeleeAttacksWithReadyWeapons,
-  meleeAttackWithRemainingRounds,
-} from '../libs/attacksDataTransformation';
 
 export default class Feint extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;
@@ -35,24 +26,7 @@ export default class Feint extends BaseActorController {
   }
 
   async getData(): Promise<ChooserData<['weapon', 'mode', 'levelWithModifiers', 'level', 'damage', 'reach']>> {
-    const { melee } = getAttacks(this.actor);
-    const weapons: Item[] = getWeaponsFromAttacks(this.actor);
-    const readyActionsWeaponNeeded: { items: ReadyManeouverNeeded[] } = getReadyActionsWeaponNeeded(
-      this.token.document,
-    );
-    const meleeDataOriginal: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithReadyWeapons(
-      melee.filter((m) => m.itemid !== undefined),
-      readyActionsWeaponNeeded,
-      weapons,
-    );
-    const meleeData: meleeAttackWithRemainingRounds[] = getMeleeAttacksWithNotReamingRounds(meleeDataOriginal);
-    const { meleeAttacksWithModifier } = await getAttacksWithModifiers(
-      meleeData,
-      [],
-      this.actor,
-      this.token,
-      undefined,
-    );
+    const { meleeAttacksWithModifier } = await this.actor.getAttacksWithModifiers(this.token, undefined);
     return {
       items: meleeAttacksWithModifier,
       headers: ['weapon', 'mode', 'levelWithModifiers', 'level', 'damage', 'reach'],
@@ -93,7 +67,7 @@ export default class Feint extends BaseActorController {
         ui.notifications?.error('target has no actor');
         return;
       }
-      const attack = getAttacks(this.actor).melee[index];
+      const attack = this.actor.getAttacks().melee[index];
       const attackResult = await rollAttack(this.actor, attack, 'melee');
       if (attackResult.failure) {
         this.close();

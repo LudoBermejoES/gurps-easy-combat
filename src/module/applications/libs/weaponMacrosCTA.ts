@@ -1,6 +1,6 @@
 import weaponIcons from './weaponIcons';
 import { Item } from '../../types';
-import { getAmmunnitionFromInventory } from './weapons';
+import EasyCombatActor from '../abstract/EasyCombatActor';
 
 const COUNTER_AMMO = 'moulinette/images/custom/Ludo/Counters/Ammo/counter_ammo_XX.png';
 
@@ -241,11 +241,8 @@ export async function drawEquipment(
   number: number | undefined = undefined,
 ) {
   if (!token?.actor) return;
-  const ammo: { ammo: Item; st: string } | undefined = getAmmunnitionFromInventory(
-    token?.actor,
-    id,
-    'data.equipment.carried',
-  );
+  const actor: EasyCombatActor = token.actor as EasyCombatActor;
+  const ammo: { ammo: Item; st: string } | undefined = actor.getAmmunnitionFromInventory(id, 'data.equipment.carried');
 
   const nameToLook = name.toUpperCase();
   let weapon: weapon | undefined;

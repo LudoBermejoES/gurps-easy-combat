@@ -2,7 +2,6 @@
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
 import { ACROBATICS, allOutAttackManeuvers, MODULE_NAME, TEMPLATES_FOLDER } from './libs/constants';
-import { getDodge } from '../dataExtractor';
 import BaseActorController from './abstract/BaseActorController';
 import {
   activateChooser,
@@ -17,22 +16,7 @@ import {
 import { ChooserData, Modifier, Skill } from '../types';
 import { applyModifiers } from './libs/actions';
 import { useFatigue } from './libs/fatigue';
-import {
-  calculateDefenseModifiersFromEquippedWeapons,
-  getModifierByPosture,
-  getModifierByShock,
-} from './libs/modifiers';
-import {
-  Block,
-  getDefenseModifiersByManeuver,
-  getDefenseModifiersByMode,
-  getDefenseModifiersBySelection,
-  getValidBlocks,
-  getValidParries,
-  Parry,
-  saveLastBlock,
-  saveLastParry,
-} from '../defenseDataTransformation';
+import { Block, Parry } from './abstract/mixins/EasyCombatDefenseExtractor';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -71,75 +55,17 @@ export default class DefenseChooser extends BaseActorController {
     blocks: ChooserData<['weapon', 'value']>;
     data: DefenseData;
   }> {
-    const actor = this.token?.actor;
-    ensureDefined(actor, 'Ese token necesita un actor');
-    const maneuver = Maneuvers.getAll()[getManeuver(actor)]._data;
-
-    const modifiersByShock = getModifierByShock(this.token.document);
-    const modifiersByPosture = getModifierByPosture(this.actor, 'DEFENSE');
-    const { modifiers: modifiersBySelectionParry } = getDefenseModifiersBySelection('PARRY');
-    const { modifiers: modifiersBySelectionBlock } = getDefenseModifiersBySelection('BLOCK');
-    const { modifiers: modifiersBySelectionDodge } = getDefenseModifiersBySelection('DODGE');
-    const modifiersByManeuverParry = getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'PARRY');
-    const modifiersByManeuverDodge = getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'DODGE');
-    const modifiersByManeuverBlock = getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'BLOCK');
-
-    const modifiersByEquippedWeapons: {
-      bonusDodge: number;
-      bonusParry: number;
-      bonusBlock: number;
-    } = await calculateDefenseModifiersFromEquippedWeapons(this.actor, this.token, this.canUseModShield);
-    let sumAllModifiersParry = 0;
-    [
-      ...this.data.modifiers,
-      ...modifiersBySelectionParry,
-      ...modifiersByManeuverParry,
-      ...modifiersByShock,
-      ...modifiersByPosture,
-    ].forEach((m) => (sumAllModifiersParry += m.mod));
-    let sumAllModifiersDodge = 0;
-    [
-      ...this.data.modifiers,
-      ...modifiersBySelectionDodge,
-      ...modifiersByManeuverDodge,
-      ...modifiersByShock,
-      ...modifiersByPosture,
-    ].forEach((m) => (sumAllModifiersDodge += m.mod));
-    let sumAllModifiersBlock = 0;
-    [
-      ...this.data.modifiers,
-      ...modifiersBySelectionBlock,
-      ...modifiersByManeuverBlock,
-      ...modifiersByShock,
-      ...modifiersByPosture,
-    ].forEach((m) => (sumAllModifiersBlock += m.mod));
-    const lastAodDouble = <{ mode: string; round: number } | undefined>(
-      this.token.document.getFlag(MODULE_NAME, 'lastAodDouble')
-    );
-
-    let forbiddenMode = '';
-    if (lastAodDouble && lastAodDouble.round === (game?.combat?.round || 0)) {
-      forbiddenMode = lastAodDouble?.mode || '';
-      await this.token.document.setFlag(MODULE_NAME, 'lastAodDouble', {
-        mode: '',
-        round: game?.combat?.round || 0,
-        times: 2,
-      });
-    }
-
     return {
-      canBlock: forbiddenMode !== 'BLOCK' && this.canUseModShield && maneuver?.defense !== DEFENSE_NONE,
-      canDodge: forbiddenMode !== 'DODGE' && maneuver?.defense !== DEFENSE_NONE,
-      canParry: forbiddenMode !== 'PARRY' && ![DEFENSE_DODGEBLOCK, DEFENSE_NONE].includes(maneuver?.defense),
+      ...(await this.actor.getCanBlockDodgeParry(this.canUseModShield)),
       acrobaticDodge: findSkillSpell(this.actor, ACROBATICS, true, false),
-      dodge: getDodge(this.actor) + sumAllModifiersDodge + modifiersByEquippedWeapons.bonusDodge,
+      dodge: await this.actor.getValidDodge(this.data, this.canUseModShield),
       parries: {
-        items: await getValidParries(this.token, sumAllModifiersParry, modifiersByEquippedWeapons.bonusParry),
+        items: await this.actor.getValidParries(this.token, this.data, this.canUseModShield),
         headers: ['weapon', 'value'],
         id: 'parries',
       },
       blocks: {
-        items: await getValidBlocks(this.token, sumAllModifiersBlock, modifiersByEquippedWeapons.bonusBlock),
+        items: await this.actor.getValidBlocks(this.token, this.data, this.canUseModShield),
         headers: ['weapon', 'value'],
         id: 'blocks',
       },
@@ -165,14 +91,9 @@ export default class DefenseChooser extends BaseActorController {
       isRetreating,
       isFeverishDefense,
       isProne,
-    } = await getDefenseModifiersBySelection(mode);
-    const modifiersByManeuver = getDefenseModifiersByManeuver(this.token, this.data.attackerId, mode);
-    const { modifiers: modifiersByMode } = await getDefenseModifiersByMode(
-      mode,
-      this.actor,
-      this.token,
-      this.canUseModShield,
-    );
+    } = await this.actor.getDefenseModifiersBySelection(mode);
+    const modifiersByManeuver = this.actor.getDefenseModifiersByManeuver(this.data.attackerId, mode);
+    const { modifiers: modifiersByMode } = await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield);
     this.data.modifiers = [...this.data.modifiers, ...modifiersBySelection, ...modifiersByMode, ...modifiersByManeuver];
     if (isRetreating) {
       this.addRetreatMalus();
@@ -193,34 +114,34 @@ export default class DefenseChooser extends BaseActorController {
     setTimeout(async () => {
       let modifiers: Modifier[] = [];
       if (mode === 'PARRY') {
-        const parries: Parry[] = await getValidParries(this.token);
+        const parries: Parry[] = await this.actor.getValidParries(this.token, this.data, this.canUseModShield);
         const parry = parries[index];
         modifiers = [
           ...this.data.modifiers,
           ...parry.modifiers,
-          ...getDefenseModifiersBySelection(mode).modifiers,
-          ...getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'PARRY'),
-          ...(await getDefenseModifiersByMode(mode, this.actor, this.token, this.canUseModShield)).modifiers,
-          ...getModifierByShock(this.token.document),
-          ...getModifierByPosture(this.actor, 'DEFENSE'),
+          ...this.actor.getDefenseModifiersBySelection(mode).modifiers,
+          ...this.actor.getDefenseModifiersByManeuver(this.data.attackerId, 'PARRY'),
+          ...(await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield)).modifiers,
+          ...this.actor.getModifierByShock(),
+          ...this.actor.getModifierByPosture('DEFENSE'),
         ];
       } else if (mode === 'BLOCK') {
         modifiers = [
           ...this.data.modifiers,
-          ...getDefenseModifiersBySelection(mode).modifiers,
-          ...getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'BLOCK'),
-          ...(await getDefenseModifiersByMode(mode, this.actor, this.token, this.canUseModShield)).modifiers,
-          ...getModifierByShock(this.token.document),
-          ...getModifierByPosture(this.actor, 'DEFENSE'),
+          ...this.actor.getDefenseModifiersBySelection(mode).modifiers,
+          ...this.actor.getDefenseModifiersByManeuver(this.data.attackerId, 'BLOCK'),
+          ...(await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield)).modifiers,
+          ...this.actor.getModifierByShock(),
+          ...this.actor.getModifierByPosture('DEFENSE'),
         ];
       } else if (mode === 'DODGE') {
         modifiers = [
           ...this.data.modifiers,
-          ...getDefenseModifiersBySelection(mode).modifiers,
-          ...getDefenseModifiersByManeuver(this.token, this.data.attackerId, 'DODGE'),
-          ...(await getDefenseModifiersByMode(mode, this.actor, this.token, this.canUseModShield)).modifiers,
-          ...getModifierByShock(this.token.document),
-          ...getModifierByPosture(this.actor, 'DEFENSE'),
+          ...this.actor.getDefenseModifiersBySelection(mode).modifiers,
+          ...this.actor.getDefenseModifiersByManeuver(this.data.attackerId, 'DODGE'),
+          ...(await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield)).modifiers,
+          ...this.actor.getModifierByShock(),
+          ...this.actor.getModifierByPosture('DEFENSE'),
         ];
       }
 
@@ -368,7 +289,7 @@ export default class DefenseChooser extends BaseActorController {
       'parries',
       async (index: number) => {
         await this.setLastModifiers('PARRY');
-        const parries: Parry[] = await getValidParries(this.token);
+        const parries: Parry[] = await this.actor.getValidParries(this.token, this.data, this.canUseModShield);
         const parry = parries[index];
 
         applyModifiers([...this.data.modifiers, ...parry.modifiers]);
@@ -381,7 +302,7 @@ export default class DefenseChooser extends BaseActorController {
           this.actor,
         );
 
-        await saveLastParry(parry.parryToStore, this.token.document);
+        await this.actor.saveLastParry(parry.parryToStore);
         this.checkResult(result, 'PARRY');
       },
       (index: number, element: JQuery<any>) => this.showModifiers('PARRY', index, element),
@@ -392,7 +313,7 @@ export default class DefenseChooser extends BaseActorController {
       'blocks',
       async (index: number) => {
         await this.setLastModifiers('BLOCK');
-        const blocks: Block[] = await getValidBlocks(this.token);
+        const blocks: Block[] = await this.actor.getValidBlocks(this.token, this.data, this.canUseModShield);
         const block = blocks[index];
 
         applyModifiers(this.data.modifiers);
@@ -405,7 +326,7 @@ export default class DefenseChooser extends BaseActorController {
           },
           this.actor,
         );
-        await saveLastBlock({ round: game?.combat?.round || 0 }, this.token.document);
+        await this.actor.saveLastBlock({ round: game?.combat?.round || 0 });
         this.checkResult(result, 'BLOCK');
       },
       (index: number, element: JQuery<any>) => this.showModifiers('BLOCK', index, element),
