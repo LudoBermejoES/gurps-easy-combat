@@ -10,6 +10,7 @@ import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
 import { checkOffHand } from './offHand';
 import { MODULE_NAME, POSTURE_MODIFIERS } from './constants';
 import { ShockPenalty } from './damage';
+import { getActorData } from './data';
 
 export async function calculateModifiersFromAttack(
   mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack',
