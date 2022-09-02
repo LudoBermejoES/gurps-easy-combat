@@ -126,7 +126,7 @@ class EasyCombatDefenseExtractor {
     );
     if (lastFeint && lastFeint.attackerId === attackerId) {
       if (lastFeint.round - (game.combat?.round ?? 0) <= 1 && lastFeint.successMargin > 0) {
-        this.token?.unsetFlag(MODULE_NAME, 'lastFeint');
+        this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'lastFeint');
         modifiers.push({ mod: -lastFeint.successMargin, desc: 'Por finta' });
       }
     }
@@ -156,8 +156,8 @@ class EasyCombatDefenseExtractor {
     bonusParry: number;
     bonusBlock: number;
   }> {
-    ensureDefined(this.token, 'Actor sin token');
-    const equippedWeapons: equippedItem[] = await getEquippedItems(this.token);
+    ensureDefined(this.tokenDocumentSelected, 'Actor sin token');
+    const equippedWeapons: equippedItem[] = await getEquippedItems(this.tokenDocumentSelected);
     let bonusDodge = 0;
     let bonusParry = 0;
     let bonusBlock = 0;

@@ -190,7 +190,7 @@ class EasyCombatAttacksModifiers {
       lastEvaluate.round - (game.combat?.round ?? 0) <= 1 &&
       lastEvaluate.bonus > 0
     ) {
-      if (removeFlags) this.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
+      if (removeFlags) this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'lastEvaluate');
       modifiers.attack.push({ mod: lastEvaluate.bonus, desc: 'Evaluar' });
     }
 
@@ -202,7 +202,7 @@ class EasyCombatAttacksModifiers {
     if (retreating && dif === 0) {
       modifiers.attack.push({ mod: retreating.bonus, desc: `por retroceder` });
     } else {
-      if (removeFlags) this.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
+      if (removeFlags) this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
     }
 
     const modifierByShock = this.getModifierByShock();
@@ -244,7 +244,7 @@ class EasyCombatAttacksModifiers {
       this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'Por localización')
     );
     if (location && location.bonus) {
-      if (removeFlags) this.token?.unsetFlag(MODULE_NAME, 'location');
+      if (removeFlags) this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'location');
       modifiers.attack.push({ mod: location.bonus, desc: location.where });
     }
 
@@ -259,7 +259,7 @@ class EasyCombatAttacksModifiers {
     if (getManeuver(this) !== 'move_and_attack') {
       const lastAim = <{ bonus: number } | undefined>this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'Por apuntar');
       if (lastAim) {
-        if (removeFlags) this.token?.unsetFlag(MODULE_NAME, 'lastAim');
+        if (removeFlags) this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'lastAim');
         modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
       }
     }

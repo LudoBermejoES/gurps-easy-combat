@@ -10,14 +10,16 @@ export function applyMixins(derivedCtor: any, constructors: any[]) {
   });
 }
 
-export function applyMixinsOnObject(derivedCtor: any, constructors: any[]) {
+export function applyMixinsOnObject(derivedCtor: Record<string, unknown>, constructors: any[]) {
   constructors.forEach((baseCtor) => {
     Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
-      Object.defineProperty(
-        derivedCtor,
-        name,
-        Object.getOwnPropertyDescriptor(baseCtor.prototype, name) || Object.create(null),
-      );
+      if (!derivedCtor[name]) {
+        Object.defineProperty(
+          derivedCtor,
+          name,
+          Object.getOwnPropertyDescriptor(baseCtor.prototype, name) || Object.create(null),
+        );
+      }
     });
   });
 }

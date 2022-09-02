@@ -17,10 +17,9 @@ function easyCombatActorfromToken(token: Token): EasyCombatActor | undefined {
   if (token.actor) {
     return easyCombatActorfromActor(token.actor, token);
   }
-  return new EasyCombatActor();
 }
 
-class EasyCombatActor {
+class EasyCombatActor extends Actor {
   tokenSelected: Token | undefined;
   tokenDocumentSelected: TokenDocument | undefined;
 }
