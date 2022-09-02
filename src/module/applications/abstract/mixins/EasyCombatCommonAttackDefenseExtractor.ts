@@ -2,10 +2,9 @@ import { HitLocation, Item, MeleeAttack, Modifier, RangedAttack, ReadyManeouverN
 import { MODULE_NAME, POSTURE_MODIFIERS } from '../../libs/constants';
 import EasyCombatBaseExtractor from './EasyCombatBaseExtractor';
 import EasyCombatInventoryExtractor from './EasyCombatInventoryExtractor';
-import { applyMixins } from '../../../gurps-easy-combat';
-import EasyCombatAttacksExtractor from './EasyCombatAttacksExtractor';
 import { ShockPenalty } from '../../libs/damage';
 import { getActorData } from '../../libs/data';
+import { applyMixins } from '../../libs/mixins';
 
 export interface meleeAttackWithRemainingRounds {
   weapon: string;
@@ -41,8 +40,6 @@ export interface rangedAttackWithRemainingRounds {
   modifiers: Modifier[];
 }
 
-interface EasyCombatCommonAttackDefenseExtractor extends Actor, EasyCombatBaseExtractor, EasyCombatInventoryExtractor {}
-
 class EasyCombatCommonAttackDefenseExtractor {
   getMeleeAttacksWithNotReamingRounds(): meleeAttackWithRemainingRounds[] {
     return this.getMeleeAttacksWithReadyWeapons().filter((item: meleeAttackWithRemainingRounds) => {
@@ -50,7 +47,9 @@ class EasyCombatCommonAttackDefenseExtractor {
     });
   }
   getModifierByShock(): Modifier[] {
-    const shockPenalties = <ShockPenalty[] | undefined>this.token?.getFlag(MODULE_NAME, 'shockPenalties');
+    const shockPenalties = <ShockPenalty[] | undefined>(
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'shockPenalties')
+    );
     const roundToAffect: number = game?.combat?.round || 0;
     const alreadyExist: ShockPenalty[] = (shockPenalties || []).filter((s) => s.round === roundToAffect);
     if (alreadyExist.length) {
@@ -140,6 +139,7 @@ class EasyCombatCommonAttackDefenseExtractor {
   }
 }
 
+interface EasyCombatCommonAttackDefenseExtractor extends Actor, EasyCombatBaseExtractor, EasyCombatInventoryExtractor {}
 applyMixins(EasyCombatCommonAttackDefenseExtractor, [Actor, EasyCombatBaseExtractor, EasyCombatInventoryExtractor]);
 
 export default EasyCombatCommonAttackDefenseExtractor;

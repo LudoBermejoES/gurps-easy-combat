@@ -1,6 +1,8 @@
 import { HitLocation, MeleeAttack, RangedAttack } from '../../../types';
 
 export default class EasyCombatBaseExtractor extends Actor {
+  tokenSelected: Token | undefined;
+  tokenDocumentSelected: TokenDocument | undefined;
   getData() {
     return this.data.data;
   }

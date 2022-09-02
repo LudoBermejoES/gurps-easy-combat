@@ -1,8 +1,8 @@
+import BaseActorController from './abstract/BaseActorController';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
 import { ACROBATICS, allOutAttackManeuvers, MODULE_NAME, TEMPLATES_FOLDER } from './libs/constants';
-import BaseActorController from './abstract/BaseActorController';
 import {
   activateChooser,
   ensureDefined,
@@ -17,6 +17,7 @@ import { ChooserData, Modifier, Skill } from '../types';
 import { applyModifiers } from './libs/actions';
 import { useFatigue } from './libs/fatigue';
 import { Block, Parry } from './abstract/mixins/EasyCombatDefenseExtractor';
+import EasyCombatActor, { easyCombatActorfromToken } from './abstract/EasyCombatActor';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -32,11 +33,12 @@ interface DefenseData {
 export const DEFENSE_NONE = 'none';
 export const DEFENSE_DODGEBLOCK = 'dodge-block';
 
+console.log('LLEGO A DEFENSE');
 export default class DefenseChooser extends BaseActorController {
   data: DefenseData;
   canUseModShield: boolean;
   constructor(token: Token, data: DefenseData) {
-    super('DefenseChooser', token, {
+    super('DefenseChooser', token, easyCombatActorfromToken(token), {
       title: `Defense Chooser - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/defenseChooser.hbs`,
     });

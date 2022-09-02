@@ -1,17 +1,14 @@
-import { Item, MeleeAttack, Modifier, RangedAttack } from '../../../types';
+import { MeleeAttack, Modifier, RangedAttack } from '../../../types';
 import { FENCING_WEAPONS, MODULE_NAME } from '../../libs/constants';
 import AttackChooser, { AttackData } from '../../attackChooser';
-import { ensureDefined, findSkillSpell, getBulk, getManeuver, getTargets } from '../../libs/miscellaneous';
+import { findSkillSpell, getBulk, getManeuver, getTargets } from '../../libs/miscellaneous';
 import EasyCombatCommonAttackDefenseExtractor, {
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from './EasyCombatCommonAttackDefenseExtractor';
-import { applyMixins } from '../../../gurps-easy-combat';
-import { getEquippedItems } from '../../libs/weaponMacrosCTA';
 import { checkOffHand } from '../../libs/offHand';
 import { LocationToAttack } from '../../libs/locationsDataTransformation';
-
-interface EasyCombatAttacksModifiers extends Actor, EasyCombatCommonAttackDefenseExtractor {}
+import { applyMixins } from '../../libs/mixins';
 
 class EasyCombatAttacksModifiers {
   async calculateModifiersFromAttack(
@@ -177,14 +174,14 @@ class EasyCombatAttacksModifiers {
     }
 
     const location: LocationToAttack | undefined = <LocationToAttack | undefined>(
-      this.token?.getFlag(MODULE_NAME, 'location')
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'location')
     );
     if (location && location.bonus) {
       modifiers.attack.push({ mod: location.bonus, desc: location.where });
     }
 
     const lastEvaluate = <{ bonus: number; targetId: string; round: number } | undefined>(
-      this.token?.getFlag(MODULE_NAME, 'lastEvaluate')
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'lastEvaluate')
     );
 
     if (
@@ -198,7 +195,7 @@ class EasyCombatAttacksModifiers {
     }
 
     const retreating = <{ bonus: number; round: number } | undefined>(
-      this.token?.getFlag(MODULE_NAME, 'roundRetreatMalus')
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'roundRetreatMalus')
     );
 
     const dif = (game.combat?.round ?? 0) - (retreating?.round ?? 0);
@@ -243,7 +240,9 @@ class EasyCombatAttacksModifiers {
       damage: <Modifier[]>[],
     };
 
-    const location = <{ bonus: number; where: string } | undefined>this.token?.getFlag(MODULE_NAME, 'Por localización');
+    const location = <{ bonus: number; where: string } | undefined>(
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'Por localización')
+    );
     if (location && location.bonus) {
       if (removeFlags) this.token?.unsetFlag(MODULE_NAME, 'location');
       modifiers.attack.push({ mod: location.bonus, desc: location.where });
@@ -258,7 +257,7 @@ class EasyCombatAttacksModifiers {
         break;
     }
     if (getManeuver(this) !== 'move_and_attack') {
-      const lastAim = <{ bonus: number } | undefined>this.token?.getFlag(MODULE_NAME, 'Por apuntar');
+      const lastAim = <{ bonus: number } | undefined>this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'Por apuntar');
       if (lastAim) {
         if (removeFlags) this.token?.unsetFlag(MODULE_NAME, 'lastAim');
         modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
@@ -275,6 +274,7 @@ class EasyCombatAttacksModifiers {
   }
 }
 
+interface EasyCombatAttacksModifiers extends Actor, EasyCombatCommonAttackDefenseExtractor {}
 applyMixins(EasyCombatAttacksModifiers, [Actor, EasyCombatCommonAttackDefenseExtractor]);
 
 export default EasyCombatAttacksModifiers;

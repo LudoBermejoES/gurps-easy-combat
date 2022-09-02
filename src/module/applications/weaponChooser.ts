@@ -6,6 +6,7 @@ import ManeuverChooser from './maneuverChooser';
 
 import { equippedItem, getEquippedItems } from './libs/weaponMacrosCTA';
 import { weaponNotToBeReady } from './abstract/mixins/EasyCombatAttacksExtractor';
+import EasyCombatActor, { easyCombatActorfromToken } from './abstract/EasyCombatActor';
 
 export default class WeaponChooser extends BaseActorController {
   promiseFuncs: PromiseFunctions<{ otf: string; hand: string }> | undefined;
@@ -13,10 +14,11 @@ export default class WeaponChooser extends BaseActorController {
   token: Token;
 
   constructor(token: Token, promiseFuncs?: PromiseFunctions<{ otf: string; hand: string }>) {
-    super('WeaponChooser', token, {
+    super('WeaponChooser', token, easyCombatActorfromToken(token), {
       title: `Weapon Chooser - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/weaponChooser.hbs`,
     });
+
     this.token = token;
     this.weaponData = [];
     this.promiseFuncs = promiseFuncs;

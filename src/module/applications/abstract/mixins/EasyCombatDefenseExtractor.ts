@@ -11,9 +11,9 @@ import { checkOffHand } from '../../libs/offHand';
 import EasyCombatCommonAttackDefenseExtractor, {
   meleeAttackWithRemainingRounds,
 } from './EasyCombatCommonAttackDefenseExtractor';
-import { applyMixins } from '../../../gurps-easy-combat';
 import EasyCombatAttacksExtractor from './EasyCombatAttacksExtractor';
 import { getActorData } from '../../libs/data';
+import { applyMixins } from '../../libs/mixins';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -52,8 +52,6 @@ export interface Block {
   value: number;
   modifiers: Modifier[];
 }
-
-interface EasyCombatDefenseExtractor extends Actor, EasyCombatCommonAttackDefenseExtractor {}
 
 class EasyCombatDefenseExtractor {
   getData() {
@@ -124,7 +122,7 @@ class EasyCombatDefenseExtractor {
     const modifiers: Modifier[] = [];
 
     const lastFeint = <{ successMargin: number; targetId: string; round: number; attackerId: string } | undefined>(
-      this.token?.getFlag(MODULE_NAME, 'lastFeint')
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'lastFeint')
     );
     if (lastFeint && lastFeint.attackerId === attackerId) {
       if (lastFeint.round - (game.combat?.round ?? 0) <= 1 && lastFeint.successMargin > 0) {
@@ -265,7 +263,7 @@ class EasyCombatDefenseExtractor {
   }
 
   getLastParries(): LastParry[] {
-    return <LastParry[]>this.token?.getFlag(MODULE_NAME, 'lastParries') || [];
+    return <LastParry[]>this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'lastParries') || [];
   }
 
   getLastParryByItemId(token: Token, itemId: string): LastParry | undefined {
@@ -341,18 +339,18 @@ class EasyCombatDefenseExtractor {
   }
 
   async saveLastBlock(lastBlock: LastBlock) {
-    return this.token?.setFlag(MODULE_NAME, 'lastBlocks', lastBlock);
+    return this.tokenDocumentSelected?.setFlag(MODULE_NAME, 'lastBlocks', lastBlock);
   }
 
   async saveLastParry(lastParry: LastParry) {
     const parries: LastParry[] = this.getLastParries();
     const parriesFiltered = parries.filter((p) => p.itemId !== lastParry.itemId);
     parriesFiltered.push(lastParry);
-    return this.token?.setFlag(MODULE_NAME, 'lastParries', parriesFiltered);
+    return this.tokenDocumentSelected?.setFlag(MODULE_NAME, 'lastParries', parriesFiltered);
   }
 
   getLastBlock(): LastBlock | undefined {
-    return <LastBlock>this.token?.getFlag(MODULE_NAME, 'lastBlocks') || undefined;
+    return <LastBlock>this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'lastBlocks') || undefined;
   }
 
   async getValidBlocks(token: Token, data: DefenseData, canUseModShield: boolean): Promise<Block[]> {
@@ -389,12 +387,12 @@ class EasyCombatDefenseExtractor {
     canUseModShield: boolean,
   ): Promise<{ canBlock: boolean; canDodge: boolean; canParry: boolean }> {
     const lastAodDouble = <{ mode: string; round: number } | undefined>(
-      this.token?.getFlag(MODULE_NAME, 'lastAodDouble')
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'lastAodDouble')
     );
     let forbiddenMode = '';
     if (lastAodDouble && lastAodDouble.round === (game?.combat?.round || 0)) {
       forbiddenMode = lastAodDouble?.mode || '';
-      await this.token?.setFlag(MODULE_NAME, 'lastAodDouble', {
+      await this.tokenDocumentSelected?.setFlag(MODULE_NAME, 'lastAodDouble', {
         mode: '',
         round: game?.combat?.round || 0,
         times: 2,
@@ -410,6 +408,7 @@ class EasyCombatDefenseExtractor {
   }
 }
 
+interface EasyCombatDefenseExtractor extends Actor, EasyCombatCommonAttackDefenseExtractor {}
 applyMixins(EasyCombatAttacksExtractor, [Actor, EasyCombatCommonAttackDefenseExtractor]);
 
 export default EasyCombatDefenseExtractor;

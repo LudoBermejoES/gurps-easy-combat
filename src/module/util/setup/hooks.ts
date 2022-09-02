@@ -14,7 +14,7 @@ import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/f
 import { applyModifiersByDamage } from '../../applications/libs/damage';
 import DefenseChooser from '../../applications/defenseChooser';
 import { beforeManeuvers, BeforeManeuversKey } from '../../applications/actions/beforeManeuvers';
-import EasyCombatActor from '../../applications/abstract/EasyCombatActor';
+import EasyCombatActor, { easyCombatActorfromActor } from '../../applications/abstract/EasyCombatActor';
 
 async function setActionByActiveEffect(actor: Actor, tokenSelected: Token) {
   for (const effectName in STATUS_EFFECTS_THAN_AFFECT_MANEUVERS) {
@@ -144,7 +144,7 @@ export function registerHooks(): void {
   // on create combatant, set the maneuver
   Hooks.on('createCombatant', async (combatant: Combatant) => {
     ensureDefined(combatant.token, 'No actor selected');
-    const actor = combatant.token.actor;
+    const actor = easyCombatActorfromActor(combatant.token.actor);
     ensureDefined(actor, 'No actor selected');
     ensureDefined(game.user, 'No user selected');
     if (!highestPriorityUsers(actor).includes(game.user)) {
@@ -156,7 +156,7 @@ export function registerHooks(): void {
     deleteFlags(game.combat);
     //clearEquipment(combatant.token.id);
     combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
-    (actor as EasyCombatActor).prepareReadyWeapons();
+    actor.prepareReadyWeapons();
   });
 
   Hooks.on('renderTokenHUD', async (app: any, html: any, token: TokenData) => {
@@ -192,7 +192,7 @@ export function registerHooks(): void {
       if (actor) {
         const user: User = highestPriorityUsers(actor)[0];
         if (user) {
-          await (actor as EasyCombatActor).prepareReadyWeapons();
+          await easyCombatActorfromActor(actor, tokenIn).prepareReadyWeapons();
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, tokenIn.document.id);

@@ -13,12 +13,13 @@ import {
 import BaseActorController from '../abstract/BaseActorController';
 import FeintDefense from '../feintDefense';
 import ManeuverChooser from '../maneuverChooser';
+import EasyCombatActor, { easyCombatActorfromToken } from '../abstract/EasyCombatActor';
 
 export default class Feint extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;
 
   constructor(token: Token, promiseFuncs?: PromiseFunctions<number>) {
-    super('Feint', token, {
+    super('Feint', token, easyCombatActorfromToken(token), {
       title: `Feint - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/feint.hbs`,
     });

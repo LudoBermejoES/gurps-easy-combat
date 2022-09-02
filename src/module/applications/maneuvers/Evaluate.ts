@@ -2,10 +2,11 @@ import { MODULE_NAME, TEMPLATES_FOLDER } from '../libs/constants';
 import { checkSingleTarget, ensureDefined, getManeuver, getTargets } from '../libs/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import ManeuverChooser from '../maneuverChooser';
+import EasyCombatActor, { easyCombatActorfromToken } from '../abstract/EasyCombatActor';
 
 export default class Evaluate extends BaseActorController {
   constructor(token: Token) {
-    super('Evaluate', token, {
+    super('Evaluate', token, easyCombatActorfromToken(token), {
       title: `Evaluate - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/Evaluate.hbs`,
     });

@@ -5,6 +5,7 @@ import BaseActorController from './abstract/BaseActorController.js';
 import { activateChooser, ensureDefined } from './libs/miscellaneous';
 import ManeuverChooser from './maneuverChooser';
 import AttackChooser from './attackChooser';
+import EasyCombatActor, { easyCombatActorfromToken } from './abstract/EasyCombatActor';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 
@@ -29,7 +30,7 @@ export default class PostureChooser extends BaseActorController {
   promiseFuncs: PromiseFunctions<void> | undefined;
 
   constructor(token: Token, data: PostureData = {}, promiseFuncs?: PromiseFunctions<void>) {
-    super('PostureChooser', token, {
+    super('PostureChooser', token, easyCombatActorfromToken(token), {
       title: `Escoger postura - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/postureChooser.hbs`,
     });

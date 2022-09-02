@@ -1,6 +1,9 @@
 import { findSkillSpell } from './miscellaneous';
-import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from './attacksDataTransformation';
 import { Skill } from '../../types';
+import {
+  meleeAttackWithRemainingRounds,
+  rangedAttackWithRemainingRounds,
+} from '../abstract/mixins/EasyCombatCommonAttackDefenseExtractor';
 
 export function isOffHandTrained(
   actor: Actor,

@@ -1,11 +1,11 @@
 import { Item } from '../../types';
 import { getEquippedItems } from './weaponMacrosCTA';
 import AttackChooser from '../attackChooser';
-import EasyCombatActor from '../abstract/EasyCombatActor';
+import EasyCombatActor, { easyCombatActorfromActor } from '../abstract/EasyCombatActor';
 
 export async function removeWeapon(chooser: AttackChooser, token: TokenDocument, weapon: any) {
   console.log('TRATO DE ELIMINAR ', weapon);
-  const actor: EasyCombatActor = chooser.actor as EasyCombatActor;
+  const actor: EasyCombatActor = easyCombatActorfromActor(chooser.actor);
   const weapons: Item[] = actor.getWeaponsFromAttacks();
   const weaponToRemove: Item | undefined = weapons.find((w) => w.itemid === weapon.itemId);
   if (weaponToRemove) {

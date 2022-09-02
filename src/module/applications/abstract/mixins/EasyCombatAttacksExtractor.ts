@@ -10,8 +10,8 @@ import EasyCombatCommonAttackDefenseExtractor, {
 
 import EasyCombatAttacksModifiers from './EasyCombatAttacksModifiers';
 
-import { applyMixins } from '../../../gurps-easy-combat';
 import { getEquippedItems } from '../../libs/weaponMacrosCTA';
+import { applyMixins } from '../../libs/mixins';
 
 export interface weaponToBeReady {
   itemid: string;
@@ -360,9 +360,9 @@ class EasyCombatAttacksExtractor {
 
     const meleeWeaponIds: string[] = attacks.melee.map((melee) => melee.itemid).filter((i) => i !== undefined);
     const rangedWeaponIds: string[] = attacks.ranged.map((melee) => melee.itemid).filter((i) => i !== undefined);
-    ensureDefined(this.token, 'Actor sin token');
-    const equippedItems: { itemId: string; hand: string }[] = await getEquippedItems(this.token);
-    await this.token.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
+    ensureDefined(this.tokenDocumentSelected, 'Actor sin token');
+    const equippedItems: { itemId: string; hand: string }[] = await getEquippedItems(this.tokenDocumentSelected);
+    await this.tokenDocumentSelected.setFlag(MODULE_NAME, 'readyActionsWeaponNeeded', {
       items: Array.from(new Set([...meleeWeaponIds, ...rangedWeaponIds]))
         .filter((item) => !equippedItems.find((i) => i.itemId === item))
         .map((item) => {

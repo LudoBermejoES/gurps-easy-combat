@@ -1,10 +1,8 @@
 import { Item, MeleeAttack, RangedAttack, ReadyManeouverNeeded } from '../../../types';
 import { clearAmmunition, equippedItem, refreshAmmo } from '../../libs/weaponMacrosCTA';
 import { MODULE_NAME } from '../../libs/constants';
-import { applyMixins } from '../../../gurps-easy-combat';
 import EasyCombatBaseExtractor from './EasyCombatBaseExtractor';
-
-interface EasyCombatInventoryExtractor extends Actor, EasyCombatBaseExtractor {}
+import { applyMixins } from '../../libs/mixins';
 
 class EasyCombatInventoryExtractor {
   getFinalItem(
@@ -194,6 +192,7 @@ class EasyCombatInventoryExtractor {
   }
 }
 
+interface EasyCombatInventoryExtractor extends Actor, EasyCombatBaseExtractor {}
 applyMixins(EasyCombatInventoryExtractor, [Actor, EasyCombatBaseExtractor]);
 
 export default EasyCombatInventoryExtractor;

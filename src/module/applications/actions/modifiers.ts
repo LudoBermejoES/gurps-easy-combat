@@ -1,6 +1,6 @@
 import { MeleeAttack, Modifier, RangedAttack } from '../../types';
 import { ensureDefined } from '../libs/miscellaneous';
-import EasyCombatActor from '../abstract/EasyCombatActor';
+import EasyCombatActor, { easyCombatActorfromActor } from '../abstract/EasyCombatActor';
 
 export function getMeleeModifiers(
   attack: MeleeAttack,
@@ -21,7 +21,7 @@ export function getMeleeModifiers(
   damage: Modifier[];
 } {
   ensureDefined(token.actor, 'No hay actor en el token');
-  const actor: EasyCombatActor = token.actor as EasyCombatActor;
+  const actor: EasyCombatActor = easyCombatActorfromActor(token.actor);
   return actor.getMeleeModifiers(attack, target, removeFlags, {
     isUsingFatigueForMoveAndAttack,
     isUsingFatigueForMightyBlows,
@@ -50,7 +50,7 @@ export function getRangedModifiers(
   damage: Modifier[];
 } {
   ensureDefined(token.actor, 'No hay actor en el token');
-  const actor: EasyCombatActor = token.actor as EasyCombatActor;
+  const actor: EasyCombatActor = easyCombatActorfromActor(token.actor);
   return actor.getRangedModifiers(attack, target, removeFlags, {
     isUsingFatigueForMoveAndAttack,
     isUsingFatigueForMightyBlows,

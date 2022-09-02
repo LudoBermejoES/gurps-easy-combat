@@ -1,8 +1,11 @@
-import { meleeAttackWithRemainingRounds, rangedAttackWithRemainingRounds } from './attacksDataTransformation';
 import { getEquippedItems } from './weaponMacrosCTA';
 import { Skill } from '../../types';
 import { isOffHandTrained } from './skillsDataExtractor';
 import { hasAmbidexterity } from './advantagesDataExtractor';
+import {
+  meleeAttackWithRemainingRounds,
+  rangedAttackWithRemainingRounds,
+} from '../abstract/mixins/EasyCombatCommonAttackDefenseExtractor';
 
 export async function checkOffHand(
   token: TokenDocument,

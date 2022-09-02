@@ -14,7 +14,7 @@ import {
   meleeAttackWithRemainingRounds,
   rangedAttackWithRemainingRounds,
 } from './abstract/mixins/EasyCombatCommonAttackDefenseExtractor';
-import EasyCombatActor from './abstract/EasyCombatActor';
+import EasyCombatActor, { easyCombatActorfromActor, easyCombatActorfromToken } from './abstract/EasyCombatActor';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -76,7 +76,7 @@ export default class AttackChooser extends BaseActorController {
   promiseFuncs: PromiseFunctions<void> | undefined;
 
   constructor(token: Token, data: AttackData = {}, promiseFuncs?: PromiseFunctions<void>, maneuver?: string) {
-    super('AttackChooser', token, {
+    super('AttackChooser', token, easyCombatActorfromToken(token), {
       title: `Attack Chooser - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/attackChooser.hbs`,
     });
@@ -150,12 +150,12 @@ export default class AttackChooser extends BaseActorController {
         id: 'hit_locations',
       },
       weaponsToBeReady: {
-        items: this.actor.getWeaponsToBeReady(),
+        items: this.weaponsToBeReadyData,
         headers: ['weapon', 'remainingRounds'],
         id: 'weapons_to_be_ready',
       },
       weaponsNotToBeReady: {
-        items: this.actor.getWeaponsNotToBeReady(),
+        items: this.weaponsNotToBeReadyData,
         headers: ['weapon', 'remainingRounds'],
         id: 'weapons_not_to_be_ready',
       },
@@ -609,7 +609,7 @@ export default class AttackChooser extends BaseActorController {
     ensureDefined(game.user, 'game not initialized');
     const target = getTargets(game.user)[0];
     ensureDefined(target.actor, 'target has no actor');
-    const targetActor = target.actor as EasyCombatActor;
+    const targetActor = easyCombatActorfromActor(target.actor);
     const hitLocationsValues = targetActor.getHitLocations();
     const hitLocationsData = hitLocationsValues.map(({ equipment, dr, roll, where, penalty }) => ({
       roll,

@@ -3,13 +3,13 @@ import { MODULE_NAME, TEMPLATES_FOLDER } from '../libs/constants';
 import { activateChooser, ensureDefined, getManeuver } from '../libs/miscellaneous';
 import BaseActorController from '../abstract/BaseActorController';
 import ManeuverChooser from '../maneuverChooser';
-import EasyCombatActor from '../abstract/EasyCombatActor';
+import EasyCombatActor, { easyCombatActorfromActor, easyCombatActorfromToken } from '../abstract/EasyCombatActor';
 
 export default class Aim extends BaseActorController {
   promiseFuncs: PromiseFunctions<number> | undefined;
 
   constructor(token: Token, promiseFuncs?: PromiseFunctions<number>) {
-    super('Aim', token, {
+    super('Aim', token, easyCombatActorfromToken(token), {
       title: `Aim - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/aim.hbs`,
     });
@@ -22,19 +22,21 @@ export default class Aim extends BaseActorController {
   }
 
   getData(): ChooserData<['weapon', 'acc', 'level', 'damage', 'range']> {
-    const data = (this.actor as EasyCombatActor).getAttacks().ranged.map(({ name, acc, level, damage, range }) => ({
-      weapon: name,
-      acc,
-      level,
-      damage,
-      range,
-    }));
+    const data = easyCombatActorfromActor(this.actor)
+      .getAttacks()
+      .ranged.map(({ name, acc, level, damage, range }) => ({
+        weapon: name,
+        acc,
+        level,
+        damage,
+        range,
+      }));
     return { items: data, headers: ['weapon', 'acc', 'level', 'damage', 'range'], id: 'range_attacks' };
   }
 
   activateListeners(html: JQuery): void {
     activateChooser(html, 'range_attacks', async (index) => {
-      const attack = (this.actor as EasyCombatActor).getAttacks().ranged[index];
+      const attack = this.actor.getAttacks().ranged[index];
       const lastAim = <{ bonus: number } | undefined>this.token.document.getFlag(MODULE_NAME, 'lastAim');
       this.token.document.setFlag(MODULE_NAME, 'lastAim', {
         bonus: lastAim?.bonus ? Number(lastAim?.bonus) + 1 : Number(attack.acc),

@@ -13,13 +13,14 @@ import {
 import BaseActorController from './abstract/BaseActorController';
 import ManeuverChooser from './maneuverChooser';
 import { meleeAttackWithRemainingRounds } from './abstract/mixins/EasyCombatCommonAttackDefenseExtractor';
+import EasyCombatActor, { easyCombatActorfromToken } from './abstract/EasyCombatActor';
 
 export default class FeintDefense extends BaseActorController {
   resolve: (value: GurpsRoll | PromiseLike<GurpsRoll>) => void;
   reject: (reason: string) => void;
 
   constructor(token: Token, { resolve, reject }: PromiseFunctions<GurpsRoll>) {
-    super('FeintDefense', token, {
+    super('FeintDefense', token, easyCombatActorfromToken(token), {
       title: `Feint Defense - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/feint.hbs`,
     });

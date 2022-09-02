@@ -6,6 +6,7 @@ import BaseActorController from '../abstract/BaseActorController.js';
 // @ts-ignore
 import Maneuvers from '/systems/gurps/module/actor/maneuver.js';
 import ManeuverChooser from '../maneuverChooser';
+import EasyCombatActor, { easyCombatActorfromToken } from './EasyCombatActor';
 
 //#region types
 export interface ManeuverInfo {
@@ -48,7 +49,7 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
   };
 
   constructor(appName: string, token: Token, options: Partial<Application.Options>) {
-    super(appName, token, {
+    super(appName, token, easyCombatActorfromToken(token), {
       title: `Maneuver Chooser - ${token.name}`,
       template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
       ...options,

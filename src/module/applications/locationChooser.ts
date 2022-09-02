@@ -4,7 +4,7 @@ import BaseActorController from './abstract/BaseActorController.js';
 import { activateChooser, ensureDefined, getTargets } from './libs/miscellaneous';
 import AttackChooser, { AttackData } from './attackChooser';
 import { getHitLocationsObject, hitLocationsData } from './libs/locationsDataTransformation';
-import EasyCombatActor from './abstract/EasyCombatActor';
+import { easyCombatActorfromToken } from './abstract/EasyCombatActor';
 
 interface LocationData {
   keepOpen?: boolean;
@@ -19,7 +19,7 @@ export default class LocationChooser extends BaseActorController {
   promiseFuncs: PromiseFunctions<void> | undefined;
 
   constructor(token: Token, data: LocationData = {}, promiseFuncs?: PromiseFunctions<void>) {
-    super('LocationChooser', token, {
+    super('LocationChooser', token, easyCombatActorfromToken(token), {
       title: `Escoger postura - ${token.name}`,
       template: `${TEMPLATES_FOLDER}/locationChooser.hbs`,
     });
@@ -53,9 +53,11 @@ export default class LocationChooser extends BaseActorController {
 
   async changeLocation(index: number, element: JQuery<any>): Promise<void> {
     ensureDefined(game.user, 'game not initialized');
-    const target = getTargets(game.user)[0];
-    ensureDefined(target.actor, 'target has no actor');
-    const hitLocationsValues = (target.actor as EasyCombatActor).getHitLocations();
+    const target = getTargets(game.user)[0] || {};
+    ensureDefined(target, 'target has no actor');
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const hitLocationsValues = easyCombatActorfromToken(target).getHitLocations();
     const hitLocationsData = hitLocationsValues.map(({ equipment, dr, roll, where, penalty }) => ({
       roll,
       where,
