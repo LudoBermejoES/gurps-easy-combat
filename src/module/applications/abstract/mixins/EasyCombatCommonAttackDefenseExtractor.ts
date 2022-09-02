@@ -103,8 +103,10 @@ class EasyCombatCommonAttackDefenseExtractor {
     return [];
   }
   getReadyActionsWeaponNeeded(): { items: ReadyManeouverNeeded[] } {
-    if (this.token)
-      return <{ items: ReadyManeouverNeeded[] }>this.token.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
+    if (this.tokenDocumentSelected)
+      return <{ items: ReadyManeouverNeeded[] }>(
+        this.tokenDocumentSelected.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')
+      );
     return { items: [] };
   }
 
