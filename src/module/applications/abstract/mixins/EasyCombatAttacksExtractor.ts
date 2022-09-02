@@ -89,10 +89,17 @@ class EasyCombatAttacksExtractor {
     return this.getRangedAttacksWithNotReamingRounds().filter((attack: rangedAttackWithRemainingRounds) => attack.rof); // && attack.rof !== '1');
   }
 
+  getRangedDataWithNoROF(): rangedAttackWithRemainingRounds[] {
+    return this.getRangedAttacksWithNotReamingRounds().filter(
+      (attack: rangedAttackWithRemainingRounds) => attack.rof === '',
+    );
+  }
+
   getExtraRangedAttacksPerROF(): rangedAttackWithRemainingRounds[] {
     const rangedAttackWithROFMoreThan1: rangedAttackWithRemainingRounds[] = this.getRangedDataWithROFMoreThan1();
     const rangedData: rangedAttackWithRemainingRounds[] = [];
     rangedAttackWithROFMoreThan1.forEach((attack) => {
+      rangedData.push(attack);
       if (attack.rof) {
         let rof = Number(attack.rof.split('!').join(''));
 
@@ -131,7 +138,7 @@ class EasyCombatAttacksExtractor {
   }
 
   getValidRangedAttacks(): rangedAttackWithRemainingRounds[] {
-    return [...this.getRangedDataWithROFMoreThan1(), ...this.getExtraRangedAttacksPerROF()];
+    return [...this.getRangedDataWithNoROF(), ...this.getExtraRangedAttacksPerROF()];
   }
 
   getAttacksToBeReady(): (meleeAttackWithRemainingRounds | rangedAttackWithRemainingRounds)[] {

@@ -17,7 +17,7 @@ import { ChooserData, Modifier, Skill } from '../types';
 import { applyModifiers } from './libs/actions';
 import { useFatigue } from './libs/fatigue';
 import { Block, Parry } from './abstract/mixins/EasyCombatDefenseExtractor';
-import EasyCombatActor, { easyCombatActorfromToken } from './abstract/EasyCombatActor';
+import { easyCombatActorfromToken } from './abstract/EasyCombatActor';
 
 interface DefenseData {
   resolve(value: boolean | PromiseLike<boolean>): void;
@@ -114,37 +114,19 @@ export default class DefenseChooser extends BaseActorController {
 
   async showModifiers(mode: 'PARRY' | 'BLOCK' | 'DODGE', index: number, element: any | undefined): Promise<void> {
     setTimeout(async () => {
-      let modifiers: Modifier[] = [];
+      let modifiers: Modifier[] = [
+        ...this.data.modifiers,
+        ...this.actor.getDefenseModifiersBySelection(mode).modifiers,
+        ...this.actor.getDefenseModifiersByManeuver(this.data.attackerId, mode),
+        ...(await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield)).modifiers,
+        ...this.actor.getModifierByShock(),
+        ...this.actor.getModifierByPosture('DEFENSE'),
+      ];
+
       if (mode === 'PARRY') {
         const parries: Parry[] = await this.actor.getValidParries(this.token, this.data, this.canUseModShield);
         const parry = parries[index];
-        modifiers = [
-          ...this.data.modifiers,
-          ...parry.modifiers,
-          ...this.actor.getDefenseModifiersBySelection(mode).modifiers,
-          ...this.actor.getDefenseModifiersByManeuver(this.data.attackerId, 'PARRY'),
-          ...(await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield)).modifiers,
-          ...this.actor.getModifierByShock(),
-          ...this.actor.getModifierByPosture('DEFENSE'),
-        ];
-      } else if (mode === 'BLOCK') {
-        modifiers = [
-          ...this.data.modifiers,
-          ...this.actor.getDefenseModifiersBySelection(mode).modifiers,
-          ...this.actor.getDefenseModifiersByManeuver(this.data.attackerId, 'BLOCK'),
-          ...(await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield)).modifiers,
-          ...this.actor.getModifierByShock(),
-          ...this.actor.getModifierByPosture('DEFENSE'),
-        ];
-      } else if (mode === 'DODGE') {
-        modifiers = [
-          ...this.data.modifiers,
-          ...this.actor.getDefenseModifiersBySelection(mode).modifiers,
-          ...this.actor.getDefenseModifiersByManeuver(this.data.attackerId, 'DODGE'),
-          ...(await this.actor.getDefenseModifiersByMode(mode, this.canUseModShield)).modifiers,
-          ...this.actor.getModifierByShock(),
-          ...this.actor.getModifierByPosture('DEFENSE'),
-        ];
+        modifiers = [...modifiers, ...parry.modifiers];
       }
 
       if (modifiers.length) {

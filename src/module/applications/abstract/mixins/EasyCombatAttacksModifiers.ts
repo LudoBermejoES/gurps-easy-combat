@@ -263,9 +263,11 @@ class EasyCombatAttacksModifiers {
         modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
       }
     }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const distance = game.canvas.grid.measureDistance(token.center, target.center, { gridSpaces: true }) || 0;
+
+    const distance =
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      game.canvas.grid.measureDistance(this.tokenSelected?.center, target.center, { gridSpaces: true }) || 0;
     const modifierByDistance = GURPS.rangeObject.ranges;
     const modifier = modifierByDistance.find((d: any) => d.max >= distance);
     modifiers.attack.push({ mod: modifier.penalty, desc: `Por distancia ${distance} casillas` });
