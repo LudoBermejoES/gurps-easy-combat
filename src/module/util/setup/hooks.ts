@@ -15,6 +15,7 @@ import { applyModifiersByDamage } from '../../applications/libs/damage';
 import DefenseChooser from '../../applications/defenseChooser';
 import { beforeManeuvers, BeforeManeuversKey } from '../../applications/actions/beforeManeuvers';
 import EasyCombatActor, { easyCombatActorfromActor } from '../../applications/abstract/EasyCombatActor';
+import { changeTokensSizeIfInTheSameGridPosition } from '../../applications/libs/actions';
 
 async function setActionByActiveEffect(actor: Actor, tokenSelected: Token) {
   for (const effectName in STATUS_EFFECTS_THAN_AFFECT_MANEUVERS) {
@@ -82,6 +83,14 @@ export function registerHooks(): void {
   };
 
   Hooks.on('preUpdateToken', (token: Token, changes: any, data: any) => {
+    if (changes.x || changes.y) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      token.data.originalPosition = game?.canvas?.grid?.grid?.getGridPositionFromPixels(token.data.x, token.data.y) || [
+        0, 0,
+      ];
+    }
+
     if (!game.combat) return true;
 
     const actor = token.actor;
@@ -130,6 +139,7 @@ export function registerHooks(): void {
         restOfMovement: restOfMovement - distance,
         round: game.combat?.round ?? 0,
       });
+
       return true;
     } else {
       ui.notifications?.error('No puedes mover tanto: tu movimiento restante es ' + restOfMovement + ' casillas');
@@ -137,8 +147,12 @@ export function registerHooks(): void {
     }
   });
 
-  Hooks.on('updateToken', (token: TokenDocument, changes: any) => {
+  Hooks.on('updateToken', async (token: TokenDocument, changes: any) => {
     applyModifiersByDamage(token, changes);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    await CanvasAnimation.getAnimation(token.object.movementAnimationName).promise;
+    changeTokensSizeIfInTheSameGridPosition(token, changes);
   });
 
   // on create combatant, set the maneuver

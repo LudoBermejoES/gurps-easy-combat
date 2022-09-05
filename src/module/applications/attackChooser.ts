@@ -353,7 +353,7 @@ export default class AttackChooser extends BaseActorController {
   }
 
   async unReadyWeapon(weapon: any): Promise<void> {
-    ensureDefined(this.actor.token, 'Actor sin token');
+    ensureDefined(this.actor.tokenSelected, 'Actor sin token');
     const readyActionsWeaponNeeded = this.actor.getReadyActionsWeaponNeeded();
     let remainingRounds = 1;
     if (this.actor) {
@@ -382,7 +382,7 @@ export default class AttackChooser extends BaseActorController {
     });
     console.log('Actualizo', weapon);
     console.log(await this.token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded'));
-    await removeItemById(this.actor.token.id as string, weapon.itemid);
+    await removeItemById(this.actor.tokenSelected.id as string, weapon.itemid);
     if (this.data.keepOpen || this.data.beforeCombat) {
       setTimeout(
         () =>
