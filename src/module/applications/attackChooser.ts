@@ -563,6 +563,25 @@ export default class AttackChooser extends BaseActorController {
       }
     }
 
+    if (mode === 'melee') {
+      debugger;
+      const attacker = { x: this.token.x, y: this.token.y };
+      const defender = { x: target.x, y: target.y };
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const distance: number = game.canvas.grid.measureDistance(attacker, defender, { gridSpaces: true }) || 0;
+      const reach: string[] = (attack as MeleeAttack).reach.replace('C', '0').split(',');
+      const validReach = reach.find((r) => parseInt(r) === distance);
+      if (!validReach) {
+        ui.notifications?.error(
+          `El ataque seleccionado no está a la distancia correcta. Solo puede atacar a ${reach.join(
+            ',',
+          )} casillas de distancia`,
+        );
+        return;
+      }
+    }
+
     await makeAttackInner(
       this.actor,
       this.token,

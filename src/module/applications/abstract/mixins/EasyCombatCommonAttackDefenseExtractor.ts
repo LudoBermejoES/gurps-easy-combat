@@ -66,12 +66,12 @@ class EasyCombatCommonAttackDefenseExtractor {
   getNameFromAttack(attack: any, attackData: any): boolean {
     const nameToLook: string = attackData.weapon.split(' --')[0];
     if (attack.alternateName) {
-      if (attack.alternateName === nameToLook) {
+      if (attack.alternateName === nameToLook && attack.mode === attackData.mode) {
         return true;
       }
     }
 
-    if (attack.name === nameToLook) {
+    if (attack.name === nameToLook && attack.mode === attackData.mode) {
       return true;
     }
 
