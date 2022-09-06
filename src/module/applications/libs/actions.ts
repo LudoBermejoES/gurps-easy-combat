@@ -44,6 +44,12 @@ export async function changeTokensSizeIfInTheSameGridPosition(token: TokenDocume
     console.log(tokensInSamePos);
     for (let i = 0; i < tokensInSamePos.length; i++) {
       const token: TokenDocument = tokensInSamePos[i];
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      token.beforeResize = {
+        x: token.data.x,
+        y: token.data.y,
+      };
       if (token.data.width === 1) {
         const size: number = (game?.canvas?.grid?.grid?.w || 0) / 4;
         token.data.width = 0.5;
@@ -78,9 +84,9 @@ export async function changeTokensSizeIfInTheSameGridPosition(token: TokenDocume
           if (token.data.width === 0.5) {
             token.data.width = 1;
             token.data.height = 1;
-            await token.update({ width: 1, height: 1 });
-            const getSnapped: any = game?.canvas?.grid?.grid?.getSnappedPosition(token.data.x, token.data.y) || [0, 0];
-            await token.update({ x: getSnapped.x, y: getSnapped.y });
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            await token.update({ width: 1, height: 1, x: token.beforeResize.x, y: token.beforeResize.y });
           }
         }
       }
