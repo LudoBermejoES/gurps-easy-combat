@@ -78,8 +78,9 @@ export async function changeTokensSizeIfInTheSameGridPosition(token: TokenDocume
           if (token.data.width === 0.5) {
             token.data.width = 1;
             token.data.height = 1;
+            await token.update({ width: 1, height: 1 });
             const getSnapped: any = game?.canvas?.grid?.grid?.getSnappedPosition(token.data.x, token.data.y) || [0, 0];
-            await token.update({ width: 1, height: 1, x: getSnapped.x, y: getSnapped.y });
+            await token.update({ x: getSnapped.x, y: getSnapped.y });
           }
         }
       }

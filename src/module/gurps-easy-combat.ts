@@ -7,8 +7,8 @@ import DefenceChooser from './applications/defenseChooser.js';
 import { SockerLibSocket } from './util/setup/socketkib.js';
 import { drawEquipment } from './applications/libs/weaponMacrosCTA';
 
-let appId = '';
-appId = '3';
+const appId = _appId;
+
 const globals = {
   dataExtractor,
   ManeuverChooser,

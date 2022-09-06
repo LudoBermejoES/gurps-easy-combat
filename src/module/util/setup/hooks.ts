@@ -46,13 +46,13 @@ export function registerHooks(): void {
 
     window.addEventListener('keydown', (evt) => {
       if (evt.key === 'Alt') {
-        $(`#${window.EasyCombat.appId}`).hide();
+        $('*[data-appid="' + _appId + '"]').hide();
       }
     });
 
     window.addEventListener('keyup', (evt) => {
       if (evt.key === 'Alt') {
-        $(`#${window.EasyCombat.appId}`).show();
+        $('*[data-appid="' + _appId + '"]').show();
       }
     });
 
