@@ -1,4 +1,4 @@
-import { MeleeAttack, Modifier, RangedAttack } from '../../../types';
+import { Item, MeleeAttack, Modifier, RangedAttack } from '../../../types';
 import { FENCING_WEAPONS, MODULE_NAME } from '../../libs/constants';
 import AttackChooser, { AttackData } from '../../attackChooser';
 import { findSkillSpell, getBulk, getManeuver, getTargets } from '../../libs/miscellaneous';
@@ -24,6 +24,7 @@ class EasyCombatAttacksModifiers {
       isUsingFatigueForMightyBlows = false,
       isUsingDeceptiveAttack = '',
       isRapidStrikeAttacks = false,
+      isUsingTwoWeapons = false,
       isCounterAttack = false,
       isDisarmAttack = false,
     },
@@ -82,12 +83,14 @@ class EasyCombatAttacksModifiers {
         isUsingFatigueForMightyBlows,
         isUsingDeceptiveAttack,
         isRapidStrikeAttacks,
+        isUsingTwoWeapons,
         isCounterAttack,
         isDisarmAttack,
       },
     );
     if (attackModifiers.length) modifiers.attack = [...modifiers.attack, ...attackModifiers];
-    const offHandModifier = await checkOffHand(token.document, attackData);
+
+    const offHandModifier = await checkOffHand(token.document, attackData, this.getWeaponsFromAttacks());
     if (offHandModifier) {
       modifiers.attack = [...modifiers.attack, offHandModifier];
     }
@@ -128,6 +131,7 @@ class EasyCombatAttacksModifiers {
       isUsingFatigueForMightyBlows = false,
       isUsingDeceptiveAttack = '',
       isRapidStrikeAttacks = false,
+      isUsingTwoWeapons = false,
       isCounterAttack = false,
       isDisarmAttack = false,
     },
@@ -157,6 +161,10 @@ class EasyCombatAttacksModifiers {
 
     if (isRapidStrikeAttacks) {
       modifiers.attack.push({ mod: -6, desc: 'Por dos ataques en el mismo turno' });
+    }
+
+    if (isUsingTwoWeapons) {
+      modifiers.attack.push({ mod: -4, desc: 'Por ataque con dos armas en el mismo turno' });
     }
 
     if (isUsingDeceptiveAttack) {
@@ -226,6 +234,7 @@ class EasyCombatAttacksModifiers {
       isUsingFatigueForMoveAndAttack = false,
       isUsingFatigueForMightyBlows = false,
       isRapidStrikeAttacks = false,
+      isUsingTwoWeapons = false,
       isCounterAttack = false,
       isDisarmAttack = false,
     },

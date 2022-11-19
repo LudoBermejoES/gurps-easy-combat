@@ -4,8 +4,15 @@ import { ChooserData, Item, MeleeAttack, Modifier, PromiseFunctions, RangedAttac
 import BaseActorController from './abstract/BaseActorController.js';
 import { activateChooser, checkSingleTarget, ensureDefined, findSkillSpell, getTargets } from './libs/miscellaneous';
 import ManeuverChooser from './maneuverChooser';
-import { checkIfRemoveWeaponFromHandNeeded } from './libs/readyWeapons';
-import { addAmmunition, drawEquipment, getEquippedItems, removeItemById, equippedItem } from './libs/weaponMacrosCTA';
+import { checkIfRemoveWeaponFromHandNeeded, getWeaponsInHands } from './libs/readyWeapons';
+import {
+  addAmmunition,
+  drawEquipment,
+  getEquippedItems,
+  removeItemById,
+  equippedItem,
+  getWeapon,
+} from './libs/weaponMacrosCTA';
 import { getMeleeModifiers, getRangedModifiers } from './actions/modifiers';
 import { getHitLocationsObject, getLocationData, LocationToAttack } from './libs/locationsDataTransformation';
 import { useFatigue } from './libs/fatigue';
@@ -15,6 +22,7 @@ import {
   rangedAttackWithRemainingRounds,
 } from './abstract/mixins/EasyCombatCommonAttackDefenseExtractor';
 import EasyCombatActor, { easyCombatActorfromActor, easyCombatActorfromToken } from './abstract/EasyCombatActor';
+import { hasPowerBlow } from './libs/skillsDataExtractor';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -26,14 +34,19 @@ export interface AttackData {
   keepOpen?: boolean;
   twoAttacks?: boolean;
   attackCount?: number;
+  twoAttacksWithWeapons?: boolean;
+  attackWeaponsCount?: number;
   onlyReadyActions?: boolean;
   beforeCombat?: boolean;
   maneuver?: string;
   locationToAttack?: LocationToAttack | undefined;
   isUsingFatigueForMoveAndAttack?: boolean;
   isUsingFatigueForMightyBlows?: boolean;
+  isUsingFatigueForPowerBlows?: boolean;
   isUsingDeceptiveAttack?: string;
   isRapidStrikeAttacks?: boolean;
+  isUsingTwoWeapons?: boolean;
+  canUsePowerBlow?: boolean;
 }
 
 export default class AttackChooser extends BaseActorController {
@@ -73,6 +86,8 @@ export default class AttackChooser extends BaseActorController {
     ranged: RangedAttack[];
   };
 
+  canUseTwoWeapons: boolean;
+
   promiseFuncs: PromiseFunctions<void> | undefined;
 
   constructor(token: Token, data: AttackData = {}, promiseFuncs?: PromiseFunctions<void>, maneuver?: string) {
@@ -82,8 +97,10 @@ export default class AttackChooser extends BaseActorController {
     });
     this.meleeData = [];
     this.rangedData = [];
+    this.canUseTwoWeapons = false;
     this.data = data;
     if (this.data.twoAttacks && !this.data.attackCount) this.data.attackCount = 1;
+    if (this.data.twoAttacksWithWeapons && !this.data.attackWeaponsCount) this.data.attackWeaponsCount = 1;
     this.attacks = this.actor.getAttacks();
     this.weaponsToBeReadyData = [];
     this.weaponsNotToBeReadyData = [];
@@ -91,6 +108,7 @@ export default class AttackChooser extends BaseActorController {
   }
 
   async getData(): Promise<{
+    canUseTwoWeapons: boolean;
     onlyReadyActions: boolean;
     beforeCombat: boolean;
     disarmAttack: ChooserData<['weapon', 'mode', 'level', 'levelWithModifiers', 'reach']>;
@@ -107,14 +125,28 @@ export default class AttackChooser extends BaseActorController {
     this.rangedData = this.actor.getValidRangedAttacks();
 
     const hitLocationsObject = getHitLocationsObject(game);
-
     this.weaponsToBeReadyData = this.actor.getWeaponsToBeReady();
     this.weaponsNotToBeReadyData = this.actor.getWeaponsNotToBeReady();
-
+    const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
+    const isUsingTwoWeapons = $('#twoWeaponsAttack').is(':checked');
     const { meleeAttacksWithModifier, rangedAttacksWithModifier } = await this.actor.getAttacksWithModifiers(
       this.token,
+      {
+        isRapidStrikeAttacks,
+        isUsingTwoWeapons,
+      },
     );
+    this.data.twoAttacksWithWeapons = isUsingTwoWeapons;
+    if (!this.data.attackWeaponsCount) this.data.attackWeaponsCount = 1;
 
+    const weaponsInHands: {
+      onHand: equippedItem | undefined;
+      offHand: equippedItem | undefined;
+    } = await getWeaponsInHands(this.token.document);
+
+    this.canUseTwoWeapons = weaponsInHands.onHand !== undefined && weaponsInHands.offHand !== undefined;
+
+    this.data.canUsePowerBlow = false; // hasPowerBlow(this.actor) !== undefined;
     this.counterAttackData = await this.actor.getCounterAttackData(this.token);
     this.disarmAttackData = await this.actor.getDisarmAttackData(this.token);
 
@@ -122,6 +154,7 @@ export default class AttackChooser extends BaseActorController {
     this.data.locationToAttack = getLocationData(game, this.locationToAttack?.where || 'torso');
 
     return {
+      canUseTwoWeapons: this.canUseTwoWeapons,
       onlyReadyActions: this.data.onlyReadyActions || false,
       beforeCombat: this.data.beforeCombat || false,
       disarmAttack: {
@@ -173,7 +206,9 @@ export default class AttackChooser extends BaseActorController {
         attack: MeleeAttack | RangedAttack;
         modifiers: any;
         target: Token;
+        isUsingFatigueForPowerBlows: boolean;
         isRapidStrikeAttacks: boolean;
+        isUsingTwoWeapons: boolean;
         isUsingDeceptiveAttack: string;
         iMode: 'ranged' | 'melee';
       }
@@ -188,7 +223,13 @@ export default class AttackChooser extends BaseActorController {
       useFatigue(this.actor);
     }
 
+    const isUsingFatigueForPowerBlows = $('#fatiguePowerBlows').is(':checked');
+    if (isUsingFatigueForPowerBlows && element) {
+      useFatigue(this.actor);
+    }
+
     const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
+    const isUsingTwoWeapons = $('#twoWeaponsAttack').is(':checked');
     const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
     const iMode = mode === 'counter_attack' || mode === 'disarm_attack' ? 'melee' : mode;
     const isCounterAttack = mode === 'counter_attack';
@@ -221,6 +262,7 @@ export default class AttackChooser extends BaseActorController {
         isUsingFatigueForMightyBlows,
         isUsingDeceptiveAttack,
         isRapidStrikeAttacks,
+        isUsingTwoWeapons,
         isCounterAttack,
         isDisarmAttack,
       },
@@ -230,7 +272,9 @@ export default class AttackChooser extends BaseActorController {
       attack,
       modifiers,
       target,
+      isUsingFatigueForPowerBlows,
       isRapidStrikeAttacks,
+      isUsingTwoWeapons,
       isUsingDeceptiveAttack,
       iMode,
     };
@@ -280,19 +324,27 @@ export default class AttackChooser extends BaseActorController {
       $(evt.target).prop('checked', lastValue);
     });
 
-    html.on('change', '#fatigueMoveAndAttack, #rapidStrikeAttacks, #fatigueMightyBlows, #deceptiveAttack', (evt) => {
-      setTimeout(() => {
-        const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
-        const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
-        const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
-        const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
-        this.data.isUsingFatigueForMoveAndAttack = isUsingFatigueForMoveAndAttack;
-        this.data.isUsingDeceptiveAttack = isUsingDeceptiveAttack;
-        this.data.isUsingFatigueForMightyBlows = isUsingFatigueForMightyBlows;
-        this.data.isRapidStrikeAttacks = isRapidStrikeAttacks;
-        this.render(false);
-      }, 50);
-    });
+    html.on(
+      'change',
+      '#fatigueMoveAndAttack, #twoWeaponsAttack, #rapidStrikeAttacks, #fatigueMightyBlows, #fatiguePowerBlows, #deceptiveAttack',
+      (evt) => {
+        setTimeout(() => {
+          const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
+          const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
+          const isUsingFatigueForPowerBlows = $('#fatiguePowerBlows').is(':checked');
+          const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
+          const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
+          const isUsingTwoWeapons = $('#twoWeaponsAttack').is(':checked');
+          this.data.isUsingFatigueForMoveAndAttack = isUsingFatigueForMoveAndAttack;
+          this.data.isUsingDeceptiveAttack = isUsingDeceptiveAttack;
+          this.data.isUsingFatigueForMightyBlows = isUsingFatigueForMightyBlows;
+          this.data.isUsingFatigueForPowerBlows = isUsingFatigueForPowerBlows;
+          this.data.isRapidStrikeAttacks = isRapidStrikeAttacks;
+          this.data.isUsingTwoWeapons = isUsingTwoWeapons;
+          this.render(false);
+        }, 50);
+      },
+    );
 
     html.on('click', '#showAdvancedCombat', () => {
       $('#advancedAttacks').show();
@@ -497,8 +549,14 @@ export default class AttackChooser extends BaseActorController {
     let remainingRounds =
       (readyActionsWeaponNeeded.items.find((item) => item.itemId === weapon.itemid) || {}).remainingRounds || 1;
 
+    debugger;
     if (!this.data.beforeCombat) {
-      await this.token.setManeuver('ready');
+      const weaponDetails = getWeapon(weapon.name);
+      if (weaponDetails?.customManeuver) {
+        await this.token.setManeuver(weaponDetails.customManeuver);
+      } else {
+        await this.token.setManeuver('ready');
+      }
       if (await this.fastDrawSkillCheck(weapon, remainingRounds)) {
         return;
       }
@@ -528,7 +586,7 @@ export default class AttackChooser extends BaseActorController {
         500,
       );
     }
-    if (!this.data.beforeCombat && remainingRounds === 0) {
+    if (!this.data.beforeCombat && remainingRounds <= 1) {
       addAmmunition(weapon.name, this.token, weapon.itemid, handWeapon);
     }
   }
@@ -538,33 +596,24 @@ export default class AttackChooser extends BaseActorController {
     index: number,
     element: any | undefined,
   ): Promise<void> {
-    const attackCalculated = await this.calculateAttack(mode, index, element);
+    const attackCalculated = await this.calculateAttack(mode, index, element || 'something');
     if (!attackCalculated) return;
-    const { attack, modifiers, target, isRapidStrikeAttacks, isUsingDeceptiveAttack, iMode } = attackCalculated;
+    const {
+      attack,
+      modifiers,
+      target,
+      isRapidStrikeAttacks,
+      isUsingTwoWeapons,
+      isUsingFatigueForPowerBlows,
+      isUsingDeceptiveAttack,
+      iMode,
+    } = attackCalculated;
 
     const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
     const weapon: Item | undefined = this.actor.getWeaponFromAttack(attack);
-
-    const stillWithAmmo = this.actor.calculateAmmunitionForRangedAttacks(attack, mode, weapon, this.token);
+    const stillWithAmmo = await this.actor.calculateAmmunitionForRangedAttacks(attack, mode, weapon, this.token);
     if (!stillWithAmmo) return;
-
-    if (
-      !this.data.keepOpen &&
-      (!this.data.twoAttacks || (this.data.twoAttacks && this.data.attackCount === 2)) &&
-      (!twoWeaponsAttack || (twoWeaponsAttack && this.twoWeaponAttacksCount === 2))
-    ) {
-      this.close();
-    } else {
-      if (twoWeaponsAttack && this.twoWeaponAttacksCount === 1) {
-        this.twoWeaponAttacksCount = 2;
-      } else if (this.data.twoAttacks && this.data.attackCount === 1) {
-        this.twoWeaponAttacksCount = 1;
-        this.data.attackCount = 2;
-      }
-    }
-
     if (mode === 'melee') {
-      debugger;
       const attacker = { x: this.token.x, y: this.token.y };
       const defender = { x: target.x, y: target.y };
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -582,6 +631,41 @@ export default class AttackChooser extends BaseActorController {
       }
     }
 
+    if (
+      !this.data.keepOpen &&
+      (!this.data.twoAttacks || ((this.data.twoAttacks && this.data.attackCount) || 0) >= 2) &&
+      (!this.data.twoAttacksWithWeapons || (this.data.twoAttacksWithWeapons && this.data.attackWeaponsCount === 2)) &&
+      (!twoWeaponsAttack || (twoWeaponsAttack && this.twoWeaponAttacksCount === 2))
+    ) {
+      this.close();
+    } else {
+      if (twoWeaponsAttack && this.twoWeaponAttacksCount === 1) {
+        this.twoWeaponAttacksCount = 2;
+      } else if (this.data.twoAttacks && this.data.attackCount === 1) {
+        this.data.attackCount = 2;
+      } else if (this.data.twoAttacks && this.data.attackCount === 2) {
+        this.data.attackWeaponsCount = 1;
+        this.twoWeaponAttacksCount = 1;
+        this.data.attackCount = 3;
+      } else if (this.data.twoAttacksWithWeapons && this.data.attackWeaponsCount === 1) {
+        this.twoWeaponAttacksCount = 1;
+        this.data.attackWeaponsCount = 2;
+      }
+    }
+
+    const specialAttacks = {
+      isCounterAttack: mode === 'counter_attack',
+      isDisarmingAttack: mode === 'disarm_attack',
+      isDeceptiveAttack: isUsingDeceptiveAttack,
+      isUsingFatigueForPowerBlows: isUsingFatigueForPowerBlows,
+    };
+    if (weapon) {
+      const weaponDetails = getWeapon(weapon.name);
+      if (weaponDetails?.costFatigue) {
+        useFatigue(this.actor, weaponDetails?.costFatigue);
+      }
+    }
+
     await makeAttackInner(
       this.actor,
       this.token,
@@ -590,9 +674,7 @@ export default class AttackChooser extends BaseActorController {
       weapon,
       iMode,
       modifiers,
-      mode === 'counter_attack',
-      mode === 'disarm_attack',
-      isUsingDeceptiveAttack,
+      specialAttacks,
       this.locationToAttack,
     );
 
@@ -608,9 +690,7 @@ export default class AttackChooser extends BaseActorController {
           weapon,
           iMode,
           modifiers,
-          mode === 'counter_attack',
-          mode === 'disarm_attack',
-          isUsingDeceptiveAttack,
+          specialAttacks,
           this.locationToAttack,
         );
         if (this.promiseFuncs) {

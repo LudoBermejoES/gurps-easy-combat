@@ -1,4 +1,4 @@
-import { findSkillSpell } from './miscellaneous';
+import { findAdvantage, findSkillSpell } from './miscellaneous';
 import { Skill } from '../../types';
 import {
   meleeAttackWithRemainingRounds,
@@ -19,4 +19,8 @@ export function isOffHandTrained(
     isTrained = findSkillSpell(actor, `Off-Hand Weapon Training (${alternateName})`, true, false);
   }
   return isTrained;
+}
+
+export function hasPowerBlow(actor: Actor): Skill | undefined {
+  return findSkillSpell(actor, 'Power blow', true, false);
 }

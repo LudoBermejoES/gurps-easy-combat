@@ -228,11 +228,13 @@ class EasyCombatAttacksExtractor {
       isUsingFatigueForMightyBlows: boolean;
       isUsingDeceptiveAttack: string;
       isRapidStrikeAttacks: boolean;
+      isUsingTwoWeapons: boolean;
     } = {
       isUsingFatigueForMoveAndAttack: data?.isUsingFatigueForMoveAndAttack || false,
       isUsingFatigueForMightyBlows: data?.isUsingFatigueForMightyBlows || false,
       isUsingDeceptiveAttack: data?.isUsingDeceptiveAttack || '0',
       isRapidStrikeAttacks: data?.isRapidStrikeAttacks || false,
+      isUsingTwoWeapons: data?.isUsingTwoWeapons || false,
     };
     ensureDefined(game.user, 'game not initialized');
     const target = getTargets(game.user)[0];

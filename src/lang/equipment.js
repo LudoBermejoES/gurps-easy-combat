@@ -2587,7 +2587,7 @@ const Equipment = {
   'Culverin Cannonball': 'Bola de cañón de Culverin',
   'Culverin Truck Carriage Mount': 'Montaje de carro de camión de Culverin',
   Curare: 'Curare',
-  Cutlass: 'Cutlass',
+  Cutlass: 'Alfanje',
   'Cutting Arrow': 'Flecha de corte',
   'Cylinder Seal': 'Sello del cilindro',
   'Cylinder Seal__1': 'Sello del cilindro',
@@ -3250,48 +3250,48 @@ const Equipment = {
   Feet__1: 'Pies',
   'Face, Partial__1': 'Cara, parcial',
   'Neck, Partial__1': 'Cuello, parcial',
-}
+};
 
 export function getBrackets(name) {
-  const TL = /(.*) \((.*)\)/
-  const found = TL.exec(name)
+  const TL = /(.*) \((.*)\)/;
+  const found = TL.exec(name);
   if (found) {
     if (Equipment[found[1]]) {
-      return `${Equipment[found[1]]} (${found[2]})`
+      return `${Equipment[found[1]]} (${found[2]})`;
     }
   }
-  return name
+  return name;
 }
 
 export function getTL(name) {
-  const TL = /\/TL(\d)/
-  const found = TL.exec(name)
+  const TL = /\/TL(\d)/;
+  const found = TL.exec(name);
   if (found) {
-    const part = name.substr(0, name.indexOf('/TL') + 3)
-    const rest = name.substr(name.indexOf('/TL') + 4, 1000)
+    const part = name.substr(0, name.indexOf('/TL') + 3);
+    const rest = name.substr(name.indexOf('/TL') + 4, 1000);
     if (Equipment[part]) {
-      const number = found[1]
-      const result = Equipment[part].replace('/TL', '/TL' + number + rest)
-      return result
+      const number = found[1];
+      const result = Equipment[part].replace('/TL', '/TL' + number + rest);
+      return result;
     }
   }
-  return name
+  return name;
 }
 
 export function getEquipmentNameTranslated(name) {
-  let basicName = name
+  let basicName = name;
   if (Equipment[name]) {
-    return Equipment[basicName]
+    return Equipment[basicName];
   }
-  basicName = getBrackets(basicName)
-  basicName = getTL(basicName)
+  basicName = getBrackets(basicName);
+  basicName = getTL(basicName);
 
   if (basicName !== name) {
-    return basicName
+    return basicName;
   }
-  return ''
+  return '';
 }
 
 export function getEquipment() {
-  return Equipment
+  return Equipment;
 }

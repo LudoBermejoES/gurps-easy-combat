@@ -12,6 +12,7 @@ export function getMeleeModifiers(
     isUsingFatigueForMightyBlows = false,
     isUsingDeceptiveAttack = '',
     isRapidStrikeAttacks = false,
+    isUsingTwoWeapons = false,
     isCounterAttack = false,
     isDisarmAttack = false,
   },
@@ -27,6 +28,7 @@ export function getMeleeModifiers(
     isUsingFatigueForMightyBlows,
     isUsingDeceptiveAttack,
     isRapidStrikeAttacks,
+    isUsingTwoWeapons,
     isCounterAttack,
     isDisarmAttack,
   });
@@ -41,6 +43,7 @@ export function getRangedModifiers(
     isUsingFatigueForMoveAndAttack = false,
     isUsingFatigueForMightyBlows = false,
     isRapidStrikeAttacks = false,
+    isUsingTwoWeapons = false,
     isCounterAttack = false,
     isDisarmAttack = false,
   },
@@ -55,6 +58,7 @@ export function getRangedModifiers(
     isUsingFatigueForMoveAndAttack,
     isUsingFatigueForMightyBlows,
     isRapidStrikeAttacks,
+    isUsingTwoWeapons,
     isCounterAttack,
     isDisarmAttack,
   });

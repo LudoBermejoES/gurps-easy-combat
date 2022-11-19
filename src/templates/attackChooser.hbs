@@ -33,15 +33,15 @@
 <div>
   <div class="container">
     {{#unless beforeCombat}}
-    <div class="nostyles">
-      <label>
-        <input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}>Mantén la ventana
-        abierta después de atacar
-      </label>
-    </div>
-    <div  class="nostyles">
-      <input type="button" class="clickable" id="closeAndReturn" value="Volver a escoger maniobra">
-    </div>
+      <div class="nostyles">
+        <label>
+          <input type="checkbox" id="keepOpen" {{#if data.keepOpen}}checked{{/if}}>Mantén la ventana
+          abierta después de atacar
+        </label>
+      </div>
+      <div  class="nostyles">
+        <input type="button" class="clickable" id="closeAndReturn" value="Volver a escoger maniobra">
+      </div>
     {{ else }}
       <div  class="nostyles">
         <input type="button" class="clickable" id="close" value="Cerrar ventana">
@@ -53,9 +53,9 @@
     {{#if weaponsToBeReady.items.length}}
       <br>
       {{#if beforeCombat}}
-          <h2>Armas sin equipar</h2>
+        <h2>Armas sin equipar</h2>
       {{else}}
-          <h2>Armas sin equipar</h2>
+        <h2>Armas sin equipar</h2>
       {{/if}}
       {{> choiceTable weaponsToBeReady}}
     {{/if}}
@@ -80,55 +80,78 @@
     {{/unless}}
 
 
-  <div id="basicAttacks">
-    {{#if melee.items.length}}
-      <div style="text-align: right; margin-bottom: 5px"><input id="showAdvancedCombat" type="button" value="Maniobras de combate avanzadas" /></div>
-      <h2>Cuerpo a cuerpo</h2>
-      {{#ifEquals maneuver "move_and_attack"}}
+    <div id="basicAttacks">
+      {{#if melee.items.length}}
+        <div style="text-align: right; margin-bottom: 5px"><input id="showAdvancedCombat" type="button" value="Maniobras de combate avanzadas" /></div>
+        <h2>Cuerpo a cuerpo</h2>
+        {{#ifEquals maneuver "move_and_attack"}}
+          <div class="nostyles">
+            <label>
+              <input type="checkbox" id="fatigueMoveAndAttack" class="onlyOne" {{ checked data.isUsingFatigueForMoveAndAttack }}/>Gastas uno de fatiga para poder mover y atacar sin el penalizador
+            </label>
+          </div>
+        {{/ifEquals}}
+
+
+
+
+        {{#ifEquals data.attackCount "2"}}
+        {{else}}
+          {{#ifEquals data.attackWeaponsCount "2"}}
+          {{else}}
+            {{#if canUseTwoWeapons }}
+              <div class="nostyles">
+                <label>
+                  <input type="checkbox" id="twoWeaponsAttack" {{ checked data.isUsingTwoWeapons }} />Realizas dos ataques, uno con cada arma, a -4 (si no tienes entrenada la mano de la segunda arma o no eres ambidiestro, tendrás un -4 adicional)
+                </label>
+              </div>
+            {{/if}}
+            <div class="nostyles">
+              <label>
+                <input type="checkbox" id="rapidStrikeAttacks" {{ checked data.isRapidStrikeAttacks }} />Realizas dos ataques seguidos con el mismo arma con un -6 cada uno
+              </label>
+            </div>
+            <div class="nostyles">
+              <label>
+                <input type="checkbox" id="fatigueMightyBlows"  class="onlyOne" {{ checked data.isUsingFatigueForMightyBlows }} />Gastas uno de fatiga para hacer un +2 al daño
+              </label>
+            </div>
+            {{#if data.canUsePowerBlow }}
+              <div class="nostyles">
+                <label>
+                  <input type="checkbox" id="fatiguePowerBlows"  class="onlyOne" {{ checked data.isUsingFatigueForPowerBlows }} />Gastas uno de fatiga para hacer Ataque de poder (duplica número de dados pero requiere tirada)
+                </label>
+              </div>
+            {{/if}}
+          {{/ifEquals}}
+        {{/ifEquals}}
         <div class="nostyles">
           <label>
-            <input type="checkbox" id="fatigueMoveAndAttack" class="onlyOne" {{ checked data.isUsingFatigueForMoveAndAttack }}/>Gastas uno de fatiga para poder mover y atacar sin el penalizador
+            Ataque engañoso
+            <select id="deceptiveAttack">
+              <option value="0">No aplicar</option>
+              <option value="-2">-2 ataque, -1 a la defensa del contrario</option>
+              <option value="-4">-4 ataque, -2 a la defensa del contrario</option>
+              <option value="-6">-6 ataque, -3 a la defensa del contrario</option>
+              <option value="-8">-8 ataque, -8 a la defensa del contrario</option>
+            </select>
           </label>
         </div>
-      {{/ifEquals}}
+        {{> choiceTable melee}}
+      {{/if}}
+      {{#if ranged.items.length}}
+        <br>
+        <h2>A distancia</h2>
+        {{> choiceTable ranged}}
+      {{/if}}
 
-      <div class="nostyles">
-        <label>
-          <input type="checkbox" id="rapidStrikeAttacks" {{ checked data.isRapidStrikeAttacks }} />Realizas dos ataques seguidos con un -6 cada uno
-        </label>
-      </div>
-      <div class="nostyles">
-        <label>
-         <input type="checkbox" id="fatigueMightyBlows"  class="onlyOne" {{ checked data.isUsingFatigueForMightyBlows }} />Gastas uno de fatiga para hacer un +2 al daño
-        </label>
-      </div>
-      <div class="nostyles">
-        <label>
-          Ataque engañoso
-          <select id="deceptiveAttack">
-            <option value="0">No aplicar</option>
-            <option value="-2">-2 ataque, -1 a la defensa del contrario</option>
-            <option value="-4">-4 ataque, -2 a la defensa del contrario</option>
-            <option value="-6">-6 ataque, -3 a la defensa del contrario</option>
-            <option value="-8">-8 ataque, -8 a la defensa del contrario</option>
-          </select>
-        </label>
-      </div>
-      {{> choiceTable melee}}
-    {{/if}}
-    {{#if ranged.items.length}}
+      {{#if weaponsToBeReady.items.length}}
+        <br>
+        <h2>Armas que tienes que preparar antes de atacar con ellas</h2>
+        {{> choiceTable weaponsToBeReady}}
+      {{/if}}
       <br>
-      <h2>A distancia</h2>
-      {{> choiceTable ranged}}
-    {{/if}}
-
-    {{#if weaponsToBeReady.items.length}}
-      <br>
-      <h2>Armas que tienes que preparar antes de atacar con ellas</h2>
-      {{> choiceTable weaponsToBeReady}}
-    {{/if}}
-    <br>
-  </div>
+    </div>
 
   <div id="advancedAttacks" style="display: none">
     <div style="text-align: right; margin-bottom: 5px"><input id="showBasicCombat"  type="button" value="Volver a las maniobras básicas" /></div>

@@ -25,6 +25,11 @@ interface weapon {
   id: string;
   toRemove: boolean;
   useArrows: boolean | undefined;
+  useMagic: boolean | undefined;
+  customManeuver: string | undefined;
+  ignoreOffHand: boolean | undefined;
+  costFatigue: number | undefined;
+  useStones: boolean | undefined;
   useBolts: boolean | undefined;
   useBullets: boolean | undefined;
 }
@@ -133,6 +138,36 @@ async function arrow(
   setTimeout(() => addAmmo(token, id, hand, toRemove, number), 1000);
 }
 
+async function magic(
+  token: Token,
+  id: string,
+  hand: string,
+  toRemove: boolean,
+  number: number | undefined = undefined,
+) {
+  const textureData = {
+    ...getWeapon('MAGIC'),
+    ...defaultOptions(hand),
+  };
+  addOrRemoveItem(token, textureData, false, `Magic_${id}`, hand, null, id, toRemove, number);
+  setTimeout(() => addAmmo(token, id, hand, toRemove, number), 1000);
+}
+
+async function stone(
+  token: Token,
+  id: string,
+  hand: string,
+  toRemove: boolean,
+  number: number | undefined = undefined,
+) {
+  const textureData = {
+    ...getWeapon('STONE'),
+    ...defaultOptions(hand),
+  };
+  addOrRemoveItem(token, textureData, false, `Stone_${id}`, hand, null, id, toRemove, number);
+  setTimeout(() => addAmmo(token, id, hand, toRemove, number), 1000);
+}
+
 async function bolt(token: Token, id: string, hand: string, toRemove: boolean, number: number | undefined = undefined) {
   const textureData = {
     ...getWeapon('BOLT'),
@@ -183,6 +218,12 @@ export async function clearAmmunition(item: Item, token: Token) {
   if (weapon?.useArrows) {
     CTA.removeAnimByName(token.id, `Arrow_${itemid}`);
   }
+  if (weapon?.useMagic) {
+    CTA.removeAnimByName(token.id, `Magic_${itemid}`);
+  }
+  if (weapon?.useStones) {
+    CTA.removeAnimByName(token.id, `Stone_${itemid}`);
+  }
   if (weapon?.useBolts) {
     CTA.removeAnimByName(token.id, `Bolt_${itemid}`);
   }
@@ -213,6 +254,12 @@ export async function addAmmunition(
   }
   if (weapon?.useArrows) {
     arrow(token, id, hand, false, number);
+  }
+  if (weapon?.useMagic) {
+    magic(token, id, hand, false, number);
+  }
+  if (weapon?.useStones) {
+    stone(token, id, hand, false, number);
   }
   if (weapon?.useBolts) {
     bolt(token, id, hand, false, number);
@@ -258,6 +305,12 @@ export async function drawEquipment(
     await addOrRemoveItem(token, weapon, false, weapon.name, hand, null, id, toRemove);
     if (weapon.useArrows) {
       setTimeout(() => arrow(token, id, hand, toRemove, ammo?.ammo?.count), 500);
+    }
+    if (weapon.useMagic) {
+      setTimeout(() => magic(token, id, hand, toRemove, ammo?.ammo?.count), 500);
+    }
+    if (weapon.useStones) {
+      setTimeout(() => stone(token, id, hand, toRemove, ammo?.ammo?.count), 500);
     }
     if (weapon.useBolts) {
       setTimeout(() => bolt(token, id, hand, toRemove, ammo?.ammo?.count), 500);

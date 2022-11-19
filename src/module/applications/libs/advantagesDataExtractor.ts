@@ -9,5 +9,5 @@ export function hasHighPainThreshold(actor: Actor) {
 }
 
 export function hasLowPainThreshold(actor: Actor) {
-  return findAdvantage(actor, 'Low Pain Threshold') !== undefined;
+  return findAdvantage(actor, 'Power Blow') !== undefined;
 }

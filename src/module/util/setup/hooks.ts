@@ -14,8 +14,7 @@ import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/f
 import { applyModifiersByDamage } from '../../applications/libs/damage';
 import DefenseChooser from '../../applications/defenseChooser';
 import { beforeManeuvers, BeforeManeuversKey } from '../../applications/actions/beforeManeuvers';
-import EasyCombatActor, { easyCombatActorfromActor } from '../../applications/abstract/EasyCombatActor';
-import { changeTokensSizeIfInTheSameGridPosition } from '../../applications/libs/actions';
+import { easyCombatActorfromActor } from '../../applications/abstract/EasyCombatActor';
 
 async function setActionByActiveEffect(actor: Actor, tokenSelected: Token) {
   for (const effectName in STATUS_EFFECTS_THAN_AFFECT_MANEUVERS) {
@@ -134,6 +133,9 @@ export function registerHooks(): void {
       alreadyMoved?.round === game.combat?.round
         ? alreadyMoved.restOfMovement
         : token.actor?.data?.data?.currentmove || 0;
+
+    console.log('Distancia', distance, restOfMovement);
+
     if (distance <= restOfMovement) {
       token.setFlag(MODULE_NAME, 'combatRoundMovement', {
         restOfMovement: restOfMovement - distance,
@@ -149,16 +151,12 @@ export function registerHooks(): void {
 
   Hooks.on('updateToken', async (token: TokenDocument, changes: any) => {
     applyModifiersByDamage(token, changes);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await CanvasAnimation.getAnimation(token.object.movementAnimationName).promise;
-    changeTokensSizeIfInTheSameGridPosition(token, changes);
   });
 
   // on create combatant, set the maneuver
   Hooks.on('createCombatant', async (combatant: Combatant) => {
     ensureDefined(combatant.token, 'No actor selected');
-    const actor = easyCombatActorfromActor(combatant.token.actor);
+    const actor = easyCombatActorfromActor(combatant.token.actor, combatant.token.object as Token);
     ensureDefined(actor, 'No actor selected');
     ensureDefined(game.user, 'No user selected');
     if (!highestPriorityUsers(actor).includes(game.user)) {

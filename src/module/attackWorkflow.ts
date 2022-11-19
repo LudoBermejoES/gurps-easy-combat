@@ -97,16 +97,20 @@ export async function makeAttackInner(
     defense: Modifier[];
     damage: Modifier[];
   },
-  isCounterAttack: boolean,
-  isDisarmingAttack: boolean,
-  isDeceptiveAttack: string,
+  specialAttacks: {
+    isCounterAttack: boolean;
+    isDisarmingAttack: boolean;
+    isDeceptiveAttack: string;
+    isUsingFatigueForPowerBlows: boolean;
+  },
   locationToAttack: any,
 ): Promise<void> {
   if (!target.actor) {
     ui.notifications?.error('target has no actor');
     return;
   }
-  addCounterAttackModifiersForAttack(isCounterAttack, attacker, attack, modifiers);
+
+  addCounterAttackModifiersForAttack(specialAttacks.isCounterAttack, attacker, attack, modifiers);
   applyModifiers(modifiers.attack);
 
   const roll: GurpsRoll = await rollAttack(attacker, attack, type);
@@ -117,11 +121,7 @@ export async function makeAttackInner(
   await doAnimationAttack(target.actor, weapon, roll.rofrcl);
   await playSound(target.actor, weapon, roll.rofrcl);
   if (!roll.isCritSuccess) {
-    const resultDefense = await rollDefense(roll, attacker, token, attack, modifiers, target, {
-      isCounterAttack,
-      isDeceptiveAttack,
-      isDisarmingAttack,
-    });
+    const resultDefense = await rollDefense(roll, attacker, token, attack, modifiers, target, specialAttacks);
     if (!resultDefense) return;
     if (roll.rofrcl) {
       //      roll.rofrcl = roll.rofrcl - (GURPS.lastTargetedRoll.margin + 1);
@@ -141,7 +141,12 @@ export async function makeAttackInner(
     await game.tables?.getName('Critical Miss')?.draw();
   }
 
-  const resultDisarmingAttack: boolean = await rollDisarmingAttack(isDisarmingAttack, target, attack, attacker);
+  const resultDisarmingAttack: boolean = await rollDisarmingAttack(
+    specialAttacks.isDisarmingAttack,
+    target,
+    attack,
+    attacker,
+  );
   if (resultDisarmingAttack) return;
 
   await playSound(target.actor, weapon, 0);
@@ -152,6 +157,23 @@ export async function makeAttackInner(
     type: damageParts[1],
     extra: damageParts[2],
   };
+
+  if (specialAttacks.isUsingFatigueForPowerBlows) {
+    const action = {
+      orig: 'Sk:"Power Blow"',
+      type: 'skill-spell',
+      isSpellOnly: false,
+      isSkillOnly: true,
+      name: 'Power Blow',
+      spantext: '<b>Sk:</b>Power Blow',
+    };
+    const result = await GURPS.performAction(action, attacker);
+    if (result) {
+      const dice = Number(damage.formula.split('d')[0]);
+      damage.formula = damage.formula.replace(`${dice}d`, `${dice * 2}d`);
+    }
+  }
+
   if (roll.rofrcl) {
     for (let i = 1; i <= roll.rofrcl; i++) {
       rollDamage(attacker, damage, target, modifiers.damage, locationToAttack);

@@ -298,7 +298,7 @@ class EasyCombatDefenseExtractor {
         parry = originalParry.split('F')[0];
       }
       if (!isNaN(Number(parry)) && !parries.find((p) => p.itemid === itemid)) {
-        const offHandModifiers = await checkOffHand(token.document, attack);
+        const offHandModifiers = await checkOffHand(token.document, attack, this.getWeaponsFromAttacks());
         if (offHandModifiers) {
           modifiers.push(offHandModifiers);
         }

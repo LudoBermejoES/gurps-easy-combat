@@ -1,5 +1,5 @@
 import { Item } from '../../types';
-import { getEquippedItems } from './weaponMacrosCTA';
+import { equippedItem, getEquippedItems } from './weaponMacrosCTA';
 import AttackChooser from '../attackChooser';
 import EasyCombatActor, { easyCombatActorfromActor } from '../abstract/EasyCombatActor';
 
@@ -24,4 +24,17 @@ export async function checkIfRemoveWeaponFromHandNeeded(chooser: AttackChooser, 
     removeFromHandItems.forEach((weapon) => promises.push(removeWeapon(chooser, token, weapon)));
   }
   await Promise.allSettled(promises);
+}
+
+export async function getWeaponsInHands(token: TokenDocument): Promise<{
+  onHand: equippedItem | undefined;
+  offHand: equippedItem | undefined;
+}> {
+  const equipped = await getEquippedItems(token);
+  const onHand: equippedItem | undefined = equipped.find((e) => e.hand === 'ON');
+  const offHand: equippedItem | undefined = equipped.find((e) => e.hand === 'OFF');
+  return {
+    onHand,
+    offHand,
+  };
 }
