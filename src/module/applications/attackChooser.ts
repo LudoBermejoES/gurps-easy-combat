@@ -2,7 +2,14 @@ import { makeAttackInner } from '../attackWorkflow.js';
 import { FAST_DRAW_SKILLS, MODULE_NAME, TEMPLATES_FOLDER } from './libs/constants';
 import { ChooserData, Item, MeleeAttack, Modifier, PromiseFunctions, RangedAttack } from '../types.js';
 import BaseActorController from './abstract/BaseActorController.js';
-import { activateChooser, checkSingleTarget, ensureDefined, findSkillSpell, getTargets } from './libs/miscellaneous';
+import {
+  activateChooser,
+  awaitClick,
+  checkSingleTarget,
+  ensureDefined,
+  findSkillSpell,
+  getTargets,
+} from './libs/miscellaneous';
 import ManeuverChooser from './maneuverChooser';
 import { checkIfRemoveWeaponFromHandNeeded, getWeaponsInHands } from './libs/readyWeapons';
 import {
@@ -236,7 +243,11 @@ export default class AttackChooser extends BaseActorController {
     const isDisarmAttack = mode === 'disarm_attack';
 
     ensureDefined(game.user, 'game not initialized');
-    if (!checkSingleTarget(game.user)) return;
+
+    if (!checkSingleTarget(game.user)) {
+      await awaitClick();
+    }
+
     const target = getTargets(game.user)[0];
     ensureDefined(target.actor, 'target has no actor');
     let meleeDataFinal = this.meleeData;
@@ -549,7 +560,6 @@ export default class AttackChooser extends BaseActorController {
     let remainingRounds =
       (readyActionsWeaponNeeded.items.find((item) => item.itemId === weapon.itemid) || {}).remainingRounds || 1;
 
-    debugger;
     if (!this.data.beforeCombat) {
       const weaponDetails = getWeapon(weapon.name);
       if (weaponDetails?.customManeuver) {

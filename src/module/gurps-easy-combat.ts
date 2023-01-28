@@ -19,7 +19,7 @@ const globals = {
 };
 
 declare global {
-  const EasyCombat: typeof globals & { socket: SockerLibSocket };
+  const EasyCombat: typeof globals & { socket: SockerLibSocket; warpgate: any };
   interface Window {
     EasyCombat: typeof globals;
   }

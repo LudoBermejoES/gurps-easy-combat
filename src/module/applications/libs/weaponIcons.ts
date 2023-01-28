@@ -203,17 +203,45 @@ export default {
   CUTLASS: {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20antiguas/cutlass.png',
     scale: '1',
-    name: 'Shortsword',
+    name: 'Cutlass',
     animation: 'Sword01_01_Regular_White*',
     sound: 'modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-8.mp3',
   },
-
+  FALCHION: {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20antiguas/falcata.png',
+    scale: '1',
+    name: 'Falchion',
+    animation: 'Falchion01_01_Regular_White*',
+    sound: 'modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-8.mp3',
+  },
   BROADSWORD: {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Longsword_01.png',
     scale: '1',
     name: 'Broadsword',
     animation: 'Sword01_01_Regular_White*',
     sound: 'modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-8.mp3',
+  },
+  AXE: {
+    texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Longsword_01.png',
+    scale: '1',
+    name: 'Broadsword',
+    animation: 'Sword01_01_Regular_White*',
+    sound: 'modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-8.mp3',
+  },
+  TORCH: {
+    texturePath:
+      'moulinette/images/custom/Forgotten-Adventures/Lightsources/Torches_and_Sconces/Torch_Hand_Wood_Ashen_B_1x1.png',
+    scale: '1',
+    name: 'Torch',
+    animation: 'Mace01_01_Regular_White_800x600* c',
+    sound: 'modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-4.mp3',
+  },
+  LANTERN: {
+    texturePath: 'moulinette/images/custom/Forgotten-Adventures/Lightsources/Lanterns/Lantern_Metal_Brass_D2_1x1.png',
+    scale: '1',
+    name: 'Torch',
+    animation: 'Mace01_01_Regular_White_800x600* c',
+    sound: 'modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-4.mp3',
   },
   SPEAR: {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Spear_A01.png',

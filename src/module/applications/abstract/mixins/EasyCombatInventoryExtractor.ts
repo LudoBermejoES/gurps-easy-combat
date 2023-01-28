@@ -186,10 +186,6 @@ class EasyCombatInventoryExtractor {
   getEquipment(): Item[] {
     return Object.values(this.getData().equipment.carried);
   }
-
-  getData() {
-    return this.data.data;
-  }
 }
 
 interface EasyCombatInventoryExtractor extends Actor, EasyCombatBaseExtractor {}

@@ -1041,6 +1041,7 @@ declare global {
     Actor: ActorDataProperties;
   }
   const GURPS: {
+    IgnoreTokenSelect: boolean;
     LastActor: Actor;
     rangeObject: any;
     SetLastActor(actor: Actor): void;

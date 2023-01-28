@@ -299,7 +299,7 @@ class EasyCombatAttacksExtractor {
   async getCounterAttackData(token: Token, data?: AttackData | undefined): Promise<meleeAttackWithRemainingRounds[]> {
     const { meleeAttacksWithModifier } = await this.getAttacksWithModifiers(token, data);
     ensureDefined(game.user, 'game not initialized');
-    if (checkSingleTarget(game.user)) {
+    if (checkSingleTarget(game.user, false)) {
       const target = getTargets(game.user)[0];
       ensureDefined(target.actor, 'target has no actor');
 

@@ -9,12 +9,7 @@ export default class BaseActorController extends Application {
   token: Token;
   actor: EasyCombatActor;
 
-  constructor(
-    appName: string,
-    token: Token,
-    actor: EasyCombatActor | undefined,
-    options: Partial<Application.Options>,
-  ) {
+  constructor(appName: string, token: Token, actor: EasyCombatActor | undefined, options: Partial<ApplicationOptions>) {
     const id = `${appName}-${token.id}`;
     super(mergeObject(Application.defaultOptions, { resizable: true, width: 600, id, ...options }));
     this.token = token;

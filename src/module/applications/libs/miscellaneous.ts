@@ -149,17 +149,17 @@ export function getManeuver(actor: Actor): string {
     ui.notifications?.error('more than one maneuver found');
     console.error(new Error('more than one maneuver found'));
   }
-  const maneuver = maneuversEffects[0].data.flags.gurps.name;
+  const maneuver = maneuversEffects[0].flags.gurps.name;
   return maneuver;
 }
 
-export function checkSingleTarget(user: User): boolean {
+export function checkSingleTarget(user: User, warning = true): boolean {
   if (user.targets.size === 0) {
-    ui.notifications?.warn('Tienes que seleccionar un objetivo');
+    if (warning) ui.notifications?.warn('Tienes que seleccionar al menos un objetivo');
     return false;
   }
   if (user.targets.size > 1) {
-    ui.notifications?.warn('Solo puedes seleccionar un objetivo');
+    if (warning) ui.notifications?.warn('Solo puedes seleccionar un objetivo');
     return false;
   }
   return true;
@@ -175,10 +175,55 @@ export function getToken(sceneId: string, tokenId: string): Token {
   return token;
 }
 
+export async function awaitClick() {
+  ensureDefined(ui.notifications, `Notifications doesn't exist`);
+  ensureDefined(game.canvas.tokens, `Tokens don't exists`);
+  ensureDefined(game.canvas.scene, `Scene don't exist`);
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  ensureDefined(window.warpgate, `No warpgate`);
+  GURPS.IgnoreTokenSelect = true;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const location = await window.warpgate.crosshairs.show({
+      interval: 0,
+      size: 1,
+      drawOutline: false,
+      lockSize: true,
+      labelOffset: { x: 0, y: -150 },
+      icon: 'icons/skills/targeting/crosshair-bars-yellow.webp',
+      //icon: 'icons/magic/symbols/runes-triangle-blue.webp',
+      label: 'Escoge un objetivo',
+    });
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const grid_size = game?.canvas?.scene?.grid?.size;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    game?.canvas?.tokens.targetObjects({
+      x: location.x - grid_size / 2,
+      y: location.y - grid_size / 2,
+      height: grid_size,
+      width: grid_size,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      releaseOthers: true,
+    });
+    GURPS.IgnoreTokenSelect = false;
+    return;
+  } catch (error) {
+    GURPS.IgnoreTokenSelect = false;
+    console.log(error);
+  }
+}
+
 export function findSkillSpell(actor: Actor, skill: string, isSkill: boolean, isSpell: boolean): Skill {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  return GURPS.findSkillSpell(actor?.data?.data, skill, isSkill, isSpell);
+  return GURPS.findSkillSpell((actor as Actor10)?.system, skill, isSkill, isSpell);
 }
 
 export function getCounterAttackLevel(actor: Actor, name: string, level: number): number {

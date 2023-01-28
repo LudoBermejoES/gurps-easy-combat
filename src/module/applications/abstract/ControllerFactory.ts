@@ -4,7 +4,7 @@ export default function controllerFactory() {
 
     static apps = new Map<string, Controller>();
 
-    constructor(appName: string, actor: Actor, options: Partial<Application.Options>) {
+    constructor(appName: string, actor: Actor, options: Partial<Application.RenderOptions>) {
       const id = `${appName}-${actor.id}`;
       super(mergeObject(Application.defaultOptions, { resizable: true, width: 600, id, ...options }));
       this.actor = actor;

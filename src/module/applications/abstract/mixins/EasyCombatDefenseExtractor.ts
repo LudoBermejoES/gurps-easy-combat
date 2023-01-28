@@ -54,10 +54,6 @@ export interface Block {
 }
 
 class EasyCombatDefenseExtractor {
-  getData() {
-    return this.data.data;
-  }
-
   getDefenseModifiersBySelection(mode: string): {
     modifiers: Modifier[];
     isRetreating: boolean;

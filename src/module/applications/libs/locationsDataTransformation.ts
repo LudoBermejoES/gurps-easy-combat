@@ -48,7 +48,7 @@ export function getHitLocationsObject(game: Game): Partial<hitLocationsObject> {
 
 export function getLocationData(game: Game, location: string): any {
   ensureDefined(game?.user, 'game doesnt have user');
-  if (!checkSingleTarget(game.user)) {
+  if (!checkSingleTarget(game.user, false)) {
     return {};
   }
   const target = getTargets(game.user)[0];

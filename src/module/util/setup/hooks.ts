@@ -6,7 +6,7 @@ import {
   StatusEffectsThanAffectManeuvers,
 } from '../../applications/libs/constants';
 import ManeuverChooser from '../../applications/maneuverChooser.js';
-import { ensureDefined, hasEffect, highestPriorityUsers } from '../../applications/libs/miscellaneous';
+import { ensureDefined, getToken, hasEffect, highestPriorityUsers } from '../../applications/libs/miscellaneous';
 import AttackChooser from '../../applications/attackChooser.js';
 import { registerFunctions } from './socketkib.js';
 import { getUserFromCombatant } from '../../applications/libs/combatants';
@@ -90,6 +90,7 @@ export function registerHooks(): void {
       ];
     }
 
+    const tokenDocument: TokenDocument = token.document;
     if (!game.combat) return true;
 
     const actor = token.actor;
@@ -104,18 +105,18 @@ export function registerHooks(): void {
     combatants.forEach((combatant) => (combatant.data.tokenId === token.id ? (foundToken = true) : ''));
     if (!(changes.x || changes.y) || !foundToken) return;
 
-    const restrictedMovement = token.getFlag(MODULE_NAME, 'restrictedMovement');
+    const restrictedMovement = tokenDocument.getFlag(MODULE_NAME, 'restrictedMovement');
     if (restrictedMovement) {
       ui.notifications?.error('Tu movimiento está restringido en este turno');
       return false;
     }
 
-    const isAttracted = token.getFlag('token-attractor', 'movementAttracted');
+    const isAttracted = tokenDocument.getFlag('token-attractor', 'movementAttracted');
     if (isAttracted) {
-      token.setFlag(MODULE_NAME, 'restrictedMovement', true);
+      tokenDocument.setFlag(MODULE_NAME, 'restrictedMovement', true);
       return true;
     }
-    const choosingManeuver: any = token.getFlag(MODULE_NAME, 'choosingManeuver');
+    const choosingManeuver: any = tokenDocument.getFlag(MODULE_NAME, 'choosingManeuver');
     if (choosingManeuver.choosing) {
       ui.notifications?.error('Antes de poder moverte tienes que escoger una maniobra');
       return false;
@@ -127,7 +128,7 @@ export function registerHooks(): void {
     const distance: number = game.canvas.grid.measureDistance(originalMove, newMove, { gridSpaces: true }) || 0;
 
     const alreadyMoved = <{ restOfMovement: number; round: number } | { round: -1; restOfMovement: 0 }>(
-      token.getFlag(MODULE_NAME, 'combatRoundMovement')
+      tokenDocument.getFlag(MODULE_NAME, 'combatRoundMovement')
     );
     const restOfMovement =
       alreadyMoved?.round === game.combat?.round
@@ -137,7 +138,7 @@ export function registerHooks(): void {
     console.log('Distancia', distance, restOfMovement);
 
     if (distance <= restOfMovement) {
-      token.setFlag(MODULE_NAME, 'combatRoundMovement', {
+      tokenDocument.setFlag(MODULE_NAME, 'combatRoundMovement', {
         restOfMovement: restOfMovement - distance,
         round: game.combat?.round ?? 0,
       });
@@ -258,12 +259,14 @@ export function registerHooks(): void {
       deleteFlags(combat);
       return;
     }
-    const tokenDocument = combat.combatant.token;
+    const tokenDocument = combat?.combatant?.token;
     ensureDefined(tokenDocument, 'current combatant has no actor');
     ensureDefined(tokenDocument.object, 'token document without token');
     const token = tokenDocument.object as Token;
     ensureDefined(game.user, 'game not initialized');
     const actor = token.actor;
+
+    if (!tokenDocument.isOwner) return;
     await tokenDocument.unsetFlag(MODULE_NAME, 'restrictedMovement');
     await tokenDocument.unsetFlag('token-attractor', 'movementAttracted');
     ensureDefined(actor, 'token without actor');
@@ -281,7 +284,8 @@ export function registerHooks(): void {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const combat = ui?.combat?.viewed;
-        const combatant = combat.combatants.get(combatantId);
+        const combatant = combat?.combatants?.get(combatantId);
+        ensureDefined(combatant, 'No hay combatiente');
         const user: User = getUserFromCombatant(combatant);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
