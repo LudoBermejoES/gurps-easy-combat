@@ -267,8 +267,12 @@ class EasyCombatAttacksModifiers {
     }
     if (getManeuver(this) !== 'move_and_attack') {
       const lastAim = <{ bonus: number } | undefined>this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'lastAim');
+
       if (lastAim) {
-        if (removeFlags) this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'lastAim');
+        if (removeFlags) {
+          console.log('Elimino aim en modifiers');
+          this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'lastAim');
+        }
         modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });
       }
     }

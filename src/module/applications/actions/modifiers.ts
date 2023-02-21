@@ -52,6 +52,7 @@ export function getRangedModifiers(
   defense: Modifier[];
   damage: Modifier[];
 } {
+  console.log('Tengo que quitar flags', removeFlags);
   ensureDefined(token.actor, 'No hay actor en el token');
   const actor: EasyCombatActor = easyCombatActorfromActor(token.actor);
   return actor.getRangedModifiers(attack, target, removeFlags, {

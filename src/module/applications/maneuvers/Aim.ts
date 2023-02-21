@@ -16,6 +16,7 @@ export default class Aim extends BaseActorController {
     const actor: Actor = token.actor as Actor;
     const maneuver = getManeuver(actor);
     if (maneuver !== 'aim') {
+      console.log('ELimino AIM 1');
       token.document.unsetFlag(MODULE_NAME, 'lastAim');
     }
     this.promiseFuncs = promiseFuncs;
@@ -36,9 +37,9 @@ export default class Aim extends BaseActorController {
 
   activateListeners(html: JQuery): void {
     activateChooser(html, 'range_attacks', async (index) => {
-      debugger;
       const attack = this.actor.getAttacks().ranged[index];
       const lastAim = <{ bonus: number } | undefined>this.token.document.getFlag(MODULE_NAME, 'lastAim');
+      console.log('Añado aim en aim');
 
       this.token.document.setFlag(MODULE_NAME, 'lastAim', {
         bonus: lastAim?.bonus ? Number(lastAim?.bonus) + 1 : Number(attack.acc) || 1,

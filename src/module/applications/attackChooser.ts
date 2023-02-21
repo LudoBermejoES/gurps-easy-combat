@@ -277,7 +277,7 @@ export default class AttackChooser extends BaseActorController {
         isCounterAttack,
         isDisarmAttack,
       },
-      true,
+      element ? true : false,
     );
     return {
       attack,
@@ -620,7 +620,6 @@ export default class AttackChooser extends BaseActorController {
     } = attackCalculated;
 
     const twoWeaponsAttack = mode == 'melee' && attack.notes.toUpperCase().includes('DOUBLE ATTACK');
-    debugger;
     const weapon: Item | undefined = this.actor.getWeaponFromAttack(attack);
     const stillWithAmmo = await this.actor.calculateAmmunitionForRangedAttacks(attack, mode, weapon, this.token);
     if (!stillWithAmmo) return;
