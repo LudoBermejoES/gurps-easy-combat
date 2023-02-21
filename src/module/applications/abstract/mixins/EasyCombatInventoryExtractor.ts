@@ -72,7 +72,7 @@ class EasyCombatInventoryExtractor {
       if (rangedAttack.shots && rangedAttack.shots.includes('(')) {
         const item: { ammo: Item; st: string } | undefined = this.getAmmunnitionFromInventory(
           rangedAttack.itemid,
-          'data.equipment.carried',
+          'system.equipment.carried',
         );
         if (item) {
           if (item.ammo.count === 0) {
@@ -89,8 +89,10 @@ class EasyCombatInventoryExtractor {
         if (rangedAttack.shots.split('(')[0] === 'T') {
           remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
         } else {
-          if (!rangedAttack.rof) {
-            remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
+          if (!rangedAttack.rof || rangedAttack.rof === '1') {
+            if (rangedAttack.shots.includes('(')) {
+              remainingRounds = Number(rangedAttack.shots.split('(')[1].split(')')[0]);
+            }
           }
           const readyActionsWeaponNeeded = <{ items: ReadyManeouverNeeded[] } | { items: [] }>(
             token.document.getFlag(MODULE_NAME, 'readyActionsWeaponNeeded')

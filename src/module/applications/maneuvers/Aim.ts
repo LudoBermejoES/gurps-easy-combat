@@ -36,10 +36,12 @@ export default class Aim extends BaseActorController {
 
   activateListeners(html: JQuery): void {
     activateChooser(html, 'range_attacks', async (index) => {
+      debugger;
       const attack = this.actor.getAttacks().ranged[index];
       const lastAim = <{ bonus: number } | undefined>this.token.document.getFlag(MODULE_NAME, 'lastAim');
+
       this.token.document.setFlag(MODULE_NAME, 'lastAim', {
-        bonus: lastAim?.bonus ? Number(lastAim?.bonus) + 1 : Number(attack.acc),
+        bonus: lastAim?.bonus ? Number(lastAim?.bonus) + 1 : Number(attack.acc) || 1,
       });
       this.close();
     });

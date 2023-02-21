@@ -99,7 +99,7 @@ class EasyCombatAttacksExtractor {
     const rangedAttackWithROFMoreThan1: rangedAttackWithRemainingRounds[] = this.getRangedDataWithROFMoreThan1();
     const rangedData: rangedAttackWithRemainingRounds[] = [];
     rangedAttackWithROFMoreThan1.forEach((attack) => {
-      rangedData.push(attack);
+      //      rangedData.push(attack);
       if (attack.rof) {
         let rof = Number(attack.rof.split('!').join(''));
 

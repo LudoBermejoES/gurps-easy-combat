@@ -46,7 +46,7 @@ class EasyCombatAttacksModifiers {
           const attackValue = Number(element.find('.level').text());
           const diff = attackValue - originalAttack.level;
           if (diff >= 0) {
-            attackModifiers.push({ mod: diff, desc: 'Por número de balas' });
+            attackModifiers.push({ mod: diff, desc: 'Por número de proyectiles' });
 
             if (originalAttack.rof !== undefined) {
               originalAttack.rof = originalAttack.rof.trim();
@@ -250,7 +250,7 @@ class EasyCombatAttacksModifiers {
     };
 
     const location = <{ bonus: number; where: string } | undefined>(
-      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'Por localización')
+      this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'location')
     );
     if (location && location.bonus) {
       if (removeFlags) this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'location');
@@ -266,7 +266,7 @@ class EasyCombatAttacksModifiers {
         break;
     }
     if (getManeuver(this) !== 'move_and_attack') {
-      const lastAim = <{ bonus: number } | undefined>this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'Por apuntar');
+      const lastAim = <{ bonus: number } | undefined>this.tokenDocumentSelected?.getFlag(MODULE_NAME, 'lastAim');
       if (lastAim) {
         if (removeFlags) this.tokenDocumentSelected?.unsetFlag(MODULE_NAME, 'lastAim');
         modifiers.attack.push({ mod: lastAim.bonus, desc: 'apuntar' });

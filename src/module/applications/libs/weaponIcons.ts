@@ -18,7 +18,7 @@ export default {
   STONE: {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/stone.png',
     scale: '1',
-    name: 'Bolt',
+    name: 'Stone',
     sound: 'modules/soundfxlibrary/Combat/Single/Throw Hit/throw-hit-1.mp3',
   },
   BOLT: {
@@ -33,6 +33,7 @@ export default {
     scale: '1',
     name: 'Arrow',
   },
+
   BULLETS: { texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/bullets.png', scale: '1', name: 'bullets' },
   LONGBOW: {
     texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Longbow_01.png',
@@ -137,7 +138,7 @@ export default {
     texturePath: 'moulinette/images/custom/JB2A/5th_Level/Arcane_Hand/ArcaneHand_Human_01_Idle_Rock01_Thumb.webp',
     scale: '1',
     animation: 'ProjectileIceShard01_01_Regular_Blue* -0.2 +0.5 ',
-    name: 'Sling',
+    name: 'Poltergueist',
     useMagic: true,
     costFatigue: 1,
     customManeuver: 'concentrate',
