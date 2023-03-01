@@ -136,11 +136,15 @@ export default class AttackChooser extends BaseActorController {
     this.weaponsNotToBeReadyData = this.actor.getWeaponsNotToBeReady();
     const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
     const isUsingTwoWeapons = $('#twoWeaponsAttack').is(':checked');
+    const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
+    const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
     const { meleeAttacksWithModifier, rangedAttacksWithModifier } = await this.actor.getAttacksWithModifiers(
       this.token,
       {
         isRapidStrikeAttacks,
         isUsingTwoWeapons,
+        isUsingFatigueForMoveAndAttack,
+        isUsingFatigueForMightyBlows,
       },
     );
     this.data.twoAttacksWithWeapons = isUsingTwoWeapons;
@@ -346,6 +350,7 @@ export default class AttackChooser extends BaseActorController {
           const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
           const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
           const isUsingTwoWeapons = $('#twoWeaponsAttack').is(':checked');
+          debugger;
           this.data.isUsingFatigueForMoveAndAttack = isUsingFatigueForMoveAndAttack;
           this.data.isUsingDeceptiveAttack = isUsingDeceptiveAttack;
           this.data.isUsingFatigueForMightyBlows = isUsingFatigueForMightyBlows;
