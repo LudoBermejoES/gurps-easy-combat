@@ -45,11 +45,11 @@ export interface SockerLibSocket {
   executeAsUser<T extends keyof typeof functionsToRegister>(
     alias: T,
     userId: string,
-    ...args: Parameters<typeof functionsToRegister[T]>
-  ): Promise<ReturnType<typeof functionsToRegister[T]>>;
+    ...args: Parameters<(typeof functionsToRegister)[T]>
+  ): Promise<ReturnType<(typeof functionsToRegister)[T]>>;
   executeForEveryone<T extends keyof typeof functionsToRegister>(
     alias: T,
-    ...args: Parameters<typeof functionsToRegister[T]>
+    ...args: Parameters<(typeof functionsToRegister)[T]>
   ): Promise<void>;
 }
 declare global {

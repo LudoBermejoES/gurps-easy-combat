@@ -6,7 +6,6 @@ export async function doAnimationAttack(
   weapon: Item | undefined,
   numberOfProjectiles: number | undefined,
 ) {
-  console.log(weapon);
   if (!weapon?.name) return;
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -16,8 +15,6 @@ export async function doAnimationAttack(
   if (numberOfProjectiles && numberOfProjectiles > 1) {
     anim += `x${numberOfProjectiles}:0.2`;
   }
-
-  console.log('Ejecuto', `!/anim ${anim}`);
 
   return GURPS.executeOTF(`!/anim ${anim}`, false, null, actor);
 }

@@ -29,7 +29,7 @@ export const FAST_DRAW_SKILLS: any = {
   'FAST-DRAW (Pistol)': ['PISTOL', 'REVOLVER'],
   'FAST-DRAW (Sword)': ['RAPIER', ' SHORTSWORD', 'BASTARD SWORD', 'BROADSWORD', 'LONGSWORD'],
   'FAST-DRAW (Two-handed sword)': ['GREATSWORD'],
-  'FAST-DRAW/TL* (Ammo)': ['PISTOL', 'REVOLVER', 'MAUER', 'WALTHER', 'UZI'],
+  'FAST-DRAW/TL* (Ammo)': ['PISTOL', 'REVOLVER', 'MAUER', 'WALTHER', 'UZI', 'SLING'],
 };
 export const FAST_DRAW_ARROW_SEARCH = 'Fast-Draw/TL* (Arrows)';
 

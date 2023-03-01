@@ -81,7 +81,7 @@ export function registerHooks(): void {
     }
   };
 
-  Hooks.on('preUpdateToken', (token: Token, changes: any, data: any) => {
+  Hooks.on('preUpdateToken', (token: Token, changes: any, data: any, userId: any) => {
     if (changes.x || changes.y) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -90,14 +90,15 @@ export function registerHooks(): void {
       ];
     }
 
-    const tokenDocument: TokenDocument = token.document;
+    const tokenDocument: any = token;
     if (!game.combat) return true;
 
     const actor = token.actor;
     ensureDefined(actor, 'No actor selected');
     ensureDefined(game.user, 'No user selected');
-    if (!highestPriorityUsers(actor).includes(game.user)) {
-      return true;
+    if (!highestPriorityUsers(actor).includes(game.user) && !game?.user?.isGM) {
+      ui.notifications?.error('Hay otro jugador con más prioridad para mover el personaje en combate que tú');
+      return false;
     }
 
     const combatants = game.combat.combatants || [];
@@ -126,6 +127,15 @@ export function registerHooks(): void {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const distance: number = game.canvas.grid.measureDistance(originalMove, newMove, { gridSpaces: true }) || 0;
+
+    //Check if client controls the token
+    if (userId != game.userId) {
+      return;
+    }
+    if (distance && game?.combat?.combatant?.token?.id !== token.id && game.user?.isGM === false) {
+      ui.notifications?.error('Te estás moviendo y no es tu turno, no me hagas un Luis');
+      return false;
+    }
 
     const alreadyMoved = <{ restOfMovement: number; round: number } | { round: -1; restOfMovement: 0 }>(
       tokenDocument.getFlag(MODULE_NAME, 'combatRoundMovement')

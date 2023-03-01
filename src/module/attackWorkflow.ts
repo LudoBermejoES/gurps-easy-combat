@@ -118,7 +118,7 @@ export async function makeAttackInner(
     doAnimationMiss(target.actor, roll.isCritFailure);
     return;
   }
-  await doAnimationAttack(target.actor, weapon, roll.rofrcl);
+  await doAnimationAttack(attacker, weapon, roll.rofrcl);
   await playSound(target.actor, weapon, roll.rofrcl);
   if (!roll.isCritSuccess) {
     const resultDefense = await rollDefense(roll, attacker, token, attack, modifiers, target, specialAttacks);
