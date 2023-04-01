@@ -73,6 +73,22 @@ export default {
     animation: 'Bullet_02_Regular_Orange*',
     sound: 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3',
   },
+  'REMINGTON MODEL 870': {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Remington Model 870.png',
+    scale: '1',
+    name: 'REMINGTON_MODEL_870',
+    useBullets: true,
+    animation: 'Bullet_02_Regular_Orange*',
+    sound: 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3',
+  },
+  P90: {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/p90.png',
+    scale: '1',
+    name: 'p90',
+    useBullets: true,
+    animation: 'Bullet_02_Regular_Orange*',
+    sound: 'dragupload/uploaded/ambient/P90 sound effects (152kbit_AAC).m4a',
+  },
   'LUGER P08': {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/luger_p08.png',
     scale: '1',
@@ -223,7 +239,7 @@ export default {
     sound: 'modules/soundfxlibrary/Combat/Single/Melee Hit/melee-hit-8.mp3',
   },
   AXE: {
-    texturePath: 'moulinette/images/custom/Forgotten-Adventures/Weapons/Longsword_01.png',
+    texturePath: 'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Axes/HandAxe_A_01_1x1.png',
     scale: '1',
     name: 'Broadsword',
     animation: 'Sword01_01_Regular_White*',

@@ -63,7 +63,7 @@ export function registerHooks(): void {
   const deleteFlags = (combat: Combat) => {
     if (game.user?.isGM) {
       combat.combatants.forEach((combatant) => {
-        combatant?.token?.unsetFlag('token-attractor', 'movementAttracted');
+        // combatant?.token?.unsetFlag('token-attractor', 'movementAttracted');
         combatant?.token?.unsetFlag(MODULE_NAME, 'restrictedMovement');
         combatant?.token?.unsetFlag(MODULE_NAME, 'location');
         combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
@@ -112,11 +112,11 @@ export function registerHooks(): void {
       return false;
     }
 
-    const isAttracted = tokenDocument.getFlag('token-attractor', 'movementAttracted');
+    /*     const isAttracted = tokenDocument.getFlag('token-attractor', 'movementAttracted');
     if (isAttracted) {
       tokenDocument.setFlag(MODULE_NAME, 'restrictedMovement', true);
       return true;
-    }
+    } */
     const choosingManeuver: any = tokenDocument.getFlag(MODULE_NAME, 'choosingManeuver');
     if (choosingManeuver.choosing) {
       ui.notifications?.error('Antes de poder moverte tienes que escoger una maniobra');
@@ -278,7 +278,7 @@ export function registerHooks(): void {
 
     if (!tokenDocument.isOwner) return;
     await tokenDocument.unsetFlag(MODULE_NAME, 'restrictedMovement');
-    await tokenDocument.unsetFlag('token-attractor', 'movementAttracted');
+    // await tokenDocument.unsetFlag('token-attractor', 'movementAttracted');
     ensureDefined(actor, 'token without actor');
     await ManeuverChooser.closeAll();
     await AttackChooser.closeAll();
