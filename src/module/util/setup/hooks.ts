@@ -147,9 +147,11 @@ export function registerHooks(): void {
 
     console.log('Distancia', distance, restOfMovement);
 
-    if (distance <= restOfMovement) {
+    if (distance <= restOfMovement || game.user?.isGM) {
+      const movementUpdated: number = restOfMovement - distance;
+      const restOfMovementCalculated: number = movementUpdated >= 0 ? movementUpdated : 0;
       tokenDocument.setFlag(MODULE_NAME, 'combatRoundMovement', {
-        restOfMovement: restOfMovement - distance,
+        restOfMovement: restOfMovementCalculated,
         round: game.combat?.round ?? 0,
       });
 

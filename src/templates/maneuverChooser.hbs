@@ -1,5 +1,28 @@
+<style>
+  .grid-container-gurps-helper {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    grid-gap: 10px;
+    padding: 10px;
+  }
+
+  .grid-container-gurps-helper .grid-item {
+    text-align: center;
+  }
+</style>
+
+
 <div>
   <div>Escoge tu maniobra para este turno.</div>
+<!--
+  <div class="grid-container-gurps-helper">
+    <div class="grid-item" class="clickable" index="0"><img  src="moulinette/images/gameicons/move.svg" alt="Mover"></div>
+    <div class="grid-item" class="clickable" index="1"><img  src="moulinette/images/gameicons/sword-brandish.svg" alt="Atacar"></div>
+    <div class="grid-item" class="clickable" index="2"><img  src="moulinette/images/gameicons/running-ninja.svg" alt="Mover y atacar"></div>
+    <div class="grid-item" class="clickable" index="4"><img  src="moulinette/images/gameicons/backward-time.svg" alt="Esperar"></div>
+    <div class="grid-item" class="clickable" index="5"><img  src="moulinette/images/gameicons/brain.svg" alt="Concentrarse"></div>
+  </div>
+-->
   <br/>
   <h2>Maniobras básicas</h2>
   {{> choiceTable basicManeuver}}

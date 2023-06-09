@@ -17,10 +17,37 @@ export default class BaseActorController extends Application {
     ensureDefined(token.actor, 'token has no actor');
     this.actor = actor || (token.actor as EasyCombatActor);
     $(`#${id} .close`).hide();
+    ensureDefined(game.user, 'game not initialized');
+    if (!game.user.isGM) {
+      setTimeout(() => {
+        $('*[data-appid="' + _appId + '"]').on('DOMSubtreeModified', function () {
+          (game.users || []).forEach((user) => {
+            if (user.isGM) {
+              const innerDIV = $('*[data-appid="' + _appId + '"]').html();
+              const iClass = $('*[data-appid="' + _appId + '"]').attr('class');
+              const iStyle = $('*[data-appid="' + _appId + '"]').attr('style');
+              const name = 'copyGurpsEasyCombat';
+              const outerDIV = `<div id='${name}' class='${iClass}' style='${iStyle}'>${innerDIV}</div>`;
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              window.EasyCombat.socket.executeAsUser('showCopyOfScreen', user.id, outerDIV);
+            }
+          });
+        });
+        $('*[data-appid="' + _appId + '"]').trigger('DOMSubtreeModified');
+      }, 1000);
+    }
   }
 
   async close(options?: Application.CloseOptions): Promise<void> {
     await super.close(options);
+    const gm = (game.users || []).find((user: User) => user.isGM);
+    if (gm) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      window.EasyCombat.socket.executeAsUser('removeCopyOfScreen', gm.id);
+    }
+
     BaseActorController.apps.delete(this.id);
   }
 

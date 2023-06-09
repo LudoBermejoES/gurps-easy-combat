@@ -73,6 +73,14 @@ export default {
     animation: 'Bullet_02_Regular_Orange*',
     sound: 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3',
   },
+  'RPG-7': {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/RPG-7.png',
+    scale: '1',
+    name: 'RPG7',
+    useBullets: true,
+    animation: 'Bullet_02_Regular_Orange*',
+    sound: 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3',
+  },
   'REMINGTON MODEL 870': {
     texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/Remington Model 870.png',
     scale: '1',

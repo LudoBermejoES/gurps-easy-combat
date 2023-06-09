@@ -34,6 +34,13 @@ const functionsToRegister = {
   attemptFeintDefense: FeintDefense.attemptDefense,
   closeController: BaseActorController.closeById,
   setFlag: BaseActorController.setFlag,
+  showCopyOfScreen: (screen: string) => {
+    $('#copyGurpsEasyCombat').remove();
+    $('body').append(screen);
+  },
+  removeCopyOfScreen: () => {
+    $('#copyGurpsEasyCombat').remove();
+  },
 } as const;
 
 interface SockerLib {
