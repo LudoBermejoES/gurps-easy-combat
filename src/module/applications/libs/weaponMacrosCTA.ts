@@ -267,6 +267,7 @@ export async function addAmmunition(
 }
 
 export function getWeapon(nameToLook: string): weapon | undefined {
+  debugger;
   let result: weapon | undefined = undefined;
   Object.keys(weaponIcons).some((key) => {
     if (nameToLook.toUpperCase().includes(key)) {

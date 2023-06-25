@@ -82,24 +82,6 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
     };
   }
   activateListeners(html: JQuery): void {
-    ensureDefined(game.user, 'game not initialized');
-    if (!game.user.isGM) {
-      $('*[data-appid="' + _appId + '"]').on('DOMSubtreeModified', function () {
-        (game.users || []).forEach((user) => {
-          if (user.isGM) {
-            const innerDIV = $('*[data-appid="' + _appId + '"]').html();
-            const iClass = $('*[data-appid="' + _appId + '"]').attr('class');
-            const iStyle = $('*[data-appid="' + _appId + '"]').attr('style');
-            const name = 'copyGurpsEasyCombat';
-            const outerDIV = `<div id='${name}' class='${iClass}' style='${iStyle}'>${innerDIV}</div>`;
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            window.EasyCombat.socket.executeAsUser('showCopyOfScreen', user.id, outerDIV);
-          }
-        });
-      });
-    }
-
     activateChooser(
       html,
       'manuever_choice,manuever_choice2',

@@ -78,7 +78,7 @@ export default {
     scale: '1',
     name: 'RPG7',
     useBullets: true,
-    animation: 'Bullet_02_Regular_Orange*',
+    animation: 'Missile02_01_Regular_White_*',
     sound: 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3',
   },
   'REMINGTON MODEL 870': {
@@ -290,5 +290,13 @@ export default {
       'moulinette/images/custom/Forgotten-Adventures/Combat/Weapons/Shields/Shield_Metal_Gray_Gold_C_1x1.png',
     scale: '1',
     name: 'Large shield',
+  },
+  'AK-74': {
+    texturePath: 'moulinette/images/custom/Ludo/Armas%20modernas/AK-74M_with_GP-25.png',
+    scale: '1',
+    name: 'AK74M',
+    useBullets: true,
+    animation: 'Bullet_02_Regular_Orange*',
+    sound: 'dragupload/uploaded/ambient/Desert-Eagle-.50-AE-Close-Single-Gunshot-B-www.fesliyanstudios.com.mp3',
   },
 };

@@ -19,29 +19,40 @@ export default class BaseActorController extends Application {
     $(`#${id} .close`).hide();
     ensureDefined(game.user, 'game not initialized');
     if (!game.user.isGM) {
+      const user = this.getGM(game);
       setTimeout(() => {
-        $('*[data-appid="' + _appId + '"]').on('DOMSubtreeModified', function () {
-          (game.users || []).forEach((user) => {
-            if (user.isGM) {
-              const innerDIV = $('*[data-appid="' + _appId + '"]').html();
-              const iClass = $('*[data-appid="' + _appId + '"]').attr('class');
-              const iStyle = $('*[data-appid="' + _appId + '"]').attr('style');
-              const name = 'copyGurpsEasyCombat';
-              const outerDIV = `<div id='${name}' class='${iClass}' style='${iStyle}'>${innerDIV}</div>`;
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              window.EasyCombat.socket.executeAsUser('showCopyOfScreen', user.id, outerDIV);
-            }
-          });
-        });
-        $('*[data-appid="' + _appId + '"]').trigger('DOMSubtreeModified');
-      }, 1000);
+        this.prepareEventToSendToUser(user);
+      }, 1500);
     }
+  }
+
+  prepareEventToSendToUser(user: User | undefined) {
+    if (!user) return;
+    $('*[data-appid="' + _appId + '"]').on('DOMSubtreeModified', () => {
+      this.sendScreenToUser(user);
+    });
+    this.sendScreenToUser(user);
+  }
+
+  sendScreenToUser(user: User | undefined) {
+    if (!user) return;
+    const innerDIV = $('*[data-appid="' + _appId + '"]').html();
+    const iClass = $('*[data-appid="' + _appId + '"]').attr('class');
+    const iStyle = $('*[data-appid="' + _appId + '"]').attr('style');
+    const name = 'copyGurpsEasyCombat';
+    const outerDIV = `<div id='${name}' class='${iClass}' style='${iStyle}'>${innerDIV}</div>`;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    window.EasyCombat.socket.executeAsUser('showCopyOfScreen', user.id, outerDIV);
+  }
+
+  getGM(game: Game): User | undefined {
+    return (game.users || []).find((user: User) => user.isGM);
   }
 
   async close(options?: Application.CloseOptions): Promise<void> {
     await super.close(options);
-    const gm = (game.users || []).find((user: User) => user.isGM);
+    const gm = this.getGM(game);
     if (gm) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
