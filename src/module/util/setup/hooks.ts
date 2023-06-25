@@ -305,5 +305,23 @@ export function registerHooks(): void {
       },
     };
     menu.splice(1, 0, entry);
+
+    const entryAttack = {
+      name: 'Ejecutar ataque',
+      icon: '<i class="fas fa-undo-alt"></i>',
+      callback: (li: any) => {
+        const combatantId = li.data('combatant-id');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const combat = ui?.combat?.viewed;
+        const combatant = combat?.combatants?.get(combatantId);
+        ensureDefined(combatant, 'No hay combatiente');
+        const user: User = getUserFromCombatant(combatant);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.EasyCombat.socket.executeAsUser('chooseAttack', user.id, combatant.data.tokenId);
+      },
+    };
+    menu.splice(1, 0, entryAttack);
   });
 }

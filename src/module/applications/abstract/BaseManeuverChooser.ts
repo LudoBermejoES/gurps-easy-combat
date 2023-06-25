@@ -81,41 +81,56 @@ export default abstract class BaseManeuverChooser extends BaseActorController {
       },
     };
   }
+
+  getManueverData(d: any, type: string | null): Maneuver {
+    if (typeof d === 'string') {
+      const all: Maneuver[] = [...this.getManeuversData().basic, ...this.getManeuversData().advanced];
+      const maneuver: Maneuver | undefined = all.find((i) => i.key === String(d));
+      if (maneuver) return maneuver;
+    }
+    const selected = type || 'basic';
+    return selected === 'basic'
+      ? this.getManeuversData().basic[Number(d)]
+      : this.getManeuversData().advanced[Number(d)];
+  }
+
+  async chooseManeuver(index: any, type: string | null): Promise<void> {
+    this.token.document.setFlag(MODULE_NAME, 'choosingManeuver', {
+      choosing: false,
+    });
+    const maneuver = this.getManueverData(index, type);
+    let target;
+    if (['aim', 'evaluate', 'attack', 'feint', 'allout_attack', 'move_and_attack'].includes(maneuver.key)) {
+      ensureDefined(game.user, 'game not initialized');
+      if (!checkSingleTarget(game.user, false)) {
+        $('*[data-appid="' + _appId + '"]').hide();
+        await awaitClick();
+        $('*[data-appid="' + _appId + '"]').show();
+      }
+
+      if (checkSingleTarget(game.user)) {
+        target = getTargets(game.user)[0];
+        ensureDefined(target.actor, 'target has no actor');
+      }
+      if (!target) return;
+    }
+
+    this.token.setManeuver(maneuver.key).then(() => {
+      ChatMessage.create({
+        content: `${this.token.name} uses the "${maneuver.name}" maneuver [PDF:${maneuver.page}]`,
+      });
+      this.closeForEveryone();
+      const token = this.token;
+      setTimeout(() => maneuver.callback?.(token), 500);
+    });
+  }
+
   activateListeners(html: JQuery): void {
     activateChooser(
       html,
       'manuever_choice,manuever_choice2',
       async (index, element, type) => {
-        this.token.document.setFlag(MODULE_NAME, 'choosingManeuver', {
-          choosing: false,
-        });
-        const selected = type || 'basic';
-        const maneuver =
-          selected === 'basic' ? this.getManeuversData().basic[index] : this.getManeuversData().advanced[index];
-        let target;
-        if (['aim', 'evaluate', 'attack', 'feint', 'allout_attack', 'move_and_attack'].includes(maneuver.key)) {
-          ensureDefined(game.user, 'game not initialized');
-          if (!checkSingleTarget(game.user, false)) {
-            $('*[data-appid="' + _appId + '"]').hide();
-            await awaitClick();
-            $('*[data-appid="' + _appId + '"]').show();
-          }
-
-          if (checkSingleTarget(game.user)) {
-            target = getTargets(game.user)[0];
-            ensureDefined(target.actor, 'target has no actor');
-          }
-          if (!target) return;
-        }
-
-        this.token.setManeuver(maneuver.key).then(() => {
-          ChatMessage.create({
-            content: `${this.token.name} uses the "${maneuver.name}" maneuver [PDF:${maneuver.page}]`,
-          });
-          this.closeForEveryone();
-          const token = this.token;
-          setTimeout(() => maneuver.callback?.(token), 500);
-        });
+        this.chooseManeuver(index, type);
       },
       (index, element, type) => {
         const content = element.closest('.window-content');

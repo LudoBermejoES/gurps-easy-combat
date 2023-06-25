@@ -34,12 +34,32 @@ const functionsToRegister = {
   attemptFeintDefense: FeintDefense.attemptDefense,
   closeController: BaseActorController.closeById,
   setFlag: BaseActorController.setFlag,
-  showCopyOfScreen: (screen: string) => {
+  shZowCopyOfScreen: (screen: string) => {
     $('#copyGurpsEasyCombat').remove();
     $('body').append(screen);
   },
   removeCopyOfScreen: () => {
     $('#copyGurpsEasyCombat').remove();
+  },
+  chooseAttack: (token: string) => {
+    const data: ManeuverChooser = new ManeuverChooser(getToken(token));
+    const alreadyMoved = <{ restOfMovement: number; round: number } | { round: -1; restOfMovement: 0 }>(
+      getToken(token).document.getFlag(MODULE_NAME, 'combatRoundMovement')
+    );
+    debugger;
+    const currentMove = getToken(token).actor?.data?.data?.currentmove || 0;
+    const restOfMovement =
+      alreadyMoved?.round === game.combat?.round
+        ? alreadyMoved.restOfMovement
+        : getToken(token).actor?.data?.data?.currentmove || 0;
+
+    const totalMovement = currentMove - restOfMovement;
+    if (totalMovement <= 1) {
+      data.chooseManeuver('attack', null);
+    } else {
+      5;
+      data.chooseManeuver('move_and_attack', null);
+    }
   },
 } as const;
 
