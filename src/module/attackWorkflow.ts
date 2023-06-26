@@ -13,12 +13,7 @@ import rollDefense from './applications/actions/defense';
 import rollDisarmingAttack from './applications/actions/disarmingAttack';
 import { LocationToAttack } from './applications/libs/locationsDataTransformation';
 
-export async function rollAttack(
-  actor: Actor,
-  attack: Attack,
-  type: 'melee' | 'ranged',
-  alreadyExistingRoll: GurpsRoll | undefined,
-): Promise<GurpsRoll> {
+export async function rollAttack(actor: Actor, attack: Attack, type: 'melee' | 'ranged'): Promise<GurpsRoll> {
   await GURPS.performAction(
     {
       isMelee: type === 'melee',
@@ -119,7 +114,7 @@ export async function makeAttackInner(
   addCounterAttackModifiersForAttack(specialAttacks.isCounterAttack, attacker, attack, modifiers);
   applyModifiers(modifiers.attack);
 
-  const roll: GurpsRoll = await rollAttack(attacker, attack, type, alreadyExistingRoll);
+  const roll: GurpsRoll = await rollAttack(attacker, attack, type);
   if (roll.failure) {
     doAnimationMiss(target.actor, roll.isCritFailure);
     return;

@@ -63,7 +63,7 @@ export function registerHooks(): void {
   const deleteFlags = (combat: Combat) => {
     if (game.user?.isGM) {
       combat.combatants.forEach((combatant) => {
-        // combatant?.token?.unsetFlag('token-attractor', 'movementAttracted');
+        // combatant?.token?.º('token-attractor', 'movementAttracted');
         combatant?.token?.unsetFlag(MODULE_NAME, 'restrictedMovement');
         combatant?.token?.unsetFlag(MODULE_NAME, 'location');
         combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
@@ -71,6 +71,8 @@ export function registerHooks(): void {
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastParries');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastBlocks');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'initialPosition');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'resetMovement');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
         combatant?.token?.unsetFlag(MODULE_NAME, 'lastAodDouble');
@@ -81,7 +83,7 @@ export function registerHooks(): void {
     }
   };
 
-  Hooks.on('preUpdateToken', (token: Token, changes: any, data: any, userId: any) => {
+  Hooks.on('preUpdateToken', (token: TokenDocument, changes: any, data: any, userId: any) => {
     if (changes.x || changes.y) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -97,7 +99,7 @@ export function registerHooks(): void {
     ensureDefined(actor, 'No actor selected');
     ensureDefined(game.user, 'No user selected');
     if (!highestPriorityUsers(actor).includes(game.user) && !game?.user?.isGM) {
-      ui.notifications?.error('Hay otro jugador con más prioridad para mover el personaje en combate que tú');
+      //ui.notifications?.error('Hay otro jugador con más prioridad para mover el personaje en combate que tú');
       return false;
     }
 
@@ -107,6 +109,8 @@ export function registerHooks(): void {
     if (!(changes.x || changes.y) || !foundToken) return;
 
     const restrictedMovement = tokenDocument.getFlag(MODULE_NAME, 'restrictedMovement');
+    const resetMovement = tokenDocument.getFlag(MODULE_NAME, 'resetMovement');
+    tokenDocument.unsetFlag(MODULE_NAME, 'resetMovement');
     if (restrictedMovement) {
       ui.notifications?.error('Tu movimiento está restringido en este turno');
       return false;
@@ -116,12 +120,12 @@ export function registerHooks(): void {
     if (isAttracted) {
       tokenDocument.setFlag(MODULE_NAME, 'restrictedMovement', true);
       return true;
-    } */
+    } 
     const choosingManeuver: any = tokenDocument.getFlag(MODULE_NAME, 'choosingManeuver');
     if (choosingManeuver.choosing) {
       ui.notifications?.error('Antes de poder moverte tienes que escoger una maniobra');
       return false;
-    }
+    }*/
     const originalMove = { x: token.data.x, y: token.data.y };
     const newMove = { x: changes.x || token.data.x, y: changes.y || token.data.y };
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -147,13 +151,29 @@ export function registerHooks(): void {
 
     console.log('Distancia', distance, restOfMovement);
 
-    if (distance <= restOfMovement || game.user?.isGM) {
+    if (resetMovement || distance <= restOfMovement) {
       const movementUpdated: number = restOfMovement - distance;
       const restOfMovementCalculated: number = movementUpdated >= 0 ? movementUpdated : 0;
-      tokenDocument.setFlag(MODULE_NAME, 'combatRoundMovement', {
-        restOfMovement: restOfMovementCalculated,
-        round: game.combat?.round ?? 0,
-      });
+      const tokenObject = tokenDocument.object as Token;
+      if (!resetMovement) {
+        tokenDocument.setFlag(MODULE_NAME, 'combatRoundMovement', {
+          restOfMovement: restOfMovementCalculated,
+          round: game.combat?.round ?? 0,
+        });
+
+        const id = `ManeuverChooser-${token.id}`;
+        if ($(`#${id}`).length) {
+          ManeuverChooser.closeAll();
+        }
+
+        debugger;
+        const currentManeouver = actor?.data?.data?.conditions?.maneuver;
+        if (!currentManeouver || currentManeouver === 'do_nothing') {
+          tokenObject.setManeuver('move');
+        }
+      } else {
+        tokenObject.setManeuver('do_nothing');
+      }
 
       return true;
     } else {
@@ -266,11 +286,31 @@ export function registerHooks(): void {
     }
   });
 
+  Hooks.on('preUpdateCombatant', async (combat: any, changes: any): Promise<boolean> => {
+    const token: TokenDocument = combat.token;
+    if (changes?.flags?.dragRuler?.passedWaypoints === null) {
+      const change: any = token.getFlag(MODULE_NAME, 'initialPosition');
+      await token.setFlag(MODULE_NAME, 'resetMovement', true);
+      await token.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+      await token.update({ x: change.x, y: change.y, byReset: true });
+    }
+    return true;
+  });
+
+  Hooks.on('updateCombatant', async (combat: any, changes: any): Promise<boolean> => {
+    const token: TokenDocument = combat.token;
+    if (changes?.flags?.dragRuler?.passedWaypoints === null) {
+      await token.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+    }
+    return true;
+  });
+
   Hooks.on('updateCombat', async (combat: Combat) => {
     if (!combat.started) {
       deleteFlags(combat);
       return;
     }
+    $('#copyGurpsEasyCombat').remove();
     const tokenDocument = combat?.combatant?.token;
     ensureDefined(tokenDocument, 'current combatant has no actor');
     ensureDefined(tokenDocument.object, 'token document without token');
@@ -278,13 +318,19 @@ export function registerHooks(): void {
     ensureDefined(game.user, 'game not initialized');
     const actor = token.actor;
 
+    tokenDocument.setFlag(MODULE_NAME, 'initialPosition', {
+      x: token.data.x,
+      y: token.data.y,
+    });
+
     if (!tokenDocument.isOwner) return;
     await tokenDocument.unsetFlag(MODULE_NAME, 'restrictedMovement');
+
     // await tokenDocument.unsetFlag('token-attractor', 'movementAttracted');
     ensureDefined(actor, 'token without actor');
     await ManeuverChooser.closeAll();
     await AttackChooser.closeAll();
-    setActionByActiveEffect(actor, token);
+    //setActionByActiveEffect(actor, token);
   });
 
   Hooks.on('getCombatTrackerEntryContext', function (html: any, menu: any) {

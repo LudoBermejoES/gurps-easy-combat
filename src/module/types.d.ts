@@ -1041,6 +1041,12 @@ declare global {
     Actor: ActorDataProperties;
   }
   const GURPS: {
+    lastAttack: {
+      mode: 'ranged' | 'melee' | 'counter_attack' | 'disarm_attack';
+      index: number;
+      element: any;
+      roll?: GurpsRoll;
+    };
     IgnoreTokenSelect: boolean;
     LastActor: Actor;
     rangeObject: any;

@@ -48,8 +48,8 @@
   top: 0;
   left: 0;
   font-size: 1em;
-  content: "Escoger";
-  background-color: #4CAF50;
+  content: 'Escoger';
+  background-color: #4caf50;
   border: none;
   color: white;
   padding: 5px 5px;
@@ -121,8 +121,8 @@
   top: 0;
   left: 0;
   font-size: 1em;
-  content: "Escoger";
-  background-color: #4CAF50;
+  content: 'Escoger';
+  background-color: #4caf50;
   border: none;
   color: white;
   padding: 5px 5px;
@@ -144,12 +144,13 @@
   color: #800000;
 }
 
-.header_level, .level {
+.header_level,
+.level {
   display: none;
 }
 
 .levelWithModifiers {
-  color: #800000
+  color: #800000;
 }
 
 .choiceTable .header {
@@ -159,4 +160,8 @@
 .location_layer {
   margin-top: 5px;
   font-size: 1.5em;
+}
+
+.header-button .close {
+  display: none;
 }

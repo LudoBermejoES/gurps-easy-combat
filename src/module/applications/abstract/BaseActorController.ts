@@ -16,14 +16,14 @@ export default class BaseActorController extends Application {
     BaseActorController.apps.set(id, this);
     ensureDefined(token.actor, 'token has no actor');
     this.actor = actor || (token.actor as EasyCombatActor);
-    $(`#${id} .close`).hide();
     ensureDefined(game.user, 'game not initialized');
-    if (!game.user.isGM) {
-      const user = this.getGM(game);
-      setTimeout(() => {
+    const gameUser = game.user;
+    setTimeout(() => {
+      if (!gameUser.isGM) {
+        const user = this.getGM(game);
         this.prepareEventToSendToUser(user);
-      }, 1500);
-    }
+      }
+    }, 1500);
   }
 
   prepareEventToSendToUser(user: User | undefined) {

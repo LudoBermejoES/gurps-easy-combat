@@ -34,7 +34,7 @@ const functionsToRegister = {
   attemptFeintDefense: FeintDefense.attemptDefense,
   closeController: BaseActorController.closeById,
   setFlag: BaseActorController.setFlag,
-  shZowCopyOfScreen: (screen: string) => {
+  showCopyOfScreen: (screen: string) => {
     $('#copyGurpsEasyCombat').remove();
     $('body').append(screen);
   },
