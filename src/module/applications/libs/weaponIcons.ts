@@ -158,16 +158,16 @@ export default {
     scale: '1',
     name: 'Blowpipe',
   },
-  POLTERGUEIST: {
+  'TORNADO DE OBJETOS': {
     texturePath: 'moulinette/images/custom/JB2A/5th_Level/Arcane_Hand/ArcaneHand_Human_01_Idle_Rock01_Thumb.webp',
     scale: '1',
-    animation: 'ProjectileIceShard01_01_Regular_Blue* -0.2 +0.5 ',
-    name: 'Poltergueist',
+    name: 'Tornado de objetos',
+    sequencePreset: 'link',
     useMagic: true,
     costFatigue: 1,
     customManeuver: 'concentrate',
     ignoreOffHand: true,
-    sound: 'modules/soundfxlibrary/Combat/Single/Throw Hit/throw-hit-1.mp3',
+    sound: 'modules/gAudioBundle-3/src/Natural Disasters/Rocks_Falling_From_The_Sky.ogg',
   },
   MAGIC: {
     texturePath: 'moulinette/images/custom/JB2A/Generic/RangedSpell/ProjectileIceShard01_01_Regular_Blue_Thumb.webp',

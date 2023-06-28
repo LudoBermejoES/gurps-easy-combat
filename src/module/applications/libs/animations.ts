@@ -1,22 +1,33 @@
 import { Item } from '../../types';
 import { getWeapon } from './weaponMacrosCTA';
+import sequencerPresets from './sequencerPresets';
 
 export async function doAnimationAttack(
   actor: Actor,
   weapon: Item | undefined,
-  numberOfProjectiles: number | undefined,
+  numberOfProjectiles?: number | undefined,
+  origin?: Token,
+  target?: Token,
 ) {
   if (!weapon?.name) return;
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 
   let anim = getWeapon(weapon.name)?.animation;
-  if (!anim) return;
-  if (numberOfProjectiles && numberOfProjectiles > 1) {
-    anim += `x${numberOfProjectiles}:0.2`;
+  if (anim) {
+    if (numberOfProjectiles && numberOfProjectiles > 1) {
+      anim += `x${numberOfProjectiles}:0.2`;
+    }
+
+    return GURPS.executeOTF(`!/anim ${anim}`, false, null, actor);
   }
 
-  return GURPS.executeOTF(`!/anim ${anim}`, false, null, actor);
+  const preset = getWeapon(weapon.name)?.sequencePreset as keyof typeof sequencerPresets;
+  if (preset && sequencerPresets[preset]) {
+    sequencerPresets[preset](origin, target);
+  }
+
+  return;
 }
 
 export async function doAnimationMiss(actor: Actor, criticalMiss: boolean) {

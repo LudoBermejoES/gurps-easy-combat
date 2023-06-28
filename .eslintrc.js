@@ -16,6 +16,7 @@ module.exports = {
 
   rules: {
     // Specify any specific ESLint rules.
+    'prettier/prettier': ['error', { endOfLine: 'auto' }],
   },
 
   overrides: [

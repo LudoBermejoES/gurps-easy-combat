@@ -350,7 +350,6 @@ export default class AttackChooser extends BaseActorController {
           const isUsingDeceptiveAttack = String($('#deceptiveAttack').val()) || '';
           const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
           const isUsingTwoWeapons = $('#twoWeaponsAttack').is(':checked');
-          debugger;
           this.data.isUsingFatigueForMoveAndAttack = isUsingFatigueForMoveAndAttack;
           this.data.isUsingDeceptiveAttack = isUsingDeceptiveAttack;
           this.data.isUsingFatigueForMightyBlows = isUsingFatigueForMightyBlows;
@@ -474,7 +473,6 @@ export default class AttackChooser extends BaseActorController {
 
   async fastDrawSkillCheck(weapon: any, remainingRounds: number): Promise<boolean> {
     const readyActionsWeaponNeeded = this.actor.getReadyActionsWeaponNeeded();
-    debugger;
 
     for (const SKILL of Object.keys(FAST_DRAW_SKILLS)) {
       const fastDrawSkill = findSkillSpell(this.actor, SKILL, true, false);

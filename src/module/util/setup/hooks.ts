@@ -166,13 +166,12 @@ export function registerHooks(): void {
           ManeuverChooser.closeAll();
         }
 
-        debugger;
         const currentManeouver = actor?.data?.data?.conditions?.maneuver;
         if (!currentManeouver || currentManeouver === 'do_nothing') {
           tokenObject.setManeuver('move');
         }
       } else {
-        tokenObject.setManeuver('do_nothing');
+        tokenObject.setManeuver('move');
       }
 
       return true;
@@ -322,7 +321,6 @@ export function registerHooks(): void {
       x: token.data.x,
       y: token.data.y,
     });
-
     if (!tokenDocument.isOwner) return;
     await tokenDocument.unsetFlag(MODULE_NAME, 'restrictedMovement');
 
@@ -330,6 +328,8 @@ export function registerHooks(): void {
     ensureDefined(actor, 'token without actor');
     await ManeuverChooser.closeAll();
     await AttackChooser.closeAll();
+    const tokenObject = tokenDocument.object as Token;
+    tokenObject.setManeuver('move');
     //setActionByActiveEffect(actor, token);
   });
 

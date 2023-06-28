@@ -28,7 +28,6 @@ export default class ManeuverChooser extends BaseManeuverChooser {
         ? alreadyMoved.restOfMovement
         : token.actor?.data?.data?.currentmove || 0;
 
-    debugger;
     if (restOfMovement >= Math.floor(token.actor?.data?.data?.currentmove || 0) - 1) {
       this.maneuversInfo = {
         basic: {

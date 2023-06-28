@@ -32,6 +32,7 @@ interface weapon {
   useStones: boolean | undefined;
   useBolts: boolean | undefined;
   useBullets: boolean | undefined;
+  sequencePreset: string;
 }
 
 const CTA = window.CTA;

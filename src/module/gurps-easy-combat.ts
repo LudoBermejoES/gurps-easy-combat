@@ -6,6 +6,7 @@ import { registerHooks } from './util/setup/hooks.js';
 import DefenceChooser from './applications/defenseChooser.js';
 import { SockerLibSocket } from './util/setup/socketkib.js';
 import { drawEquipment } from './applications/libs/weaponMacrosCTA';
+import addSequences from './applications/libs/sequencerPresets';
 
 const appId = _appId;
 

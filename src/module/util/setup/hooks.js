@@ -1,0 +1,327 @@
+import { registerSettings } from './settings.js';
+import { registerHelpers, registerPartials } from './handlebars.js';
+import { MODULE_NAME, STATUS_EFFECTS_THAN_AFFECT_MANEUVERS } from '../../applications/libs/constants';
+import ManeuverChooser from '../../applications/maneuverChooser.js';
+import { ensureDefined, hasEffect, highestPriorityUsers } from '../../applications/libs/miscellaneous';
+import AttackChooser from '../../applications/attackChooser.js';
+import { registerFunctions } from './socketkib.js';
+import { getUserFromCombatant } from '../../applications/libs/combatants';
+import { applyModifiersByDamage } from '../../applications/libs/damage';
+import DefenseChooser from '../../applications/defenseChooser';
+import { beforeManeuvers } from '../../applications/actions/beforeManeuvers';
+import { easyCombatActorfromActor } from '../../applications/abstract/EasyCombatActor';
+async function setActionByActiveEffect(actor, tokenSelected) {
+  for (const effectName in STATUS_EFFECTS_THAN_AFFECT_MANEUVERS) {
+    const effectFunction = STATUS_EFFECTS_THAN_AFFECT_MANEUVERS[effectName];
+    if (hasEffect(actor, effectName)) {
+      const f = beforeManeuvers[effectFunction];
+      if (f) {
+        const result = await f(actor);
+        if (!result) return;
+      }
+    }
+  }
+  ensureDefined(game.user, 'No user selected');
+  if (highestPriorityUsers(actor).includes(game.user) && game.settings.get(MODULE_NAME, 'maneuver-chooser-on-turn')) {
+    new ManeuverChooser(tokenSelected).render(true);
+  }
+}
+export function registerHooks() {
+  Hooks.once('socketlib.ready', registerFunctions);
+  // Initialize module
+  Hooks.once('init', async () => {
+    console.log('gurps-easy-combat | Initializing gurps-easy-combat');
+    // Register custom module settings
+    registerSettings();
+    window.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Alt') {
+        $('*[data-appid="' + _appId + '"]').hide();
+      }
+    });
+    window.addEventListener('keyup', (evt) => {
+      if (evt.key === 'Alt') {
+        $('*[data-appid="' + _appId + '"]').show();
+      }
+    });
+    // register Handlebars helpers and partials
+    registerHelpers();
+    await registerPartials();
+  });
+  const deleteFlags = (combat) => {
+    if (game.user?.isGM) {
+      combat.combatants.forEach((combatant) => {
+        // combatant?.token?.º('token-attractor', 'movementAttracted');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'restrictedMovement');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'location');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'roundRetreatMalus');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastParries');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastBlocks');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastAim');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'initialPosition');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'resetMovement');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastFeint');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastEvaluate');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'lastAodDouble');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'choosingManeuver');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'successDefenses');
+        combatant?.token?.unsetFlag(MODULE_NAME, 'shockPenalties');
+      });
+    }
+  };
+  Hooks.on('preUpdateToken', (token, changes, data, userId) => {
+    if (changes.x || changes.y) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      token.data.originalPosition = game?.canvas?.grid?.grid?.getGridPositionFromPixels(token.data.x, token.data.y) || [
+        0, 0,
+      ];
+    }
+    const tokenDocument = token;
+    if (!game.combat) return true;
+    const actor = token.actor;
+    ensureDefined(actor, 'No actor selected');
+    ensureDefined(game.user, 'No user selected');
+    if (!highestPriorityUsers(actor).includes(game.user) && !game?.user?.isGM) {
+      //ui.notifications?.error('Hay otro jugador con más prioridad para mover el personaje en combate que tú');
+      return false;
+    }
+    const combatants = game.combat.combatants || [];
+    let foundToken = false;
+    combatants.forEach((combatant) => (combatant.data.tokenId === token.id ? (foundToken = true) : ''));
+    if (!(changes.x || changes.y) || !foundToken) return;
+    const restrictedMovement = tokenDocument.getFlag(MODULE_NAME, 'restrictedMovement');
+    const resetMovement = tokenDocument.getFlag(MODULE_NAME, 'resetMovement');
+    tokenDocument.unsetFlag(MODULE_NAME, 'resetMovement');
+    if (restrictedMovement) {
+      ui.notifications?.error('Tu movimiento está restringido en este turno');
+      return false;
+    }
+    /*     const isAttracted = tokenDocument.getFlag('token-attractor', 'movementAttracted');
+        if (isAttracted) {
+          tokenDocument.setFlag(MODULE_NAME, 'restrictedMovement', true);
+          return true;
+        }
+        const choosingManeuver: any = tokenDocument.getFlag(MODULE_NAME, 'choosingManeuver');
+        if (choosingManeuver.choosing) {
+          ui.notifications?.error('Antes de poder moverte tienes que escoger una maniobra');
+          return false;
+        }*/
+    const originalMove = { x: token.data.x, y: token.data.y };
+    const newMove = { x: changes.x || token.data.x, y: changes.y || token.data.y };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const distance = game.canvas.grid.measureDistance(originalMove, newMove, { gridSpaces: true }) || 0;
+    //Check if client controls the token
+    if (userId != game.userId) {
+      return;
+    }
+    if (distance && game?.combat?.combatant?.token?.id !== token.id && game.user?.isGM === false) {
+      ui.notifications?.error('Te estás moviendo y no es tu turno, no me hagas un Luis');
+      return false;
+    }
+    const alreadyMoved = tokenDocument.getFlag(MODULE_NAME, 'combatRoundMovement');
+    const restOfMovement =
+      alreadyMoved?.round === game.combat?.round
+        ? alreadyMoved.restOfMovement
+        : token.actor?.data?.data?.currentmove || 0;
+    console.log('Distancia', distance, restOfMovement);
+    if (resetMovement || distance <= restOfMovement) {
+      const movementUpdated = restOfMovement - distance;
+      const restOfMovementCalculated = movementUpdated >= 0 ? movementUpdated : 0;
+      const tokenObject = tokenDocument.object;
+      if (!resetMovement) {
+        tokenDocument.setFlag(MODULE_NAME, 'combatRoundMovement', {
+          restOfMovement: restOfMovementCalculated,
+          round: game.combat?.round ?? 0,
+        });
+        const id = `ManeuverChooser-${token.id}`;
+        if ($(`#${id}`).length) {
+          ManeuverChooser.closeAll();
+        }
+        const currentManeouver = actor?.data?.data?.conditions?.maneuver;
+        if (!currentManeouver || currentManeouver === 'do_nothing') {
+          tokenObject.setManeuver('move');
+        }
+      } else {
+        tokenObject.setManeuver('move');
+      }
+      return true;
+    } else {
+      ui.notifications?.error('No puedes mover tanto: tu movimiento restante es ' + restOfMovement + ' casillas');
+      return false;
+    }
+  });
+  Hooks.on('updateToken', async (token, changes) => {
+    applyModifiersByDamage(token, changes);
+  });
+  // on create combatant, set the maneuver
+  Hooks.on('createCombatant', async (combatant) => {
+    ensureDefined(combatant.token, 'No actor selected');
+    const actor = easyCombatActorfromActor(combatant.token.actor, combatant.token.object);
+    ensureDefined(actor, 'No actor selected');
+    ensureDefined(game.user, 'No user selected');
+    if (!highestPriorityUsers(actor).includes(game.user)) {
+      return;
+    }
+    ensureDefined(game.combat, 'No hay combate activo');
+    combatant?.token?.unsetFlag(MODULE_NAME, 'readyActionsWeaponNeeded');
+    deleteFlags(game.combat);
+    //clearEquipment(combatant.token.id);
+    combatant?.token?.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+    actor.prepareReadyWeapons();
+  });
+  Hooks.on('renderTokenHUD', async (app, html, token) => {
+    if (!app?.object?.document) {
+      return;
+    }
+    const isPlayerOwned = app?.object.document.isOwner;
+    if (!game.user?.isGM && !isPlayerOwned) {
+      return;
+    }
+    if (!token._id) {
+      return;
+    }
+    const tokenIn = game.canvas.tokens?.get(token._id);
+    if (!tokenIn) return;
+    const buttonReadyWeapon = $(
+      `<div class="control-icon ready-weapon" title="Preparar arma"><img src="icons/svg/sword.svg" width="36" height="36" title="Preparar arma"></div>`,
+    );
+    const col = html.find('.col.right');
+    col.append(buttonReadyWeapon);
+    const buttonOpenActions = $(
+      `<div class="control-icon open-actions" title="Abrir acciones"><img src="icons/svg/card-hand.svg" width="36" height="36" title="Abrir acciones"></div>`,
+    );
+    const col2 = html.find('.col.right');
+    if (game?.combat?.started && game?.combat?.combatant?.token?.id === tokenIn.id) {
+      col2.append(buttonOpenActions);
+    }
+    $('.ready-weapon').on('click', async () => {
+      const actor = game?.actors?.find((a) => a.id == token.actorId);
+      if (actor) {
+        const user = highestPriorityUsers(actor)[0];
+        if (user) {
+          await easyCombatActorfromActor(actor, tokenIn).prepareReadyWeapons();
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          window.EasyCombat.socket.executeAsUser('readyWeaponsFirstRound', user.id, tokenIn.document.id);
+        }
+      }
+    });
+    $('.open-actions').on('click', async () => {
+      if (!game?.combat?.started) {
+        ui.notifications?.error('No hay combate, así que no puedes sacar las acciones');
+        return;
+      }
+      if (!game?.combat?.combatant?.token) {
+        ui.notifications?.error('No hay combatiente');
+        return;
+      }
+      const tokenInCombat = game.combat.combatant.token;
+      if (tokenInCombat.id !== tokenIn.id) {
+        ui.notifications?.error('No es tu turno de combate');
+        return;
+      }
+      const actor = game?.actors?.find((a) => a.id == token.actorId);
+      const tokenDocument = tokenIn.document;
+      ensureDefined(tokenDocument, 'current combatant has no actor');
+      ensureDefined(tokenDocument.object, 'token document without token');
+      const tokenSelected = tokenDocument.object;
+      ensureDefined(game.user, 'game not initialized');
+      ensureDefined(actor, 'token without actor');
+      await ManeuverChooser.closeAll();
+      await AttackChooser.closeAll();
+      await DefenseChooser.closeAll();
+      setActionByActiveEffect(actor, tokenSelected);
+    });
+  });
+  Hooks.on('deleteCombat', async (combat) => {
+    deleteFlags(combat);
+    if (game.user?.isGM) {
+      combat.combatants.forEach((combatant) => {
+        ensureDefined('combatant.token', 'Token exists');
+        // clearEquipment(combatant?.token?.id || '');
+      });
+    }
+  });
+  Hooks.on('preUpdateCombatant', async (combat, changes) => {
+    const token = combat.token;
+    if (changes?.flags?.dragRuler?.passedWaypoints === null) {
+      const change = token.getFlag(MODULE_NAME, 'initialPosition');
+      await token.setFlag(MODULE_NAME, 'resetMovement', true);
+      await token.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+      await token.update({ x: change.x, y: change.y, byReset: true });
+    }
+    return true;
+  });
+  Hooks.on('updateCombatant', async (combat, changes) => {
+    const token = combat.token;
+    if (changes?.flags?.dragRuler?.passedWaypoints === null) {
+      await token.unsetFlag(MODULE_NAME, 'combatRoundMovement');
+    }
+    return true;
+  });
+  Hooks.on('updateCombat', async (combat) => {
+    if (!combat.started) {
+      deleteFlags(combat);
+      return;
+    }
+    $('#copyGurpsEasyCombat').remove();
+    const tokenDocument = combat?.combatant?.token;
+    ensureDefined(tokenDocument, 'current combatant has no actor');
+    ensureDefined(tokenDocument.object, 'token document without token');
+    const token = tokenDocument.object;
+    ensureDefined(game.user, 'game not initialized');
+    const actor = token.actor;
+    tokenDocument.setFlag(MODULE_NAME, 'initialPosition', {
+      x: token.data.x,
+      y: token.data.y,
+    });
+    if (!tokenDocument.isOwner) return;
+    await tokenDocument.unsetFlag(MODULE_NAME, 'restrictedMovement');
+    // await tokenDocument.unsetFlag('token-attractor', 'movementAttracted');
+    ensureDefined(actor, 'token without actor');
+    await ManeuverChooser.closeAll();
+    await AttackChooser.closeAll();
+    const tokenObject = tokenDocument.object;
+    tokenObject.setManeuver('move');
+    //setActionByActiveEffect(actor, token);
+  });
+  Hooks.on('getCombatTrackerEntryContext', function (html, menu) {
+    const entry = {
+      name: 'Resetear y volver a abrir la pantalla de maniobras',
+      icon: '<i class="fas fa-undo-alt"></i>',
+      callback: (li) => {
+        const combatantId = li.data('combatant-id');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const combat = ui?.combat?.viewed;
+        const combatant = combat?.combatants?.get(combatantId);
+        ensureDefined(combatant, 'No hay combatiente');
+        const user = getUserFromCombatant(combatant);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.EasyCombat.socket.executeAsUser('chooseManeuver', user.id, combatant.data.tokenId);
+      },
+    };
+    menu.splice(1, 0, entry);
+    const entryAttack = {
+      name: 'Ejecutar ataque',
+      icon: '<i class="fas fa-undo-alt"></i>',
+      callback: (li) => {
+        const combatantId = li.data('combatant-id');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const combat = ui?.combat?.viewed;
+        const combatant = combat?.combatants?.get(combatantId);
+        ensureDefined(combatant, 'No hay combatiente');
+        const user = getUserFromCombatant(combatant);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        window.EasyCombat.socket.executeAsUser('chooseAttack', user.id, combatant.data.tokenId);
+      },
+    };
+    menu.splice(1, 0, entryAttack);
+  });
+}
+//# sourceMappingURL=hooks.js.map

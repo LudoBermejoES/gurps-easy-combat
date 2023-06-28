@@ -7,6 +7,7 @@ import {
   doAnimationDamage,
   doAnimationMiss,
 } from './applications/libs/animations';
+
 import { playSound } from './applications/libs/sounds';
 import { addCounterAttackModifiersForAttack } from './applications/actions/counterAttack';
 import rollDefense from './applications/actions/defense';
@@ -119,7 +120,7 @@ export async function makeAttackInner(
     doAnimationMiss(target.actor, roll.isCritFailure);
     return;
   }
-  await doAnimationAttack(attacker, weapon, roll.rofrcl);
+  await doAnimationAttack(attacker, weapon, roll.rofrcl, token, target);
   await playSound(target.actor, weapon, roll.rofrcl);
   if (!roll.isCritSuccess) {
     const resultDefense = await rollDefense(roll, attacker, token, attack, modifiers, target, specialAttacks);
