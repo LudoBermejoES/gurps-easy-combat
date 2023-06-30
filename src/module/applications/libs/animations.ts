@@ -6,13 +6,8 @@ export async function doAnimationAttack(
   actor: Actor,
   weapon: Item | undefined,
   numberOfProjectiles?: number | undefined,
-  origin?: Token,
-  target?: Token,
 ) {
   if (!weapon?.name) return;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-
   let anim = getWeapon(weapon.name)?.animation;
   if (anim) {
     if (numberOfProjectiles && numberOfProjectiles > 1) {
@@ -22,12 +17,28 @@ export async function doAnimationAttack(
     return GURPS.executeOTF(`!/anim ${anim}`, false, null, actor);
   }
 
-  const preset = getWeapon(weapon.name)?.sequencePreset as keyof typeof sequencerPresets;
+  return;
+}
+
+export async function doSequenceAttack(weapon: Item | undefined, origin: Token, target: Token) {
+  debugger;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  if (!weapon?.name) return;
+  const preset = getWeapon(weapon.name)?.sequenceAttack as keyof typeof sequencerPresets;
+  if (preset && sequencerPresets[preset]) {
+    return sequencerPresets[preset](origin, target);
+  }
+}
+
+export async function doSequenceSuccess(weapon: Item | undefined, origin: Token, target: Token) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  if (!weapon?.name) return;
+  const preset = getWeapon(weapon.name)?.sequenceSuccess as keyof typeof sequencerPresets;
   if (preset && sequencerPresets[preset]) {
     sequencerPresets[preset](origin, target);
   }
-
-  return;
 }
 
 export async function doAnimationMiss(actor: Actor, criticalMiss: boolean) {

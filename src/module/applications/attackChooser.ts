@@ -22,7 +22,7 @@ import {
 } from './libs/weaponMacrosCTA';
 import { getMeleeModifiers, getRangedModifiers } from './actions/modifiers';
 import { getHitLocationsObject, getLocationData, LocationToAttack } from './libs/locationsDataTransformation';
-import { useFatigue } from './libs/fatigue';
+import { useFatigue, useFatigueWithCyclicAttack } from './libs/fatigue';
 import LocationChooser from './locationChooser';
 import {
   meleeAttackWithRemainingRounds,
@@ -673,10 +673,11 @@ export default class AttackChooser extends BaseActorController {
       isDeceptiveAttack: isUsingDeceptiveAttack,
       isUsingFatigueForPowerBlows: isUsingFatigueForPowerBlows,
     };
+
     if (weapon) {
       const weaponDetails = getWeapon(weapon.name);
-      if (weaponDetails?.costFatigue) {
-        useFatigue(this.actor, weaponDetails?.costFatigue);
+      if (weaponDetails?.cycleAttackFatigueToStart) {
+        await useFatigueWithCyclicAttack(this.actor, this.token, weaponDetails);
       }
     }
 

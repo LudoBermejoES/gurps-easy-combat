@@ -15,7 +15,7 @@ export interface equippedItem {
   hand: string;
 }
 
-interface weapon {
+export interface weapon {
   token: Token;
   textureData: any;
   actor: boolean;
@@ -28,11 +28,14 @@ interface weapon {
   useMagic: boolean | undefined;
   customManeuver: string | undefined;
   ignoreOffHand: boolean | undefined;
-  costFatigue: number | undefined;
+  cycleAttackFatigueToStart: number | undefined;
+  cycleAttackFatigueToKeep: number | undefined;
   useStones: boolean | undefined;
   useBolts: boolean | undefined;
   useBullets: boolean | undefined;
-  sequencePreset: string;
+  sequenceAttack?: string;
+  sequenceSuccess?: string;
+  animation?: string;
 }
 
 const CTA = window.CTA;

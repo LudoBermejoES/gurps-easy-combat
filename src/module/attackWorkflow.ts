@@ -6,6 +6,8 @@ import {
   doAnimationCriticalSuccess,
   doAnimationDamage,
   doAnimationMiss,
+  doSequenceAttack,
+  doSequenceSuccess,
 } from './applications/libs/animations';
 
 import { playSound } from './applications/libs/sounds';
@@ -120,8 +122,9 @@ export async function makeAttackInner(
     doAnimationMiss(target.actor, roll.isCritFailure);
     return;
   }
-  await doAnimationAttack(attacker, weapon, roll.rofrcl, token, target);
+  await doAnimationAttack(attacker, weapon, roll.rofrcl);
   await playSound(target.actor, weapon, roll.rofrcl);
+  await doSequenceAttack(weapon, token, target);
   if (!roll.isCritSuccess) {
     const resultDefense = await rollDefense(roll, attacker, token, attack, modifiers, target, specialAttacks);
     if (!resultDefense) return;
@@ -176,6 +179,7 @@ export async function makeAttackInner(
     }
   }
 
+  await doSequenceSuccess(weapon, token, target);
   if (roll.rofrcl) {
     for (let i = 1; i <= roll.rofrcl; i++) {
       rollDamage(attacker, damage, target, modifiers.damage, locationToAttack);
