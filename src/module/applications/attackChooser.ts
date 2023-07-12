@@ -106,6 +106,9 @@ export default class AttackChooser extends BaseActorController {
     this.rangedData = [];
     this.canUseTwoWeapons = false;
     this.data = data;
+    if (this.data.maneuver === 'move_and_attack') {
+      if (this.data.isUsingFatigueForMoveAndAttack === undefined) this.data.isUsingFatigueForMoveAndAttack = true;
+    }
     if (this.data.twoAttacks && !this.data.attackCount) this.data.attackCount = 1;
     if (this.data.twoAttacksWithWeapons && !this.data.attackWeaponsCount) this.data.attackWeaponsCount = 1;
     this.attacks = this.actor.getAttacks();
@@ -134,10 +137,22 @@ export default class AttackChooser extends BaseActorController {
     const hitLocationsObject = getHitLocationsObject(game);
     this.weaponsToBeReadyData = this.actor.getWeaponsToBeReady();
     this.weaponsNotToBeReadyData = this.actor.getWeaponsNotToBeReady();
-    const isRapidStrikeAttacks = $('#rapidStrikeAttacks').is(':checked');
-    const isUsingTwoWeapons = $('#twoWeaponsAttack').is(':checked');
-    const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').is(':checked');
-    const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').is(':checked');
+    const isRapidStrikeAttacks = $('#rapidStrikeAttacks').length
+      ? $('#rapidStrikeAttacks').is(':checked')
+      : this.data.isRapidStrikeAttacks;
+
+    const isUsingTwoWeapons = $('#twoWeaponsAttack').length
+      ? $('#twoWeaponsAttack').is(':checked')
+      : this.data.isUsingTwoWeapons;
+
+    const isUsingFatigueForMoveAndAttack = $('#fatigueMoveAndAttack').length
+      ? $('#fatigueMoveAndAttack').is(':checked')
+      : this.data.isUsingFatigueForMoveAndAttack;
+
+    const isUsingFatigueForMightyBlows = $('#fatigueMightyBlows').length
+      ? $('#fatigueMightyBlows').is(':checked')
+      : this.data.isUsingFatigueForMightyBlows;
+
     const { meleeAttacksWithModifier, rangedAttacksWithModifier } = await this.actor.getAttacksWithModifiers(
       this.token,
       {
@@ -203,7 +218,7 @@ export default class AttackChooser extends BaseActorController {
         headers: ['weapon', 'remainingRounds'],
         id: 'weapons_not_to_be_ready',
       },
-      maneuver: this?.actor?.data?.data?.conditions?.maneuver,
+      maneuver: easyCombatActorfromActor(this?.actor).getData()?.conditions?.maneuver,
       data: this.data,
     };
   }

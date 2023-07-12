@@ -5,6 +5,7 @@ import { MODULE_NAME } from '../../applications/libs/constants';
 import ManeuverChooser from '../../applications/maneuverChooser';
 import { ensureDefined } from '../../applications/libs/miscellaneous';
 import AttackChooser from '../../applications/attackChooser';
+import EasyCombatActor, { easyCombatActorfromToken } from '../../applications/abstract/EasyCombatActor.js';
 
 function getToken(token: string): Token {
   ensureDefined(game.user, 'game not initialized');
@@ -46,11 +47,12 @@ const functionsToRegister = {
     const alreadyMoved = <{ restOfMovement: number; round: number } | { round: -1; restOfMovement: 0 }>(
       getToken(token).document.getFlag(MODULE_NAME, 'combatRoundMovement')
     );
-    const currentMove = getToken(token).actor?.data?.data?.currentmove || 0;
+
+    const easyActor: EasyCombatActor | undefined = easyCombatActorfromToken(getToken(token));
+    ensureDefined(easyActor, 'Actor does not exists');
+    const currentMove = easyActor.getData()?.currentmove || 0;
     const restOfMovement =
-      alreadyMoved?.round === game.combat?.round
-        ? alreadyMoved.restOfMovement
-        : getToken(token).actor?.data?.data?.currentmove || 0;
+      alreadyMoved?.round === game.combat?.round ? alreadyMoved.restOfMovement : easyActor.getData()?.currentmove || 0;
 
     const totalMovement = currentMove - restOfMovement;
     if (totalMovement <= 1) {

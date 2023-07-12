@@ -14,7 +14,11 @@ import { TokenData } from '@league-of-foundry-developers/foundry-vtt-types/src/f
 import { applyModifiersByDamage } from '../../applications/libs/damage';
 import DefenseChooser from '../../applications/defenseChooser';
 import { beforeManeuvers, BeforeManeuversKey } from '../../applications/actions/beforeManeuvers';
-import { easyCombatActorfromActor } from '../../applications/abstract/EasyCombatActor';
+import EasyCombatActor, {
+  easyCombatActorfromActor,
+  easyCombatActorfromToken,
+} from '../../applications/abstract/EasyCombatActor';
+import { getCombatantData } from '../../applications/libs/data.js';
 
 async function setActionByActiveEffect(actor: Actor, tokenSelected: Token) {
   for (const effectName in STATUS_EFFECTS_THAN_AFFECT_MANEUVERS) {
@@ -84,18 +88,10 @@ export function registerHooks(): void {
   };
 
   Hooks.on('preUpdateToken', (token: TokenDocument, changes: any, data: any, userId: any) => {
-    if (changes.x || changes.y) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      token.data.originalPosition = game?.canvas?.grid?.grid?.getGridPositionFromPixels(token.data.x, token.data.y) || [
-        0, 0,
-      ];
-    }
-
     const tokenDocument: any = token;
     if (!game.combat) return true;
 
-    const actor = token.actor;
+    const actor: EasyCombatActor | undefined = easyCombatActorfromActor(token.actor);
     ensureDefined(actor, 'No actor selected');
     ensureDefined(game.user, 'No user selected');
     if (!highestPriorityUsers(actor).includes(game.user) && !game?.user?.isGM) {
@@ -105,7 +101,7 @@ export function registerHooks(): void {
 
     const combatants = game.combat.combatants || [];
     let foundToken = false;
-    combatants.forEach((combatant) => (combatant.data.tokenId === token.id ? (foundToken = true) : ''));
+    combatants.forEach((combatant) => (getCombatantData(combatant).tokenId === token.id ? (foundToken = true) : ''));
     if (!(changes.x || changes.y) || !foundToken) return;
 
     const restrictedMovement = tokenDocument.getFlag(MODULE_NAME, 'restrictedMovement');
@@ -145,9 +141,7 @@ export function registerHooks(): void {
       tokenDocument.getFlag(MODULE_NAME, 'combatRoundMovement')
     );
     const restOfMovement =
-      alreadyMoved?.round === game.combat?.round
-        ? alreadyMoved.restOfMovement
-        : token.actor?.data?.data?.currentmove || 0;
+      alreadyMoved?.round === game.combat?.round ? alreadyMoved.restOfMovement : actor.getData()?.currentmove || 0;
 
     console.log('Distancia', distance, restOfMovement);
 
@@ -166,7 +160,9 @@ export function registerHooks(): void {
           ManeuverChooser.closeAll();
         }
 
-        const currentManeouver = actor?.data?.data?.conditions?.maneuver;
+        const easyActor: EasyCombatActor = easyCombatActorfromActor(actor);
+
+        const currentManeouver = easyActor.getData()?.conditions?.maneuver;
         if (!currentManeouver || currentManeouver === 'do_nothing') {
           tokenObject.setManeuver('move');
         }
@@ -365,7 +361,7 @@ export function registerHooks(): void {
         const user: User = getUserFromCombatant(combatant);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        window.EasyCombat.socket.executeAsUser('chooseAttack', user.id, combatant.data.tokenId);
+        window.EasyCombat.socket.executeAsUser('chooseAttack', user.id, getCombatantData(combatant).tokenId);
       },
     };
     menu.splice(1, 0, entryAttack);

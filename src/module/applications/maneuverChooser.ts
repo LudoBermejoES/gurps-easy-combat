@@ -7,6 +7,9 @@ import Feint from './maneuvers/Feint.js';
 import Aim from './maneuvers/Aim.js';
 import Evaluate from './maneuvers/Evaluate';
 import PostureChooser from './postureChooser';
+import { easyCombatActorfromToken } from './abstract/EasyCombatActor';
+import { ensureDefined } from './libs/miscellaneous';
+import { ActorDataPropertiesData } from '../types';
 
 export default class ManeuverChooser extends BaseManeuverChooser {
   maneuversInfo: {
@@ -20,15 +23,16 @@ export default class ManeuverChooser extends BaseManeuverChooser {
       template: `modules/${MODULE_NAME}/templates/maneuverChooser.hbs`,
     });
 
+    const properties: ActorDataPropertiesData | undefined = easyCombatActorfromToken(token)?.getData();
+    ensureDefined(properties, 'Non defined');
+
     const alreadyMoved = <{ restOfMovement: number; round: number } | { round: -1; restOfMovement: 0 }>(
       token.document.getFlag(MODULE_NAME, 'combatRoundMovement')
     );
     const restOfMovement =
-      alreadyMoved?.round === game.combat?.round
-        ? alreadyMoved.restOfMovement
-        : token.actor?.data?.data?.currentmove || 0;
+      alreadyMoved?.round === game.combat?.round ? alreadyMoved.restOfMovement : properties.currentmove || 0;
 
-    if (restOfMovement >= Math.floor(token.actor?.data?.data?.currentmove || 0) - 1) {
+    if (restOfMovement >= Math.floor(properties.currentmove || 0) - 1) {
       this.maneuversInfo = {
         basic: {
           move: {
@@ -46,7 +50,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
           move_and_attack: {
             tooltip: 'Moverse y atacar con penalizador',
             page: 'B:365',
-            callback: (token: Token) => new AttackChooser(token).render(true),
+            callback: (token: Token) => new AttackChooser(token, { maneuver: 'move_and_attack' }).render(true),
           },
           ready: {
             tooltip: 'Preparar un arma u otro equipo',
@@ -102,7 +106,7 @@ export default class ManeuverChooser extends BaseManeuverChooser {
           },
         },
       };
-    } else if (restOfMovement > Math.floor((token.actor?.data?.data?.currentmove || 0) / 2)) {
+    } else if (restOfMovement > Math.floor((properties.currentmove || 0) / 2)) {
       this.maneuversInfo = {
         basic: {
           move: {
@@ -112,15 +116,10 @@ export default class ManeuverChooser extends BaseManeuverChooser {
           move_and_attack: {
             tooltip: 'Moverse y atacar con penalizador',
             page: 'B:365',
-            callback: (token: Token) => new AttackChooser(token).render(true),
+            callback: (token: Token) => new AttackChooser(token, { maneuver: 'move_and_attack' }).render(true),
           },
         },
         advanced: {
-          do_nothing: {
-            tooltip: 'No hacer acción pero recuperarse de Aturdido',
-            page: 'B:364',
-            callback: () => game.combat?.nextTurn(),
-          },
           allout_attack: {
             tooltip: 'Atacar con bonus o varias veces',
             page: 'B:365',
@@ -130,15 +129,6 @@ export default class ManeuverChooser extends BaseManeuverChooser {
             tooltip: 'Defensa incrementada o defenderse dos veces de un mismo ataque',
             page: 'B:366',
             callback: (token: Token) => new AllOutDefense(token).render(true),
-          },
-          change_posture: {
-            tooltip: `Levantarse, sentarse, etc`,
-            page: 'B:364',
-            callback: (token: Token) => new PostureChooser(token).render(true),
-          },
-          wait: {
-            tooltip: 'Esperar antes de actuar',
-            page: 'B:366',
           },
         },
       };
@@ -152,25 +142,10 @@ export default class ManeuverChooser extends BaseManeuverChooser {
           move_and_attack: {
             tooltip: 'Moverse y atacar con penalizador',
             page: 'B:365',
-            callback: (token: Token) => new AttackChooser(token).render(true),
+            callback: (token: Token) => new AttackChooser(token, { maneuver: 'move_and_attack' }).render(true),
           },
         },
-        advanced: {
-          do_nothing: {
-            tooltip: 'No hacer acción pero recuperarse de Aturdido',
-            page: 'B:364',
-            callback: () => game.combat?.nextTurn(),
-          },
-          change_posture: {
-            tooltip: `Levantarse, sentarse, etc`,
-            page: 'B:364',
-            callback: (token: Token) => new PostureChooser(token).render(true),
-          },
-          wait: {
-            tooltip: 'Esperar antes de actuar',
-            page: 'B:366',
-          },
-        },
+        advanced: {},
       };
     }
   }

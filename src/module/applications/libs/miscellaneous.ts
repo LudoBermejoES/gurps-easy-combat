@@ -155,7 +155,6 @@ export function getManeuver(actor: Actor): string {
 
 export function checkSingleTarget(user: User, warning = true): boolean {
   if (user.targets.size === 0) {
-    if (warning) ui.notifications?.warn('Tienes que seleccionar al menos un objetivo');
     return false;
   }
   if (user.targets.size > 1) {
@@ -255,5 +254,5 @@ export function findAdvantage(actor: Actor, name: string): Advantage {
 }
 
 export function hasEffect(actor: Actor, effect: string): boolean {
-  return actor.effects.contents.find((it: any) => it.data.flags?.core?.statusId === effect) !== undefined;
+  return actor.effects.contents.find((it: any) => it.flags?.core?.statusId === effect) !== undefined;
 }
